@@ -1,6 +1,18 @@
 import { hashPin, verifyPin } from './security/pinHash';
 import { TagOwner, TagType, TagStatus } from './types';
 import { getSupabaseServerClient } from '@/lib/supabaseClient';
+import { getNeonSql } from '@/lib/neonClient';
+
+async function queryNeonSingle(query: string, params: any[]): Promise<any | null> {
+  const sql = getNeonSql();
+  if (!sql) return null;
+  try {
+    const rows = await (sql as any).query(query, params);
+    return rows && rows.length > 0 ? rows[0] : null;
+  } catch {
+    return null;
+  }
+}
 
 export interface TagScanEvent {
   timestamp: string;
@@ -135,7 +147,58 @@ export async function validateQrIdServer(rawQrId: string): Promise<{
   const cleanId = rawQrId.trim().toUpperCase();
   const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
 
-  // 1. Check Supabase DB Table (bikers, kids, travellers, universals)
+  // 1. Check Neon PostgreSQL DB Table
+  try {
+    const neonData = await queryNeonSingle(
+      `SELECT * FROM ${tableName} WHERE tag_id = $1 LIMIT 1`,
+      [cleanId]
+    );
+
+    if (neonData) {
+      const phoneVal = neonData[phoneCol] || neonData.phone || neonData.guardian_phone;
+      const isAlready = Boolean(
+        neonData.tag_active === true ||
+        neonData.owner_name ||
+        phoneVal ||
+        neonData.registered_at ||
+        neonData.status === 'activated' ||
+        neonData.status === 'active' ||
+        neonData.status === 'trial' ||
+        neonData.status === 'paid'
+      );
+
+      if (isAlready) {
+        return {
+          success: false,
+          isAlreadyRegistered: true,
+          error: `Tag ID ${cleanId} is ALREADY REGISTERED in the ${tableName} database.`,
+        };
+      }
+
+      return {
+        success: true,
+        tag: {
+          id: neonData.id,
+          qrId: neonData.tag_id,
+          tagType: cleanId.substring(0, 3) as TagType,
+          status: neonData.status || 'printed',
+          ownerName: neonData.owner_name,
+          ownerPhone: phoneVal,
+          emergencyName: neonData.emergency_contact_name,
+          emergencyPhone: neonData.emergency_contact_phone,
+          vehicleNo: extraCol ? neonData[extraCol] : undefined,
+          bloodGroup: neonData.blood_group,
+          medicalNotes: neonData.medical_notes,
+          activatedAt: neonData.activated_at,
+          createdAt: neonData.created_at,
+        },
+      };
+    }
+  } catch {
+    // Fallback
+  }
+
+  // 2. Check Supabase DB Table (bikers, kids, travellers, universals)
   try {
     const supabase = getSupabaseServerClient();
     const { data, error } = await supabase
@@ -391,6 +454,102 @@ export async function registerTagServer(payload: RegisterPayload): Promise<{
     // Supabase table fallback
   }
 
+  // 3. Persist to Neon PostgreSQL if configured
+  try {
+    const sql = getNeonSql();
+    if (sql) {
+      const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
+      const vehicleVal = payload.vehicleNo?.trim() || null;
+      const bloodVal = payload.bloodGroup?.trim() || null;
+
+      if (tableName === 'bikers') {
+        await sql`
+          INSERT INTO bikers (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at, bike_model, blood_group)
+          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt}, ${vehicleVal}, ${bloodVal})
+          ON CONFLICT (tag_id) DO UPDATE SET
+            owner_name = EXCLUDED.owner_name,
+            phone = EXCLUDED.phone,
+            emergency_contact_name = EXCLUDED.emergency_contact_name,
+            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
+            medical_notes = EXCLUDED.medical_notes,
+            status = EXCLUDED.status,
+            tag_active = EXCLUDED.tag_active,
+            activated_at = EXCLUDED.activated_at,
+            registered_at = EXCLUDED.registered_at,
+            bike_model = EXCLUDED.bike_model,
+            blood_group = EXCLUDED.blood_group;
+        `;
+      } else if (tableName === 'kids') {
+        await sql`
+          INSERT INTO kids (tag_id, owner_name, guardian_phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at)
+          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt})
+          ON CONFLICT (tag_id) DO UPDATE SET
+            owner_name = EXCLUDED.owner_name,
+            guardian_phone = EXCLUDED.guardian_phone,
+            emergency_contact_name = EXCLUDED.emergency_contact_name,
+            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
+            medical_notes = EXCLUDED.medical_notes,
+            status = EXCLUDED.status,
+            tag_active = EXCLUDED.tag_active,
+            activated_at = EXCLUDED.activated_at,
+            registered_at = EXCLUDED.registered_at;
+        `;
+      } else if (tableName === 'travellers') {
+        await sql`
+          INSERT INTO travellers (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at, passport_country)
+          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt}, ${vehicleVal})
+          ON CONFLICT (tag_id) DO UPDATE SET
+            owner_name = EXCLUDED.owner_name,
+            phone = EXCLUDED.phone,
+            emergency_contact_name = EXCLUDED.emergency_contact_name,
+            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
+            medical_notes = EXCLUDED.medical_notes,
+            status = EXCLUDED.status,
+            tag_active = EXCLUDED.tag_active,
+            activated_at = EXCLUDED.activated_at,
+            registered_at = EXCLUDED.registered_at,
+            passport_country = EXCLUDED.passport_country;
+        `;
+      } else {
+        await sql`
+          INSERT INTO universals (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at, asset_name)
+          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt}, ${vehicleVal})
+          ON CONFLICT (tag_id) DO UPDATE SET
+            owner_name = EXCLUDED.owner_name,
+            phone = EXCLUDED.phone,
+            emergency_contact_name = EXCLUDED.emergency_contact_name,
+            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
+            medical_notes = EXCLUDED.medical_notes,
+            status = EXCLUDED.status,
+            tag_active = EXCLUDED.tag_active,
+            activated_at = EXCLUDED.activated_at,
+            registered_at = EXCLUDED.registered_at,
+            asset_name = EXCLUDED.asset_name;
+        `;
+      }
+
+      await sql`
+        INSERT INTO qr_tags (qr_id, tag_type, status, pin_hash, pin_salt, owner_name, owner_phone, emergency_name, emergency_phone, vehicle_no, blood_group, medical_notes, activated_at, updated_at)
+        VALUES (${cleanId}, ${tagType}, 'activated', ${hash}, ${salt}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${vehicleVal}, ${bloodVal}, ${payload.medicalNotes?.trim() || null}, ${activatedAt}, ${activatedAt})
+        ON CONFLICT (qr_id) DO UPDATE SET
+          tag_type = EXCLUDED.tag_type,
+          status = EXCLUDED.status,
+          pin_hash = EXCLUDED.pin_hash,
+          pin_salt = EXCLUDED.pin_salt,
+          owner_name = EXCLUDED.owner_name,
+          owner_phone = EXCLUDED.owner_phone,
+          emergency_name = EXCLUDED.emergency_name,
+          emergency_phone = EXCLUDED.emergency_phone,
+          vehicle_no = EXCLUDED.vehicle_no,
+          blood_group = EXCLUDED.blood_group,
+          medical_notes = EXCLUDED.medical_notes,
+          activated_at = EXCLUDED.activated_at,
+          updated_at = EXCLUDED.updated_at;
+      `;
+    }
+  } catch {}
+
+
   return { success: true, activatedAt };
 }
 
@@ -411,7 +570,31 @@ export async function getPublicTagInfo(rawQrId: string): Promise<{
   const cleanId = rawQrId?.trim().toUpperCase();
   const { tableName, extraCol } = getTableNameForTag(cleanId);
 
-  // Try Supabase Model Table First (bikers, kids, travellers, universals)
+  // Try Neon PostgreSQL First
+  try {
+    const neonData = await queryNeonSingle(
+      `SELECT * FROM ${tableName} WHERE tag_id = $1 LIMIT 1`,
+      [cleanId]
+    );
+
+    if (neonData && (neonData.tag_active || neonData.owner_name)) {
+      return {
+        found: true,
+        tag: {
+          qrId: neonData.tag_id,
+          tagType: cleanId.substring(0, 3),
+          status: 'activated',
+          vehicleNo: extraCol ? neonData[extraCol] : undefined,
+          bloodGroup: neonData.blood_group,
+          medicalNotes: neonData.medical_notes,
+        },
+      };
+    }
+  } catch {
+    // Fallback
+  }
+
+  // Try Supabase Model Table Second (bikers, kids, travellers, universals)
   try {
     const supabase = getSupabaseServerClient();
     const { data, error } = await supabase
@@ -488,7 +671,35 @@ export async function getTagByQrIdAsync(rawQrId: string): Promise<QrTagRecord | 
 
   const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
 
-  // 1. Query Supabase model table (bikers, kids, travellers, universals)
+  // 1. Query Neon PostgreSQL model table
+  try {
+    const neonData = await queryNeonSingle(
+      `SELECT * FROM ${tableName} WHERE tag_id = $1 LIMIT 1`,
+      [cleanId]
+    );
+
+    if (neonData && (neonData.tag_active || neonData.owner_name)) {
+      return {
+        id: neonData.id || `uuid-${cleanId.toLowerCase()}`,
+        qrId: neonData.tag_id,
+        tagType: (cleanId.substring(0, 3) as TagType),
+        status: neonData.status || 'activated',
+        ownerName: neonData.owner_name,
+        ownerPhone: neonData[phoneCol],
+        emergencyName: neonData.emergency_contact_name,
+        emergencyPhone: neonData.emergency_contact_phone,
+        vehicleNo: extraCol ? neonData[extraCol] : undefined,
+        bloodGroup: neonData.blood_group,
+        medicalNotes: neonData.medical_notes,
+        activatedAt: neonData.activated_at,
+        createdAt: neonData.created_at,
+      };
+    }
+  } catch {
+    // Fallback
+  }
+
+  // 2. Query Supabase model table (bikers, kids, travellers, universals)
   try {
     const supabase = getSupabaseServerClient();
     const { data, error } = await supabase
