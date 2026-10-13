@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  --surface-dark: #0a0a0a;
+  --surface-card: #121212;
+  --border-subtle: rgba(255, 255, 255, 0.15);
+  --border-active: rgba(255, 255, 255, 0.50);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-heading: var(--font-space-grotesk), var(--font-plus-jakarta), sans-serif;
+  --font-sans: var(--font-inter), sans-serif;
+  --font-display: var(--font-bebas), sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+.font-bebas {
+  font-family: var(--font-bebas), sans-serif;
+}
+
+.font-grotesk {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-jetbrains), monospace;
+}
+
+/* Glassmorphism Black Sticky Header */
+.glass-header-dark {
+  background: rgba(0, 0, 0, 0.90);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Black Hardware Card Primitive */
+.hardware-card {
+  background: radial-gradient(100% 100% at 50% 0%, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%), #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hardware-card:hover {
+  border-color: rgba(255, 255, 255, 0.50);
+  box-shadow: 0 0 30px -5px rgba(255, 255, 255, 0.10);
+}
+
+/* Ambient Soft White Radial Background Lighting Glow */
+.bg-radial-glow {
+  background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+}

@@ -1,0 +1,24 @@
+{
+  "name": "GuardianTag • QR Safety & Emergency Network",
+  "short_name": "GuardianTag",
+  "description": "Physical QR emergency safety tags for motorcycles, helmets, kids, travellers & personal gear.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/gt-shield-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/gt-shield-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
