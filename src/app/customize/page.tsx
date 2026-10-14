@@ -48,7 +48,7 @@ function CustomizerContent() {
           </h1>
 
           <p className="text-neutral-400 text-base sm:text-lg max-w-2xl mx-auto font-normal">
-            Choose your model, custom laser-etched header text, surface finish, and preview your custom hardware plate in real-time.
+            Choose your model, custom printed header text, surface finish, and preview your custom safety tag in real-time.
           </p>
         </div>
       </section>

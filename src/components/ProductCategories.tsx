@@ -24,9 +24,9 @@ export default function ProductCategories() {
       id: 'GTB' as const,
       name: 'GTB Biker',
       subtitle: 'Helmet & Motorcycle Safety',
-      description: 'Ultra-durable polycarbonate tag designed for helmets and motorbikes. Instant accident emergency connection.',
+      description: 'Ultra-durable weatherproof vinyl & PVC tag designed for helmets and motorbikes. Instant accident emergency connection.',
       icon: Bike,
-      badge: 'Crash Tested',
+      badge: 'Available Now — ₹499',
     },
     {
       id: 'GTK' as const,
@@ -34,7 +34,7 @@ export default function ProductCategories() {
       subtitle: 'Complete 10-Piece Child Safety Kit',
       description: 'Includes 4 small stickers, 1 key tag, 1 badge & 4 iron-on clothing stickers for full school & daily protection.',
       icon: Baby,
-      badge: '10-Piece Bundle',
+      badge: 'Coming Soon',
     },
     {
       id: 'GTT' as const,
@@ -42,15 +42,15 @@ export default function ProductCategories() {
       subtitle: 'Luggage & Airport Bag Return',
       description: 'Heavy-duty luggage loop tag with steel wire connector. Enables airport return without exposing home address.',
       icon: Briefcase,
-      badge: 'Travel Essential',
+      badge: 'Coming Soon',
     },
     {
       id: 'GTU' as const,
       name: 'GTU Universal',
       subtitle: 'Vehicle, Keys & Asset Security',
-      description: 'Versatile 3M adhesive decal for cars, two-wheelers, laptops, and keychains with high-vis warning pattern.',
+      description: 'Versatile outdoor adhesive decal for cars, two-wheelers, laptops, and keychains with high-vis warning pattern.',
       icon: Car,
-      badge: 'Multi-Surface',
+      badge: 'Coming Soon',
     },
   ];
 

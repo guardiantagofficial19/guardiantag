@@ -37,18 +37,18 @@ export default function FeatureGrid() {
     },
     {
       icon: Layers,
-      title: '3M Polycarbonate Core',
-      description: 'High-visibility reflective core bonded with 3M heavy-duty waterproof adhesive.',
+      title: 'Weatherproof Vinyl & PVC Core',
+      description: 'High-visibility reflective core bonded with heavy-duty all-weather adhesive.',
     },
     {
       icon: Lock,
       title: 'PBKDF2/SHA-512 PIN Protection',
-      description: 'Owner management portal protected with 10,000-iteration PBKDF2 PIN hashing.',
+      description: 'Owner management portal protected with salted PIN hashing.',
     },
     {
       icon: Zap,
-      title: 'Instant Proxy Call Relay',
-      description: 'Twilio voice proxy bridges caller to owner instantly without exposing either line.',
+      title: 'Masked Call Bridge',
+      description: 'Private voice proxy connects caller to emergency contact without exposing personal phone numbers.',
     },
   ];
 
