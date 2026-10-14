@@ -35,7 +35,7 @@ const PRODUCTS_CATALOG: ProductCatalogItem[] = [
     priceNum: 499,
     category: 'Motorcycle & Helmet Safety',
     material: 'Impact PVC + 3M High-Tack Adhesive',
-    rating: 'IP68 Waterproof & UV Resistant (Up to 120km/h wind force)',
+    rating: '100% Waterproof & UV Weather Resistant',
     isComingSoon: false,
     description:
       'Complete 4-piece motorcycle emergency safety kit engineered specifically for riders. Includes 1 High-Impact PVC Helmet Tag, 1 Emergency Key Chain Tag, Waterproof Small Helmet/Visor Stickers, and All-Weather Large Bike Frame/Windshield Stickers. Enables any bystander or paramedic in an accident to scan the QR code to trigger instant masked emergency call dispatch.',

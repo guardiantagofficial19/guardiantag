@@ -8,10 +8,9 @@ export default function PrivacyDisintegration() {
   const [disintegrated, setDisintegrated] = useState(false);
 
   const privateDataNodes = [
-    { id: 1, label: '+91 98765 43210 (REAL PHONE)', type: 'SENSITIVE' },
-    { id: 2, label: 'FLAT 402, SUNSHINE APTS (HOME ADDR)', type: 'SENSITIVE' },
-    { id: 3, label: 'IP: 192.168.1.45 (LOCATION LAT/LNG)', type: 'SENSITIVE' },
-    { id: 4, label: 'SOCIAL SECURITY / AADHAAR ID', type: 'SENSITIVE' },
+    { id: 1, label: '+91 98765 43210 (YOUR PERSONAL PHONE)', type: 'HIDDEN' },
+    { id: 2, label: 'FLAT 402, RESIDENTIAL ADDRESS', type: 'HIDDEN' },
+    { id: 3, label: 'GOVERNMENT ID / AADHAAR NUMBER', type: 'NEVER STORED' },
   ];
 
   return (
@@ -21,13 +20,13 @@ export default function PrivacyDisintegration() {
         {/* Section Header */}
         <div className="max-w-3xl mx-auto space-y-3">
           <span className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase tracking-wider">
-            PRIVACY DISINTEGRATION VISUALIZATION
+            PRIVACY & DATA PROTECTION
           </span>
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-            Connect when needed. Reveal only what matters.
+            Connect when needed. Keep personal info hidden.
           </h2>
           <p className="text-neutral-400 text-base font-normal">
-            Watch how GuardianTag strips away sensitive personal identity markers before rendering emergency contact options to bystanders.
+            See how GuardianTag ensures your private details stay hidden while giving bystanders an instant way to call your emergency contact.
           </p>
         </div>
 
@@ -38,7 +37,7 @@ export default function PrivacyDisintegration() {
             <div className="flex items-center gap-2">
               <Lock className="w-5 h-5 text-white" />
               <span className="text-xs font-mono font-extrabold text-white">
-                DATA MINIMIZATION ENGINE
+                DATA PRIVACY ENGINE
               </span>
             </div>
 
@@ -47,14 +46,14 @@ export default function PrivacyDisintegration() {
               className="px-5 py-2.5 rounded-xl bg-white text-black font-extrabold text-xs font-mono uppercase tracking-wider shadow-xl hover:bg-neutral-200 transition cursor-pointer flex items-center gap-2"
             >
               {disintegrated ? <Sparkles className="w-4 h-4 text-black" /> : <Trash2 className="w-4 h-4 text-black" />}
-              <span>{disintegrated ? 'Restore Raw Data Stream' : 'Disintegrate Sensitive PII Data'}</span>
+              <span>{disintegrated ? 'Reset Privacy Demo' : 'Hide Sensitive Personal Info'}</span>
             </button>
           </div>
 
           {/* Data Nodes Container */}
           <div className="space-y-3">
             <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
-              RAW SCANNER DATA FEED:
+              SENSITIVE DATA DEMO:
             </span>
 
             <AnimatePresence>
@@ -74,7 +73,7 @@ export default function PrivacyDisintegration() {
                 >
                   <span className="font-bold">{node.label}</span>
                   <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-neutral-300">
-                    {disintegrated ? 'DISINTEGRATED' : node.type}
+                    {disintegrated ? 'PROTECTED' : node.type}
                   </span>
                 </motion.div>
               ))}
@@ -85,17 +84,17 @@ export default function PrivacyDisintegration() {
           <div className="pt-4 border-t border-white/15 space-y-3">
             <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-white" />
-              <span>GUARDIANTAG MASKED EMERGENCY RELAY OUTPUT:</span>
+              <span>GUARDIANTAG SECURE EMERGENCY VIEW:</span>
             </span>
 
             <div className="p-4 rounded-2xl bg-white text-black font-mono text-xs font-bold space-y-2 shadow-xl">
               <div className="flex justify-between">
-                <span>ENCRYPTED MASKED PROXY</span>
-                <span>PROTECTED</span>
+                <span>EMERGENCY CONTACT CALL</span>
+                <span>ENABLED (NUMBER HIDDEN)</span>
               </div>
               <div className="flex justify-between text-neutral-700 font-normal">
-                <span>EMERGENCY HELPLINES (100, 108)</span>
-                <span>AVAILABLE</span>
+                <span>NATIONAL HELPLINES (112, 1033)</span>
+                <span>AVAILABLE DIRECTLY</span>
               </div>
             </div>
           </div>

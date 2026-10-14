@@ -10,31 +10,31 @@ export default function ExplodedView3D() {
   const layers = [
     {
       id: 'L1',
-      title: '01. Optical Polycarbonate Sheen',
-      detail: 'UV-resistant 0.3mm protective top film with hydrophobic water-repellent coating.',
+      title: '01. Protective Overlaminate',
+      detail: 'UV-resistant protective top film that shields against sun exposure, road rain, and scratches.',
       offsetZ: 90,
-      badge: 'UV / IP68 SHEEN',
+      badge: 'WEATHERPROOF SHIELD',
     },
     {
       id: 'L2',
       title: '02. High-Contrast QR Matrix',
-      detail: 'Laser-etched optical QR pattern calibrated for 0.2s smartphone camera detection.',
+      detail: 'Precision-printed high-contrast QR pattern calibrated for fast smartphone camera scanning in all lighting.',
       offsetZ: 30,
-      badge: 'ETCHED QR MATRIX',
+      badge: 'HIGH-CONTRAST QR',
     },
     {
       id: 'L3',
-      title: '03. High-Density Polymer Body',
-      detail: 'Flexible impact-absorbing core designed to conform to helmet curves and gear.',
+      title: '03. Durable Vinyl & PVC Base',
+      detail: 'Flexible, tear-resistant core designed to conform smoothly to helmet curves and motorcycle surfaces.',
       offsetZ: -30,
-      badge: 'POLYMER CORE',
+      badge: 'DURABLE VINYL & PVC',
     },
     {
       id: 'L4',
-      title: '04. Industrial 3M Adhesive Base',
-      detail: 'Heavy-duty all-weather 3M adhesive layer engineered for heat up to 80°C.',
+      title: '04. Heavy-Duty 3M Adhesive',
+      detail: 'All-weather high-tack 3M adhesive backing engineered to bond firmly through Indian weather conditions.',
       offsetZ: -90,
-      badge: '3M HEAVY-DUTY BOND',
+      badge: '3M ALL-WEATHER BOND',
     },
   ];
 
@@ -46,10 +46,10 @@ export default function ExplodedView3D() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/15 pb-6">
           <div className="space-y-2">
             <span className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase tracking-wider">
-              3D ARCHITECTURAL EXPLODED VIEW
+              MULTI-LAYER TAG ARCHITECTURE
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Deconstructed Hardware Anatomy.
+              Multi-Layer Tag Construction.
             </h2>
           </div>
 
@@ -58,7 +58,7 @@ export default function ExplodedView3D() {
             className="px-6 py-3 rounded-2xl bg-white text-black font-extrabold text-xs font-mono uppercase tracking-wider shadow-xl hover:bg-neutral-200 transition cursor-pointer flex items-center gap-2 self-start sm:self-auto"
           >
             <Layers className="w-4 h-4 text-black" />
-            <span>{isExploded ? 'Reassemble Specimen' : 'Explode 3D Layers'}</span>
+            <span>{isExploded ? 'Reassemble Layers' : 'Separate Layers'}</span>
           </button>
         </div>
 
@@ -97,7 +97,7 @@ export default function ExplodedView3D() {
                     </div>
 
                     <div className="text-[9px] font-mono text-neutral-500 text-right">
-                      {isExploded ? `Z: ${layer.offsetZ}px` : 'ASSEMBLED'}
+                      {isExploded ? 'LAYER EXPANDED' : 'ASSEMBLED'}
                     </div>
                   </motion.div>
                 );

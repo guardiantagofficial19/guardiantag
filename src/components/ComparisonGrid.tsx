@@ -37,7 +37,7 @@ export default function ComparisonGrid() {
     },
     {
       feature: 'Weather & Water Durability',
-      guardianTag: 'IP68 Waterproof & Crash Tested',
+      guardianTag: '100% Waterproof & Weather Resistant',
       gpsTracker: 'Sensitive electronic circuit board',
       icon: Check,
     },

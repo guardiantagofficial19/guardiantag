@@ -825,6 +825,7 @@ export function updateOwnerDetails(rawQrId: string, details: Partial<TagOwner>, 
   if (details.vehicleNo !== undefined) tag.vehicleNo = details.vehicleNo;
   if (details.bloodGroup !== undefined) tag.bloodGroup = details.bloodGroup;
   if (details.medicalNotes !== undefined) tag.medicalNotes = details.medicalNotes;
+  if (details.status) tag.status = details.status;
 
   localTagDatabase.set(cleanId, tag);
   return { success: true };

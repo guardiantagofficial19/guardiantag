@@ -99,10 +99,10 @@ export default function PrivacySection() {
         {/* PRIVACY -> SHOWCASE TRANSITION: Edge Light & Slow Camera Rotation */}
         <div className="flex flex-col items-center justify-center pt-8">
           <motion.div style={{ rotateY: tagRotateY, scale: tagScale }}>
-            <PhysicalTag3D size="lg" serial="GTB-SHOWCASE-360" />
+            <PhysicalTag3D size="lg" serial="GTB0001" />
           </motion.div>
           <span className="text-[10px] font-mono font-bold text-neutral-400 tracking-widest pt-4 uppercase">
-            ROTATING ARCHITECTURAL HARDWARE AXIS...
+            360° PHYSICAL HARDWARE PERSPECTIVE
           </span>
         </div>
 

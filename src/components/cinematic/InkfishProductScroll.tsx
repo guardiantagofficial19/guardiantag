@@ -28,8 +28,8 @@ export const PRODUCTS_DATA: ProductItem[] = [
     price: '₹499',
     priceNum: 499,
     category: 'Motorcycle & Helmet Safety',
-    material: 'Impact Polycarbonate + 3M High-Tack Bond',
-    rating: 'IP68 Waterproof & UV Resistant',
+    material: 'Durable Impact PVC & Flexible Vinyl',
+    rating: '100% Waterproof & UV Weather Resistant',
     features: [
       'Curved surface flex design for full-face & modular helmets',
       'Reflective optical QR core visible in night headlights',

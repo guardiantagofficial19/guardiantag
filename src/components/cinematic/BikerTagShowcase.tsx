@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import { 
   Shield, 
   Key, 
@@ -22,6 +23,7 @@ interface BikerTagItem {
   id: string;
   badge: string;
   title: string;
+  shortName: string;
   tagline: string;
   image: string;
   specs: {
@@ -44,29 +46,30 @@ const TAGS_DATA: BikerTagItem[] = [
     id: 'helmet-tag',
     badge: 'FORMAT 01 • HELMET SPECIALIST',
     title: 'High-Impact PVC Helmet Tag',
-    tagline: 'Engineered for extreme endurance & immediate first-responder access right on your helmet.',
+    shortName: 'Helmet Tag',
+    tagline: 'Engineered for durability & immediate first-responder access right on your helmet.',
     image: '/biker-tags/pvc-helmet-tag.png',
     specs: {
       dimensions: '85mm × 54mm (Credit Card Size)',
-      material: 'Flexible High-Density PVC Shield',
-      durability: 'IP68 100% Waterproof & Thermal Proof',
-      mount: '3M Automotive-Grade VHB Adhesive Base'
+      material: 'Flexible High-Density PVC',
+      durability: '100% Waterproof & Weather Resistant',
+      mount: '3M Automotive-Grade Adhesive Base'
     },
     features: [
       {
         icon: Droplets,
-        title: 'IP68 All-Weather Seal',
-        desc: 'Impervious to torrential rain, high-pressure washing, UV rays, and extreme heat.'
+        title: 'Weatherproof Seal',
+        desc: 'Built to withstand torrential rain, high-pressure washing, UV rays, and road grime.'
       },
       {
         icon: Zap,
         title: '3-Step Emergency Guide',
-        desc: 'Printed directly on face: 1. Scan QR, 2. Tap Connect, 3. View Life-Saving Medical Data.'
+        desc: 'Clear guide printed directly on face: 1. Scan QR, 2. Tap Connect, 3. Call Emergency Contact.'
       },
       {
         icon: Sun,
         title: 'High-Visibility Safety Border',
-        desc: 'High-contrast hazard yellow framing ensures instant paramedic visibility in dark crashes.'
+        desc: 'High-contrast hazard yellow framing ensures instant visibility for responders.'
       }
     ],
     accentColor: 'from-amber-400 to-yellow-500',
@@ -76,12 +79,13 @@ const TAGS_DATA: BikerTagItem[] = [
     id: 'keychain-tag',
     badge: 'FORMAT 02 • KEYRING SENTINEL',
     title: 'Emergency Key Chain Tag',
-    tagline: 'High-visibility keyring sentinel providing rapid medical access even if helmet is separated.',
+    shortName: 'Key Chain Tag',
+    tagline: 'High-visibility keyring sentinel providing rapid contact access even if helmet is separated.',
     image: '/biker-tags/keychain-tag.png',
     specs: {
       dimensions: '50mm Diameter Circular Shield',
-      material: 'Polycarbonate Composite + Carbon Weave',
-      durability: 'Scratch-Proof & Impact Reinforced',
+      material: 'Durable Impact PVC + Reinforced Weave',
+      durability: 'Scratch-Proof & Impact Resistant',
       mount: 'Heavy-Duty Stainless Steel Keyring'
     },
     features: [
@@ -93,12 +97,12 @@ const TAGS_DATA: BikerTagItem[] = [
       {
         icon: Shield,
         title: 'Dual-Sided High Contrast QR',
-        desc: 'Precision laser matrix readable from any orientation regardless of key position.'
+        desc: 'Precision matrix readable from either side regardless of key position.'
       },
       {
         icon: Sparkles,
-        title: 'Carbon-Fiber Aesthetic',
-        desc: 'Tactical dark mesh texture designed to match high-end motorcycle hardware.'
+        title: 'Matte Finish Aesthetic',
+        desc: 'Tactical dark texture designed to match high-end motorcycle hardware.'
       }
     ],
     accentColor: 'from-emerald-400 to-green-500',
@@ -108,7 +112,8 @@ const TAGS_DATA: BikerTagItem[] = [
     id: 'small-sticker',
     badge: 'FORMAT 03 • VISOR & COLLAR DECAL',
     title: 'Visor & Compact Helmet Sticker',
-    tagline: 'Ultra-slim 35mm precision decal engineered for visors, suit collars, and subtle placements.',
+    shortName: 'Visor Sticker',
+    tagline: 'Ultra-slim precision decal engineered for visors, suit collars, and subtle placements.',
     image: '/biker-tags/small-sticker.png',
     specs: {
       dimensions: '35mm × 35mm Square (Rounded Edge)',
@@ -129,8 +134,8 @@ const TAGS_DATA: BikerTagItem[] = [
       },
       {
         icon: Zap,
-        title: 'High-Density Optical Matrix',
-        desc: 'Sub-millimeter QR calibration allows instant phone camera reads in under 0.2 seconds.'
+        title: 'High-Contrast Optical Matrix',
+        desc: 'Calibrated QR pattern allows fast, effortless phone camera reads in seconds.'
       }
     ],
     accentColor: 'from-cyan-400 to-blue-500',
@@ -140,23 +145,24 @@ const TAGS_DATA: BikerTagItem[] = [
     id: 'large-sticker',
     badge: 'FORMAT 04 • BODYWORK & LUGGAGE',
     title: 'Bike Frame & Large Decal',
+    shortName: 'Frame Decal',
     tagline: 'Wide-format decal optimized for motorcycle bodywork, fuel tanks, top boxes & side panniers.',
     image: '/biker-tags/large-sticker.png',
     specs: {
       dimensions: '110mm × 70mm Large Card Format',
       material: 'Industrial Heavy-Duty Vinyl Sheet',
-      durability: 'Gasoline & Solvent Resistant Coating',
+      durability: 'Fuel & Weather Resistant Coating',
       mount: 'Permanent All-Weather Bond'
     },
     features: [
       {
         icon: Shield,
         title: 'Wide-Distance Rapid Scan',
-        desc: 'Magnified QR code footprint readable by emergency services from up to 2 meters away.'
+        desc: 'Magnified QR code footprint readable by emergency responders from distance.'
       },
       {
         icon: Droplets,
-        title: 'Chemical & Gasoline Guard',
+        title: 'Chemical & Rain Guard',
         desc: 'Specialized clear coat protects against fuel spills, chain lube, and road debris.'
       },
       {
@@ -192,7 +198,7 @@ export default function BikerTagShowcase() {
   };
 
   return (
-    <section className="relative w-full bg-black text-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section id="products" className="relative w-full bg-black text-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden scroll-mt-24">
       {/* Dynamic Background Ambient Light Mesh */}
       <div 
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none transition-all duration-1000"
@@ -317,7 +323,7 @@ export default function BikerTagShowcase() {
                     <span className={`text-[10px] font-mono font-bold block truncate max-w-[100px] sm:max-w-[120px] ${
                       isSelected ? 'text-yellow-400' : 'text-neutral-400'
                     }`}>
-                      {tag.title.split(' ')[0]} {tag.title.split(' ')[1] || ''}
+                      {tag.shortName}
                     </span>
                   </div>
                 </motion.div>
@@ -403,12 +409,12 @@ export default function BikerTagShowcase() {
 
                 {/* Action CTA & Quick Switch Strip */}
                 <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-                  <a
-                    href="#order"
+                  <Link
+                    href="/products"
                     className="w-full sm:w-auto flex-1 px-6 py-3 rounded-xl bg-yellow-400 text-black font-extrabold text-xs font-mono uppercase tracking-wider shadow-lg shadow-yellow-500/20 hover:bg-yellow-300 transition text-center"
                   >
-                    Select {activeTag.title.split(' ')[0]} Tag Format
-                  </a>
+                    Get 4-Piece Biker Kit — ₹499
+                  </Link>
 
                   {/* Format Selector Dots */}
                   <div className="flex items-center gap-2">

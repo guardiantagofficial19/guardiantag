@@ -39,7 +39,7 @@ export default function Footer() {
 
             <div className="pt-2 flex items-center gap-2 text-xs font-mono text-neutral-400">
               <ShieldCheck className="w-4 h-4 text-white shrink-0" />
-              <span>Made for Indian Safety Standards • Patent Pending</span>
+              <span>Personal Safety Technology • India</span>
             </div>
           </div>
 
@@ -49,22 +49,22 @@ export default function Footer() {
             <ul className="space-y-2 text-neutral-400">
               <li>
                 <Link href="/products#gtb" className="hover:text-white transition">
-                  GTB Biker Tag (Helmet)
+                  GTB Biker Tag (Helmet & Bike)
                 </Link>
               </li>
               <li>
                 <Link href="/products#gtk" className="hover:text-white transition">
-                  GTK Kids Tag (Backpack)
+                  GTK Kids Tag (Coming Soon)
                 </Link>
               </li>
               <li>
                 <Link href="/products#gtt" className="hover:text-white transition">
-                  GTT Traveller Tag (Luggage)
+                  GTT Traveller Tag (Coming Soon)
                 </Link>
               </li>
               <li>
                 <Link href="/products#gtu" className="hover:text-white transition">
-                  GTU Universal Decal (Vehicles)
+                  GTU Universal Decal (Coming Soon)
                 </Link>
               </li>
             </ul>
@@ -81,17 +81,17 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/manage" className="hover:text-white transition">
-                  Login to Dashboard
+                  Manage My Tag
                 </Link>
               </li>
               <li>
                 <Link href="/emergency" className="hover:text-white transition">
-                  Public Emergency Demo
+                  Emergency Scanner
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-white transition font-bold text-white">
-                  Admin Control Panel
+                <Link href="/about" className="hover:text-white transition">
+                  About GuardianTag
                 </Link>
               </li>
             </ul>
@@ -103,48 +103,32 @@ export default function Footer() {
             <ul className="space-y-2 text-neutral-400">
               <li className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-white shrink-0" />
-                <span>support@guardiantag.com</span>
+                <a href="mailto:support@guardiantag.in" className="hover:text-white transition">
+                  support@guardiantag.in
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <PhoneCall className="w-3.5 h-3.5 text-white shrink-0" />
-                <span>+91 1800 200 4892</span>
+                <a href="https://wa.me/918058800880" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
+                  WhatsApp Support (+91 80588 00880)
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-white shrink-0" />
-                <span>Bengaluru, Karnataka, India</span>
+                <span>India</span>
               </li>
             </ul>
           </div>
 
         </div>
 
-        {/* ACCESSIBILITY & CONTRAST CONTROL BAR (UI-UX PRO MAX) */}
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
-          <div className="flex items-center gap-2 text-neutral-300 font-bold">
-            <Eye className="w-4 h-4 text-white" />
-            <span>WCAG AAA ACCESSIBILITY SUITE:</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleContrast}
-              className={`px-3 py-1.5 rounded-lg border font-bold text-[10px] uppercase cursor-pointer transition flex items-center gap-1.5 ${
-                highContrast ? 'bg-white text-black border-white' : 'bg-black text-white border-white/20 hover:border-white/40'
-              }`}
-            >
-              <Type className="w-3.5 h-3.5" />
-              <span>{highContrast ? 'High Contrast Active' : 'Enable High Contrast'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Bottom Copyright Row */}
-        <div className="pt-4 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-400 gap-4">
-          <p>© {new Date().getFullYear()} GuardianTag Technologies India. All rights reserved.</p>
+        {/* Bottom Copyright & Legal Links */}
+        <div className="pt-8 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-400 gap-4">
+          <p>© {new Date().getFullYear()} GuardianTag. All rights reserved.</p>
           <div className="flex space-x-6">
-            <span className="hover:text-white cursor-pointer">Privacy Policy</span>
-            <span className="hover:text-white cursor-pointer font-bold">Terms of Service</span>
-            <span className="hover:text-white cursor-pointer">Security Protocol</span>
+            <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition">Terms of Service</Link>
+            <Link href="/security" className="hover:text-white transition">Security Protocol</Link>
           </div>
         </div>
 

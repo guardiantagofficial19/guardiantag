@@ -14,6 +14,7 @@ export async function POST(request: Request) {
       bloodGroup,
       medicalNotes,
       newPin,
+      status,
     } = body;
 
     const cleanId = qrId?.trim()?.toUpperCase();
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
         vehicleNo: vehicleNo?.trim() || undefined,
         bloodGroup: bloodGroup?.trim() || undefined,
         medicalNotes: medicalNotes?.trim() || undefined,
+        status: status === 'deactivated' || status === 'activated' ? status : undefined,
       },
       newPin
     );
@@ -80,6 +82,7 @@ export async function POST(request: Request) {
         bloodGroup: updatedTag?.bloodGroup,
         medicalNotes: updatedTag?.medicalNotes,
         activatedAt: updatedTag?.activatedAt,
+        status: updatedTag?.status,
       },
     });
   } catch (error) {

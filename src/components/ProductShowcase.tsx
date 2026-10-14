@@ -22,8 +22,8 @@ export default function ProductShowcase() {
   const angles = [
     {
       angle: 'FRONT VIEW',
-      label: 'Reflective QR Core',
-      detail: 'High-contrast optical QR pattern etched into polycarbonate surface.',
+      label: 'Weatherproof QR Surface',
+      detail: 'High-contrast optical QR pattern printed with durable UV-resistant protective laminate.',
       spec: '30mm x 30mm Core Area',
     },
     {
@@ -34,9 +34,9 @@ export default function ProductShowcase() {
     },
     {
       angle: 'REAR ADHESIVE',
-      label: 'Industrial 3M Layer',
-      detail: 'All-weather 3M adhesive backing withstands extreme heat up to 80°C.',
-      spec: '3M Heavy-Duty Bond',
+      label: 'Industrial Adhesive',
+      detail: 'All-weather outdoor adhesive backing engineered for vibration and heat resistance.',
+      spec: 'Heavy-Duty All-Weather Bond',
     },
   ];
 

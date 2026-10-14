@@ -36,8 +36,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: 'GuardianTag | QR Personal Safety Technology',
-  description: 'Physical QR safety tags for motorcycles, helmets, children, travel luggage, and personal gear. Instant app-free emergency connection.',
-  keywords: ['GuardianTag', 'QR Safety Tag', 'Emergency Contact QR', 'Biker Safety India', 'Luggage Tag QR'],
+  description: 'Biker emergency QR safety tags for helmets and motorcycles with ₹499 one-time pricing and no subscriptions. Instant emergency calling with complete phone number privacy. Kids, luggage, and pet tags coming soon.',
+  keywords: ['GuardianTag', 'Biker QR Tag', 'Helmet Emergency QR', 'Biker Safety India', 'Emergency ICE Tag'],
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -50,10 +50,9 @@ export const viewport = {
   themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: 'cover',
 };
+
 
 export default function RootLayout({
   children,

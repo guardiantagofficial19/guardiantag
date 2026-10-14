@@ -58,7 +58,7 @@ export default function TrustSection() {
 
         {/* Central Receding Hardware Anchor */}
         <motion.div style={{ scale: tagScale, opacity: tagOpacity }} className="flex justify-center mb-8">
-          <PhysicalTag3D size="sm" serial="GTB-TRUST-CENTER" interactive={false} />
+          <PhysicalTag3D size="sm" serial="GTB0001" interactive={false} />
         </motion.div>
 
         {/* 4 Clean Pillars Orbiting Around Product */}

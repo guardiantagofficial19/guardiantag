@@ -66,20 +66,20 @@ export default function Hero() {
             opacity: tagOpacity,
             z: tagZ,
           }}
-          className="pt-4 pb-6 flex justify-center items-center"
+          className="pt-4 pb-4 flex justify-center items-center"
         >
-          <PhysicalTag3D serial="GTB-4892-IND" tagType="GTB" size="lg" />
+          <PhysicalTag3D serial="GTB0001" tagType="GTB" size="lg" />
         </motion.div>
 
         {/* Centered Pill Action Buttons */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a
-            href="#products"
+          <Link
+            href="/products"
             className="px-10 py-4.5 rounded-full bg-white hover:bg-neutral-200 text-black font-extrabold text-sm sm:text-base shadow-2xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
-            <span>Explore Tags</span>
+            <span>Buy Biker Tag — ₹499</span>
             <ArrowRight className="w-5 h-5 text-black" />
-          </a>
+          </Link>
 
           <Link
             href="/register"
@@ -90,19 +90,24 @@ export default function Hero() {
           </Link>
         </div>
 
+        {/* Value Micro-Copy */}
+        <p className="text-xs font-mono text-neutral-400 font-medium tracking-wider uppercase">
+          Zero Yearly Subscription • 3-5 Days Delivery Across India • 7-Day Replacement
+        </p>
+
         {/* Feature Highlights Row */}
-        <div className="pt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto border-t border-white/15 text-neutral-400 text-xs font-mono font-bold uppercase">
+        <div className="pt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto border-t border-white/15 text-neutral-400 text-xs font-mono font-bold uppercase">
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2">
             <Radio className="w-4 h-4 text-white" />
-            <span>Instant App-Free Connection</span>
+            <span>Instant Emergency Connection</span>
           </div>
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4 text-white" />
-            <span>Reflective Polycarbonate Core</span>
+            <span>Weatherproof Vinyl & PVC</span>
           </div>
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2">
             <Shield className="w-4 h-4 text-white" />
-            <span>100% Privacy Number Masking</span>
+            <span>Your Number Stays Hidden</span>
           </div>
         </div>
 

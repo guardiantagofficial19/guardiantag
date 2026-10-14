@@ -6,7 +6,7 @@ import { soundEngine } from '@/lib/soundEngine';
 
 export default function WhatsAppWidget() {
   const phoneNumber = '918058800880';
-  const message = encodeURIComponent('Hello GuardianTag, I have an inquiry regarding the Biker Tag.');
+  const message = encodeURIComponent('Hello GuardianTag, I have an inquiry regarding GuardianTag safety products.');
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 
   return (

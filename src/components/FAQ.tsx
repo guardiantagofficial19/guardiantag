@@ -9,24 +9,32 @@ export default function FAQ() {
 
   const faqs = [
     {
-      question: 'How does GuardianTag work if I am in an accident?',
-      answer: 'When a bystander or first responder scans the physical QR tag on your helmet, bag, or vehicle using their smartphone camera, they are taken to a web page with single-tap emergency contact buttons. Your designated emergency contacts receive immediate alerts without revealing your real phone number on the web.',
+      question: 'How does GuardianTag work in an emergency?',
+      answer: 'When a bystander or paramedic scans your physical GuardianTag QR on your helmet, keychain, or motorcycle, it opens a fast mobile emergency page. With a single tap, they can call your primary emergency contact directly or connect to national emergency services (112 & 1033). No app download or sign-up is required.',
     },
     {
-      question: 'Does GuardianTag require a monthly subscription fee?',
-      answer: 'No! GuardianTag operates as a physical hardware purchase with lifetime emergency web scanning included. Zero monthly subscriptions.',
+      question: 'Is there any yearly or monthly subscription fee?',
+      answer: 'No. GuardianTag is a one-time purchase of ₹499 for the complete 4-piece Biker Safety Kit. There are zero monthly or yearly subscription fees. Lifetime emergency page hosting and QR connectivity are included.',
     },
     {
-      question: 'Do bystanders need to download an app to scan my tag?',
-      answer: 'No app download is required. Standard iOS and Android camera apps automatically scan the optical QR pattern and open the mobile web emergency interface instantly.',
+      question: 'Is my private phone number or personal identity exposed to anyone who scans?',
+      answer: 'Never. We do not display your private phone number or home address publicly on the emergency page. Bystanders reach your designated emergency contact without seeing your personal contact number.',
     },
     {
-      question: 'Is my personal phone number visible to anyone who scans?',
-      answer: 'No. GuardianTag uses server-side masked proxy call relays. Bystanders can call your emergency contact via the proxy line without seeing your private 10-digit number.',
+      question: 'What are the delivery charges and shipping times across India?',
+      answer: 'We provide free shipping across all serviceable pin codes in India. Orders are processed within 24-48 hours and delivered via tracked express couriers within 3 to 5 business days.',
     },
     {
-      question: 'How durable is the GuardianTag hardware sticker/tag?',
-      answer: 'GuardianTag hardware is crafted from high-impact polycarbonate with high-visibility reflective cores and industrial 3M heavy-duty waterproof adhesive. Designed to withstand rain, UV exposure, and speeds up to 150 km/h on motorcycles.',
+      question: 'What is your replacement policy?',
+      answer: 'We offer a 7-day replacement guarantee. If your tag arrives damaged, has a print defect, or fails to scan, reach out to support@guardiantag.in or WhatsApp support at +91 80588 00880 for a quick, no-hassle replacement.',
+    },
+    {
+      question: 'What happens if I lose my tag or sell my bike? Can I deactivate it?',
+      answer: 'Yes! You have full owner control. Simply log into your GuardianTag Dashboard at /manage using your registered phone number to deactivate your tag instantly or update your emergency contact info anytime.',
+    },
+    {
+      question: 'How durable are the tags in Indian weather and high-speed riding?',
+      answer: 'Tags are crafted from heavy-duty impact PVC and laminated vinyl with UV protection and all-weather 3M adhesive. They are 100% waterproof, mud-resistant, and tested against highway wind and frequent washing.',
     },
   ];
 

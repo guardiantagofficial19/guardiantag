@@ -48,18 +48,18 @@ export default function FinalCTA() {
           style={{ scale: tagScale, z: tagZ }}
           className="py-4 flex justify-center items-center"
         >
-          <PhysicalTag3D size="xl" serial="GTB-FULL-CIRCLE-01" tagType="GTB" />
+          <PhysicalTag3D size="xl" serial="GTB0001" tagType="GTB" />
         </motion.div>
 
         {/* Buttons */}
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a
-            href="#products"
+          <Link
+            href="/products"
             className="w-full sm:w-auto px-10 py-4.5 rounded-full bg-white hover:bg-neutral-200 text-black font-extrabold text-base shadow-2xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
-            <span>Shop GuardianTag</span>
+            <span>Order Biker Kit — ₹499</span>
             <ArrowRight className="w-5 h-5 text-black" />
-          </a>
+          </Link>
 
           <Link
             href="/register"

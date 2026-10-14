@@ -32,13 +32,13 @@ export default function EmergencyDemo() {
         {/* MAJOR CINEMATIC TRANSITION HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <span className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase tracking-wider">
-            CINEMATIC PROTOCOL: SCAN TO EMERGENCY CONNECTION
+            EMERGENCY CONTACT PROTOCOL
           </span>
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
             When seconds matter, make contact instant.
           </h2>
           <p className="text-neutral-400 text-base sm:text-lg font-normal">
-            Bystander scans physical tag → Optical QR verifies → Masked emergency mobile interface renders instantly.
+            Bystander scans tag QR → Emergency page loads instantly → Calls your emergency contact directly.
           </p>
         </div>
 
@@ -54,7 +54,7 @@ export default function EmergencyDemo() {
               </span>
               
               <div className="flex justify-center relative my-2">
-                <PhysicalTag3D size="md" serial="GTB-EMERGENCY-01" />
+                <PhysicalTag3D size="md" serial="GTB0001" />
                 {isScanning && <ScanningBeam className="absolute inset-0 rounded-3xl" />}
               </div>
 
@@ -63,7 +63,7 @@ export default function EmergencyDemo() {
                 className="w-full py-3.5 rounded-xl bg-white text-black font-extrabold text-xs uppercase tracking-wider shadow-xl hover:bg-neutral-200 transition cursor-pointer flex items-center justify-center gap-2"
               >
                 <QrCode className="w-4 h-4 text-black" />
-                <span>{isScanning ? 'Reset QR Scan Trigger' : 'Simulate Optical QR Scan'}</span>
+                <span>{isScanning ? 'Reset QR Scan Trigger' : 'Simulate Tag Scan'}</span>
               </button>
             </div>
 
@@ -76,12 +76,12 @@ export default function EmergencyDemo() {
               
               <div className="flex items-center gap-3 bg-white/5 p-3.5 rounded-xl border border-white/15 text-white">
                 <span className="w-6 h-6 rounded-lg bg-white text-black flex items-center justify-center text-xs font-black">2</span>
-                <span>TWILIO VOICE MASKED PROXY CREATED</span>
+                <span>PRIVACY-PROTECTED EMERGENCY PAGE OPENS</span>
               </div>
 
               <div className="flex items-center gap-3 bg-white/5 p-3.5 rounded-xl border border-white/15 text-white">
                 <span className="w-6 h-6 rounded-lg bg-white text-black flex items-center justify-center text-xs font-black">3</span>
-                <span>DIRECT EMERGENCY CONTACT DISPATCHED</span>
+                <span>CALL EMERGENCY CONTACT OR NATIONAL 112 / 1033</span>
               </div>
             </div>
 
@@ -95,10 +95,10 @@ export default function EmergencyDemo() {
                 {/* Phone Notch / Status Header */}
                 <div className="flex justify-between items-center text-[10px] font-mono text-neutral-400 border-b border-white/15 pb-4">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    <span className="text-white font-extrabold">GT-EMERGENCY VERIFIED</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-white font-extrabold">EMERGENCY PROTOCOL ACTIVE</span>
                   </div>
-                  <span>100% PRIVATE</span>
+                  <span>NUMBER HIDDEN</span>
                 </div>
 
                 {/* Mobile UI Screen Header */}
@@ -107,10 +107,10 @@ export default function EmergencyDemo() {
                     EMERGENCY CONTACT PORTAL
                   </span>
                   <h4 className="text-2xl font-extrabold text-white tracking-tight pt-2">
-                    GuardianTag #GTB0002
+                    GuardianTag #GTB0001
                   </h4>
                   <p className="text-xs text-neutral-400 font-mono">
-                    Yamaha R15 • Blood Group: O+ Positive
+                    Motorcycle Safety Tag • Active Protection
                   </p>
                 </div>
 
@@ -118,28 +118,36 @@ export default function EmergencyDemo() {
                 <div className="space-y-3">
                   <button className="w-full py-4 rounded-2xl bg-white text-black font-extrabold text-sm shadow-xl flex items-center justify-center gap-3 cursor-pointer hover:bg-neutral-200 transition">
                     <PhoneCall className="w-5 h-5 text-black" />
-                    <span>Call Owner (Masked Proxy)</span>
+                    <span>Call Emergency Contact</span>
                   </button>
 
                   <button className="w-full py-3.5 rounded-2xl bg-white/10 text-white border border-white/20 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer hover:bg-white/15 transition">
                     <MessageSquare className="w-4 h-4 text-white" />
-                    <span>Send Emergency Location SMS</span>
+                    <span>Share Location with Family</span>
                   </button>
                 </div>
 
                 {/* Verified Helpline Quick Grid */}
                 <div className="pt-2 border-t border-white/15 text-left space-y-2">
                   <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">
-                    Verified Helplines (India)
+                    National Emergency Helplines (India)
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-white flex justify-between">
-                      <span>POLICE</span>
-                      <span className="font-bold text-white">100</span>
+                      <span>NATIONAL</span>
+                      <span className="font-bold text-yellow-400">112</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-white flex justify-between">
+                      <span>HIGHWAY</span>
+                      <span className="font-bold text-yellow-400">1033</span>
                     </div>
                     <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-white flex justify-between">
                       <span>AMBULANCE</span>
                       <span className="font-bold text-white">108</span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-white flex justify-between">
+                      <span>POLICE</span>
+                      <span className="font-bold text-white">100</span>
                     </div>
                   </div>
                 </div>

@@ -85,16 +85,16 @@ export const PRODUCTS: Product[] = [
     tagType: 'GTB',
     subtitle: 'Helmet & Motorcycle Accident Emergency Tag',
     description: 'Ultra-durable, weather-resistant 3M adhesive tag designed for motorcycle helmets, tanks, and riding gear. Enables instant accident call masking and family alert.',
-    price: 399,
+    price: 499,
     originalPrice: 699,
     rating: 4.9,
     reviewsCount: 1240,
     badge: 'BESTSELLER',
     features: [
-      'Heavy-Duty Polycarbonate Surface',
-      'Crash-Tested & Waterproof (IP68)',
-      'Twilio Encrypted Proxy Call Relay',
-      'Instant SMS Alert with GPS Link',
+      'Heavy-Duty Impact PVC & Flexible Vinyl',
+      '100% Waterproof & All-Weather Resistant',
+      'Privacy-Protected Emergency Call Relay',
+      'Instant Emergency Call & Helplines',
     ],
     image: '/images/products/gtb-biker.svg',
   },
@@ -177,9 +177,10 @@ export const PRODUCTS: Product[] = [
 ];
 
 export const INDIA_HELPLINES = [
+  { name: 'National Emergency', number: '112', icon: 'Shield', description: 'Single National Emergency Helpline' },
+  { name: 'Highway Emergency', number: '1033', icon: 'AlertTriangle', description: 'NHAI National Highway Emergency' },
   { name: 'Police', number: '100', icon: 'Shield', description: 'National Police Emergency' },
   { name: 'Ambulance', number: '108 / 102', icon: 'Ambulance', description: 'Medical & Disaster Response' },
   { name: 'Women Helpline', number: '1091', icon: 'HeartHandshake', description: 'Women in Distress Hotline' },
   { name: 'Childline', number: '1098', icon: 'Smile', description: 'Child Protection & Assistance' },
-  { name: 'Road Accident', number: '1033', icon: 'AlertTriangle', description: 'National Highway Emergency' },
 ];

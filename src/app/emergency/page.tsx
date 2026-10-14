@@ -51,10 +51,61 @@ const HELPLINES: Record<number, string> = {
 };
 
 const LINE_ORDER: Record<string, number[]> = {
-  GTB: [108, 100, 1033, 101, 1091, 1098],
-  GTK: [1098, 108, 100, 1091, 101, 1033],
-  GTT: [108, 100, 1033, 1091, 101, 1098],
-  GTU: [108, 100, 101, 1033, 1091, 1098]
+  GTB: [112, 108, 1033, 100, 101, 1091, 1098],
+  GTK: [112, 1098, 108, 100, 1091, 101, 1033],
+  GTT: [112, 108, 100, 1033, 1091, 101, 1098],
+  GTU: [112, 108, 100, 101, 1033, 1091, 1098]
+};
+
+const I18N = {
+  en: {
+    tagId: 'Tag ID',
+    checking: 'Checking…',
+    someoneNeedsHelp: 'Someone may need help',
+    chooseOption: "Choose an option below. We connect you to the owner's side.",
+    callOwner: 'Call owner',
+    callOwnerSub: 'About this item',
+    callContact: 'Call emergency contact',
+    callContactSub: "Owner's family or friend",
+    sendLoc: 'Send location',
+    sendLocSub: 'Message with your location',
+    privacyNote: 'Your number stays private. So does theirs.',
+    helplines: 'Emergency helplines',
+    allEmergencies: 'All emergencies · police, fire, ambulance',
+    firstAidTitle: 'Crash Site First Aid Guidance',
+    doNotRemoveHelmet: 'Do NOT remove rider’s helmet',
+    doNotRemoveHelmetDesc: 'to prevent spinal injury unless breathing is obstructed.',
+    callImmediately: 'Dial 112 / 108 immediately',
+    callImmediatelyDesc: 'to dispatch professional medical responders.',
+    doNotMoveRider: 'Do not move injured person',
+    doNotMoveRiderDesc: 'unless there is an immediate fire or traffic hazard.',
+    isYourTag: 'Is this your tag?',
+    loginManage: 'Log in to manage it',
+  },
+  hi: {
+    tagId: 'टैग आईडी',
+    checking: 'जाँच हो रही है…',
+    someoneNeedsHelp: 'सहायता की आवश्यकता हो सकती है',
+    chooseOption: 'नीचे दिए गए विकल्प चुनें। हम आपको सीधे आपातकालीन संपर्क से जोड़ेंगे।',
+    callOwner: 'मालिक को कॉल करें',
+    callOwnerSub: 'इस वस्तु या वाहन के बारे में',
+    callContact: 'आपातकालीन संपर्क को कॉल करें',
+    callContactSub: 'परिवार या नज़दीकी संपर्क',
+    sendLoc: 'स्थान साझा करें',
+    sendLocSub: 'अपने वर्तमान स्थान का संदेश भेजें',
+    privacyNote: 'आपका नंबर पूरी तरह सुरक्षित और गुप्त रहेगा।',
+    helplines: 'आपातकालीन हेल्पलाइन',
+    allEmergencies: 'सभी आपात स्थिति · पुलिस, एम्बुलेंस, फायर',
+    firstAidTitle: 'दुर्घटना स्थल प्राथमिक सहायता नियम',
+    doNotRemoveHelmet: 'सवार का हेलमेट न उतारें',
+    doNotRemoveHelmetDesc: 'रीढ़ या गर्दन की गंभीर चोट से बचाने के लिए।',
+    callImmediately: 'तुरंत 112 या 108 डायल करें',
+    callImmediatelyDesc: 'सरकारी आपातकालीन व एम्बुलेंस सहायता के लिए।',
+    doNotMoveRider: 'घायल व्यक्ति को बेवजह न हिलाएं',
+    doNotMoveRiderDesc: 'जब तक कि आग या तेज ट्रैफिक का खतरा न हो।',
+    isYourTag: 'क्या यह आपका टैग है?',
+    loginManage: 'मैनेज करने के लिए लॉगिन करें',
+  }
 };
 
 const ERRORS: Record<string, string> = {
@@ -90,6 +141,7 @@ function EmergencyContent() {
   const [errorNotice, setErrorNotice] = useState<{ title: string; text: string; link?: { href: string; text: string } } | null>(null);
   const [stateDot, setStateDot] = useState<'dot' | 'dot ok' | 'dot warn' | 'dot bad'>('dot');
   const [stateText, setStateText] = useState('Checking…');
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
 
   // Sheet States
   const [activeSheet, setActiveSheet] = useState<'call_owner' | 'call_contact' | 'alert' | null>(null);
@@ -314,6 +366,7 @@ function EmergencyContent() {
 
   const currentType = tag ? (TYPES[tag.type] || TYPES.GTU) : TYPES.GTU;
   const currentHelplineOrder = tag ? (LINE_ORDER[tag.type] || LINE_ORDER.GTU) : LINE_ORDER.GTU;
+  const t = I18N[lang];
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
@@ -692,8 +745,8 @@ function EmergencyContent() {
       `}</style>
 
       <div className="wrap">
-        {/* Top Header */}
-        <header className="top">
+        {/* Top Header with Language Toggle */}
+        <header className="top flex items-center justify-between">
           <a className="brand" href="/" aria-label="GuardianTag home">
             <svg viewBox="0 0 34 38" aria-hidden="true">
               <path d="M17 1 32 7v11c0 9.5-6.4 16.4-15 19C8.4 34.4 2 27.5 2 18V7z" fill="#fff"/>
@@ -701,6 +754,28 @@ function EmergencyContent() {
             </svg>
             <span><b>GuardianTag</b><small>Scan. Connect. Return.</small></span>
           </a>
+
+          {/* Hindi / English Language Toggle */}
+          <div className="flex items-center gap-1 bg-[#1a1a1a] border border-[#2e2e2e] p-1 rounded-full text-xs font-mono font-bold">
+            <button
+              type="button"
+              onClick={() => setLang('en')}
+              className={`px-2.5 py-1 rounded-full transition cursor-pointer ${
+                lang === 'en' ? 'bg-white text-black' : 'text-[#a3a3a3] hover:text-white'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang('hi')}
+              className={`px-2.5 py-1 rounded-full transition cursor-pointer ${
+                lang === 'hi' ? 'bg-white text-black' : 'text-[#a3a3a3] hover:text-white'
+              }`}
+            >
+              हिन्दी
+            </button>
+          </div>
         </header>
 
         {/* Tag Status Box */}
@@ -786,11 +861,30 @@ function EmergencyContent() {
           </div>
         )}
 
+        {/* Bystander Crash Site First Aid Guidance Box */}
+        <div className="bg-[#181412] border border-amber-500/35 rounded-[14px] p-3.5 space-y-2 text-xs text-amber-200">
+          <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-amber-400">
+            <span>⚠️</span>
+            <span>{t.firstAidTitle}</span>
+          </div>
+          <ul className="space-y-1 list-disc pl-4 text-neutral-300">
+            <li>
+              <strong className="text-white">{t.doNotRemoveHelmet}:</strong> {t.doNotRemoveHelmetDesc}
+            </li>
+            <li>
+              <strong className="text-white">{t.callImmediately}:</strong> {t.callImmediatelyDesc}
+            </li>
+            <li>
+              <strong className="text-white">{t.doNotMoveRider}:</strong> {t.doNotMoveRiderDesc}
+            </li>
+          </ul>
+        </div>
+
         {!errorNotice && (
           <>
             <h1 className="lead">
-              Someone may need help
-              <span>Choose an option below. We connect you to the owner's side.</span>
+              {t.someoneNeedsHelp}
+              <span>{t.chooseOption}</span>
             </h1>
 
             {/* Action Buttons */}
@@ -809,7 +903,7 @@ function EmergencyContent() {
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/>
                   </svg>
-                  <div><b>Call owner</b><span>About this item</span></div>
+                  <div><b>{t.callOwner}</b><span>{t.callOwnerSub}</span></div>
                 </button>
 
                 {/* Call Emergency Contact Button */}
@@ -825,7 +919,7 @@ function EmergencyContent() {
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="currentColor" d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13zm8 0c-.3 0-.6 0-1 .05A4.2 4.2 0 0 1 17 16.5V19h6v-2.5c0-2.3-4.7-3.5-7-3.5z"/>
                   </svg>
-                  <div><b>Call emergency contact</b><span>Owner's family or friend</span></div>
+                  <div><b>{t.callContact}</b><span>{t.callContactSub}</span></div>
                 </button>
 
                 {/* Send Location Alert Button */}
@@ -841,7 +935,7 @@ function EmergencyContent() {
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 14.5 9 2.5 2.5 0 0 1 12 11.5z"/>
                   </svg>
-                  <div><b>Send location</b><span>Message with your location</span></div>
+                  <div><b>{t.sendLoc}</b><span>{t.sendLocSub}</span></div>
                 </button>
               </div>
 
@@ -850,26 +944,26 @@ function EmergencyContent() {
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="#a3a3a3" d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5zm0 10.9h7c-.5 4.1-3.3 7.8-7 8.9V12H5V6.3l7-3.1z"/>
                 </svg>
-                <span>Your number stays private. So does theirs.</span>
+                <span>{t.privacyNote}</span>
               </p>
             </section>
           </>
         )}
 
         {/* Emergency Helplines Section */}
-        <h2 className="sec-h">Emergency helplines</h2>
+        <h2 className="sec-h">{t.helplines}</h2>
         <section className="lines">
           {/* Wide 112 Main Helpline */}
           <a className="line wide" href="tel:112">
             <i className="emo" aria-hidden="true">{EMOJI[112]}</i>
             <span className="txt">
               <b>112</b>
-              <span>{HELPLINES[112]} · police, fire, ambulance</span>
+              <span>{t.allEmergencies}</span>
             </span>
           </a>
 
           {/* Dynamic Helper Lines */}
-          {currentHelplineOrder.map((num) => (
+          {currentHelplineOrder.filter(n => n !== 112).map((num) => (
             <a key={num} className="line" href={`tel:${num}`}>
               <i className="emo" aria-hidden="true">{EMOJI[num]}</i>
               <span className="txt">
@@ -882,7 +976,7 @@ function EmergencyContent() {
 
         {/* Footer */}
         <footer>
-          <span>Is this your tag? <a href="/admin">Log in to manage it</a></span>
+          <span>{t.isYourTag} <a href="/manage">{t.loginManage}</a></span>
           <span>Get your own safety tag at <a href="/">guardiantag.in</a></span>
         </footer>
       </div>

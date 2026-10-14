@@ -33,52 +33,52 @@ const SAFETY_FEATURES: SafetyFeature[] = [
     title: 'Bystander Emergency Protocol',
     badge: 'CRASH-SITE GUIDANCE',
     subtitle: 'Step-by-Step First Aid Protocol',
-    description: 'Guides non-medical bystanders with critical instructions: keep helmet secured to prevent spinal injury, notify emergency services, and initiate ICE call.',
+    description: 'Guides non-medical bystanders with critical instructions: keep helmet secured to prevent spinal injury, notify emergency services (112 / 1033), and initiate ICE call.',
     accent: 'from-amber-400 to-yellow-500',
     glow: 'rgba(250, 204, 21, 0.15)'
   },
   {
     icon: PhoneCall,
-    title: 'Automated ICE Dispatch',
-    badge: 'FAMILY ALERT SYSTEM',
-    subtitle: 'One-Tap Emergency Calling',
-    description: 'Instantly alerts your emergency contacts (Next of Kin, ICE contacts) with immediate phone dispatch & automated SMS alerts upon scan.',
+    title: 'One-Tap Emergency Calling',
+    badge: 'DIRECT ICE CONNECT',
+    subtitle: 'Instant Bystander Reach',
+    description: 'Any bystander can tap a single button on their smartphone to call your primary emergency contact immediately, with no app download required.',
     accent: 'from-emerald-400 to-green-500',
     glow: 'rgba(52, 211, 153, 0.15)'
   },
   {
-    icon: HeartPulse,
-    title: 'Vital Medical Profile',
-    badge: 'FIRST-RESPONDER SPECS',
-    subtitle: 'Blood Type, Allergies & Donor Status',
-    description: 'Displays life-saving emergency medical data including blood group, severe allergies, pre-existing conditions, and insurance policies.',
-    accent: 'from-red-400 to-rose-500',
-    glow: 'rgba(244, 63, 94, 0.15)'
-  },
-  {
     icon: ShieldCheck,
-    title: 'Zero PII Data Shield',
+    title: 'Zero PII Exposure',
     badge: 'PRIVACY FIRST',
-    subtitle: 'No Exposed Personal Info',
-    description: 'Your raw phone number and home address remain 100% encrypted. Data is routed through secure proxy relay channels to prevent stalking.',
+    subtitle: 'Your Number Stays Hidden',
+    description: 'Your real phone number and personal identity remain private. Calls and connections are routed so your number is never publicly shown on the tag.',
     accent: 'from-cyan-400 to-blue-500',
     glow: 'rgba(56, 189, 248, 0.15)'
   },
   {
     icon: ZapOff,
-    title: '100% Battery-Free & IP68',
+    title: '100% Battery-Free & Waterproof',
     badge: 'ZERO MAINTENANCE',
-    subtitle: 'Impervious to Extreme Crash Impact',
-    description: 'No charging cables, bluetooth pairing, or batteries. Waterproof, heat-resistant polymer shield functions even after severe crash impact.',
+    subtitle: 'Zero Charging, All-Weather Build',
+    description: 'No charging cables, bluetooth pairing, or batteries. Weatherproof vinyl & PVC construction built to withstand Indian rains, dirt, and daily riding.',
     accent: 'from-orange-400 to-amber-500',
     glow: 'rgba(251, 146, 60, 0.15)'
   },
   {
+    icon: HeartPulse,
+    title: 'Emergency Medical Notes',
+    badge: 'COMING SOON',
+    subtitle: 'Blood Group & Critical Notes',
+    description: 'Under active development: optional medical notes and blood group information displayable securely during an accident for first responders.',
+    accent: 'from-red-400 to-rose-500',
+    glow: 'rgba(244, 63, 94, 0.15)'
+  },
+  {
     icon: MapPin,
-    title: 'Live GPS Pin Broadcast',
-    badge: 'LOCATION RELAY',
-    subtitle: 'Instant Accident Coordinates',
-    description: 'When scanned by a paramedic or bystander, GuardianTag optionally transmits precise GPS accident coordinates straight to your emergency network.',
+    title: 'Crash Location Sharing',
+    badge: 'COMING SOON',
+    subtitle: 'GPS Location Sharing',
+    description: 'In testing: one-tap feature allowing the scanning bystander to send their current GPS coordinates directly to your emergency contact.',
     accent: 'from-purple-400 to-indigo-500',
     glow: 'rgba(192, 132, 252, 0.15)'
   }
@@ -157,9 +157,9 @@ export default function GuardianSafetyFeatures() {
                 <div className="pt-6 mt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-neutral-400">
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                    ACTIVE SAFETY SHIELD
+                    GUARDIANTAG SAFETY SYSTEM
                   </span>
-                  <span className="text-neutral-500">SPEC-0{idx + 1}</span>
+                  <span className="text-neutral-500">FEATURE 0{idx + 1}</span>
                 </div>
               </motion.div>
             );

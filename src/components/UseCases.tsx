@@ -28,7 +28,7 @@ export default function UseCases() {
       environment: 'Helmet & Open Highway Biker Environment',
       description: 'Accidents happen on the open road in milliseconds. Mounting GTB on full-face helmets or riding jackets ensures bystanders can alert your family immediately without fumbling through your phone.',
       icon: Bike,
-      specs: ['Impact-Resistant Polycarbonate', 'Reflective Night Vision Core', 'Curved Helmet Surface Bond'],
+      specs: ['Impact-Resistant PVC & Vinyl', 'High-Visibility Safety Frame', 'Curved Helmet Surface Bond'],
     },
     {
       id: 'GTK' as const,
@@ -37,7 +37,7 @@ export default function UseCases() {
       environment: 'School & Family Daily Environment',
       description: 'School backpacks, water bottles, and jackets can get misplaced or lost in crowded places. GTK provides a soft, non-toxic silicone tag so anyone who finds your child can reach you instantly.',
       icon: Baby,
-      specs: ['Food-Grade Non-Toxic Silicone', 'Waterproof IP68 Seal', 'Direct Parent Call Relay'],
+      specs: ['Food-Grade Non-Toxic Silicone', '100% Waterproof Seal', 'Direct Parent Call Relay'],
     },
     {
       id: 'GTT' as const,
@@ -55,7 +55,7 @@ export default function UseCases() {
       environment: 'Everyday Vehicle & Gear Environment',
       description: 'Car windshields, laptop sleeves, pet collars, and keychains. GTU’s reflective 3M adhesive decal brings instant emergency contact capability to any personal item you value.',
       icon: Car,
-      specs: ['Heavy-Duty 3M Adhesive', 'Heat Tested up to 80°C', 'Multi-Surface Decal'],
+      specs: ['Heavy-Duty 3M Adhesive', 'All-Weather Tested', 'Multi-Surface Decal'],
     },
   ];
 

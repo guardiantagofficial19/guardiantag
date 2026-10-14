@@ -42,6 +42,7 @@ function ManageFlow() {
   const [bloodGroup, setBloodGroup] = useState('');
   const [medicalNotes, setMedicalNotes] = useState('');
   const [activatedAt, setActivatedAt] = useState('');
+  const [tagStatus, setTagStatus] = useState<'activated' | 'deactivated'>('activated');
 
   // Optional PIN Change State
   const [showPinChange, setShowPinChange] = useState(false);
@@ -158,6 +159,7 @@ function ManageFlow() {
       setBloodGroup(data.owner.bloodGroup || '');
       setMedicalNotes(data.owner.medicalNotes || '');
       setActivatedAt(data.owner.activatedAt || '');
+      setTagStatus(data.owner.status === 'deactivated' ? 'deactivated' : 'activated');
     } catch {
       setIsLoading(false);
       setError('Authentication request failed. Please check your network connection.');
@@ -208,6 +210,7 @@ function ManageFlow() {
           bloodGroup,
           medicalNotes,
           newPin: showPinChange ? newPin : undefined,
+          status: tagStatus,
         }),
       });
 
@@ -228,6 +231,45 @@ function ManageFlow() {
     } catch {
       setIsLoading(false);
       setError('Network error saving updates.');
+    }
+  };
+
+  // Toggle Tag Active / Deactivated (Lost) Status
+  const handleToggleTagStatus = async () => {
+    const nextStatus = tagStatus === 'activated' ? 'deactivated' : 'activated';
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/owner/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          qrId: qrId.trim().toUpperCase(),
+          ownerName,
+          ownerPhone,
+          emergencyName,
+          emergencyPhone,
+          vehicleNo,
+          bloodGroup,
+          medicalNotes,
+          status: nextStatus,
+        }),
+      });
+
+      const data = await res.json();
+      setIsLoading(false);
+
+      if (res.ok && data.success) {
+        setTagStatus(nextStatus);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 4000);
+      } else {
+        setError(data.error || 'Failed to update tag status.');
+      }
+    } catch {
+      setIsLoading(false);
+      setError('Network error updating tag status.');
     }
   };
 
@@ -455,14 +497,21 @@ function ManageFlow() {
               {/* Profile Header Bar */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/15 pb-4 gap-3">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-mono font-extrabold text-white uppercase tracking-wider block">
                       AUTHENTICATED TAG: {qrId}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-emerald-400" />
-                      Live Registry
-                    </span>
+                    {tagStatus === 'activated' ? (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3 text-emerald-400" />
+                        Status: Active
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-mono font-bold flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3 text-amber-400" />
+                        Status: Deactivated (Lost Mode)
+                      </span>
+                    )}
                   </div>
                   <span className="text-[11px] text-neutral-400 font-mono block mt-0.5">
                     Privacy Masking Active • Server Session Authenticated
@@ -471,6 +520,21 @@ function ManageFlow() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   
+                  {/* Lost Tag / Deactivation Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={handleToggleTagStatus}
+                    disabled={isLoading}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer border transition ${
+                      tagStatus === 'activated'
+                        ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    }`}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>{tagStatus === 'activated' ? 'Deactivate Tag (Lost)' : 'Reactivate Tag'}</span>
+                  </button>
+
                   {/* Emergency Scan Preview */}
                   <Link
                     href={`/tag/${qrId}`}
@@ -506,8 +570,8 @@ function ManageFlow() {
                           <text x="300" y="410" fill="#ffffff" font-size="16" font-weight="bold">${emergencyName} (${emergencyPhone})</text>
                           
                           <rect x="250" y="480" width="300" height="300" fill="#000000" stroke="#ffffff" stroke-width="3" rx="16"/>
-                          <text x="400" y="820" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="bold">1-YEAR HARDWARE WARRANTY VALIDATED</text>
-                          <text x="400" y="860" text-anchor="middle" fill="#555555" font-size="12">GUARDIANTAG TECHNOLOGIES INDIA • BENGALURU</text>
+                          <text x="400" y="820" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="bold">HARDWARE SAFETY VALIDATED</text>
+                          <text x="400" y="860" text-anchor="middle" fill="#555555" font-size="12">GUARDIANTAG • guardiantag.in</text>
                         </svg>
                       `;
                       const blob = new Blob([svgContent], { type: 'image/svg+xml' });

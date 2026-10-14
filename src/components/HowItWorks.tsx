@@ -31,13 +31,13 @@ export default function HowItWorks() {
     {
       step: '02',
       title: 'CONNECT',
-      description: 'System instantly dispatches masked phone relay & emergency helpline options without exposing real numbers.',
+      description: 'Emergency page opens instantly with one-tap calling and helpline access without exposing your personal phone number.',
       icon: PhoneCall,
     },
     {
       step: '03',
       title: 'RESPOND',
-      description: 'Designated emergency contact receives instant masked call relay and emergency SMS alert notification.',
+      description: 'Bystander connects directly with your emergency contact and accesses first aid reminders and national helplines.',
       icon: Zap,
     },
   ];
@@ -59,7 +59,7 @@ export default function HowItWorks() {
             Protection starts with one scan.
           </h2>
           <p className="text-neutral-400 text-base sm:text-lg font-normal">
-            Zero app installation. Zero registration barriers for bystanders. Direct emergency reach in milliseconds.
+            Zero app installation. Zero registration barriers for bystanders. Direct emergency reach in seconds.
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function HowItWorks() {
                   className="w-full flex flex-col items-center space-y-6 my-auto"
                 >
                   <div className="relative p-4 rounded-3xl bg-black border border-white/20">
-                    <PhysicalTag3D size="md" serial="GTB-4892-IND" />
+                    <PhysicalTag3D size="md" serial="GTB0001" />
                     <ScanningBeam className="absolute inset-0 rounded-3xl" />
                   </div>
 
@@ -139,7 +139,7 @@ export default function HowItWorks() {
                 >
                   <div className="flex items-center justify-center gap-6 w-full py-4">
                     <div className="p-3 rounded-2xl bg-white/10 border border-white/20">
-                      <PhysicalTag3D size="sm" serial="GTB-4892-IND" interactive={false} />
+                      <PhysicalTag3D size="sm" serial="GTB0001" interactive={false} />
                     </div>
 
                     {/* Traveling Connection Line Pulse */}
@@ -158,10 +158,10 @@ export default function HowItWorks() {
 
                   <div className="space-y-1">
                     <span className="text-xs font-mono font-extrabold text-white tracking-widest uppercase">
-                      STEP 02: SERVER MASKED PROXY RELAY
+                      STEP 02: PRIVACY-PROTECTED ACCESS
                     </span>
                     <p className="text-xs text-neutral-400">
-                      Encrypted bridge routes bystander call without exposing real phone numbers.
+                      Emergency page connects bystander with your emergency contact without revealing your phone number.
                     </p>
                   </div>
                 </motion.div>
@@ -178,19 +178,19 @@ export default function HowItWorks() {
                     <div className="flex items-center justify-between border-b border-white/15 pb-3">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-white" />
-                        <span className="text-xs font-mono font-bold text-white">EMERGENCY ALERT DISPATCHED</span>
+                        <span className="text-xs font-mono font-bold text-white">EMERGENCY CALL DISPATCH READY</span>
                       </div>
-                      <span className="text-[9px] font-mono text-neutral-400">0.4s LATENCY</span>
+                      <span className="text-[9px] font-mono text-neutral-400">READY</span>
                     </div>
 
                     <div className="space-y-2 text-xs font-mono">
                       <div className="p-3 rounded-xl bg-white/10 text-white flex justify-between">
-                        <span>OWNER VOICE PROXY</span>
-                        <span className="font-extrabold text-white">CONNECTED</span>
+                        <span>EMERGENCY ICE CONTACT</span>
+                        <span className="font-extrabold text-white">READY TO CALL</span>
                       </div>
                       <div className="p-3 rounded-xl bg-white/10 text-white flex justify-between">
-                        <span>EMERGENCY SMS</span>
-                        <span className="font-extrabold text-white">DISPATCHED</span>
+                        <span>NATIONAL HELPLINES (112 / 1033)</span>
+                        <span className="font-extrabold text-white">ONE-TAP CONNECT</span>
                       </div>
                     </div>
                   </div>
@@ -200,7 +200,7 @@ export default function HowItWorks() {
                       STEP 03: IMMEDIATE EMERGENCY RESPONSE
                     </span>
                     <p className="text-xs text-neutral-400">
-                      Emergency contacts &amp; Indian emergency services receive direct alerts.
+                      Bystander calls family contact and accesses official emergency services (112 & 1033).
                     </p>
                   </div>
                 </motion.div>
