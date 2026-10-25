@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import AdminGatekeeper from '@/components/AdminGatekeeper';
 import JSZip from 'jszip';
 import qrcode from 'qrcode-generator';
 
@@ -699,7 +698,7 @@ export default function AdminQrGeneratorPage() {
   };
 
   return (
-    <AdminGatekeeper>
+    <>
       <div className="min-h-screen bg-[#030603] text-[#c6ffd6] font-mono select-none relative">
         {/* Matrix Rain Canvas & CRT Scanline Overlay */}
         <canvas ref={rainRef} id="rain" className="fixed inset-0 w-full h-full z-0 opacity-16 pointer-events-none" />
@@ -1039,6 +1038,6 @@ export default function AdminQrGeneratorPage() {
 
         <Footer />
       </div>
-    </AdminGatekeeper>
+    </>
   );
 }

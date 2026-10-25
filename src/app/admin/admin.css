@@ -1,0 +1,37 @@
+/* Store manager styles. Every rule is scoped under .adm-root so nothing leaks onto the public site. */
+.adm-root{--bg:#0b0b0c;--card:#151517;--line:#26262a;--tx:#f2f2f2;--mut:#8b8b93;--ac:#facc15;background:var(--bg);color:var(--tx);min-height:100vh;font:14px/1.5 system-ui,sans-serif}
+.adm-root a{color:var(--ac);text-decoration:none}
+.adm-root .adm{display:flex;min-height:100vh}
+.adm-root .adm aside{width:200px;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:20px;position:sticky;top:0;height:100vh}
+.adm-root .brand{font-weight:800;font-size:18px;color:var(--ac)}.adm-root .brand span{color:var(--tx);font-weight:500}
+.adm-root .adm nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.adm-root .adm nav a{padding:8px 10px;border-radius:8px;color:var(--tx)}.adm-root .adm nav a:hover{background:var(--card)}
+.adm-root .adm main{flex:1;padding:24px;max-width:1100px;min-width:0}
+.adm-root h1{font-size:24px;font-weight:700;margin:0 0 16px}.adm-root h2{font-size:15px;font-weight:600;margin:0 0 10px}
+.adm-root .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.adm-root .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.adm-root .grid4 .card{margin:0}
+.adm-root .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.adm-root .stat b{display:block;font-size:22px;color:var(--ac)}.adm-root .stat span,.adm-root .muted{color:var(--mut)}
+.adm-root .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.adm-root table{width:100%;border-collapse:collapse}.adm-root th{text-align:left;color:var(--mut);font-weight:500}
+.adm-root td,.adm-root th{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.adm-root .scroll{overflow-x:auto}
+.adm-root .pill{padding:2px 9px;border-radius:99px;font-size:12px;background:#26262a;white-space:nowrap}
+.adm-root .pill.new,.adm-root .pill.unpaid,.adm-root .pill.printed{background:#3b3305;color:#facc15}
+.adm-root .pill.packed,.adm-root .pill.shipped{background:#0c2a44;color:#7cc4ff}
+.adm-root .pill.delivered,.adm-root .pill.paid,.adm-root .pill.active,.adm-root .pill.activated{background:#0d3320;color:#4ade80}
+.adm-root .pill.cancelled,.adm-root .pill.disabled,.adm-root .pill.refunded{background:#3a1212;color:#f87171}
+.adm-root .tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.adm-root .tabs a{padding:5px 12px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--tx)}
+.adm-root .tabs a.on{background:var(--ac);color:#000}.adm-root .tabs .search{margin-left:auto}
+.adm-root input,.adm-root select,.adm-root textarea,.adm-root button{font:inherit;color:var(--tx);background:#0f0f11;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.adm-root button,.adm-root .btn{background:var(--ac);color:#000;border:0;font-weight:600;cursor:pointer;padding:8px 14px;border-radius:8px;display:inline-block}
+.adm-root .btn.small{padding:5px 12px}.adm-root button.ghost{background:transparent;color:var(--tx);border:1px solid var(--line);font-weight:500;padding:4px 10px}
+.adm-root button.danger{color:#f87171}
+.adm-root .form{display:flex;flex-direction:column;gap:10px}.adm-root .form label{display:flex;flex-direction:column;gap:4px;color:var(--mut)}
+.adm-root .form label.line{flex-direction:row;justify-content:space-between;align-items:center;color:var(--tx)}.adm-root .form label.line input{width:90px}
+.adm-root .form label.check{flex-direction:row;align-items:center}.adm-root .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.adm-root .form.cols{display:grid}.adm-root .actions{display:flex;gap:6px}.adm-root .actions form{display:inline}
+.adm-root .err{color:#f87171}.adm-root .ok{color:#4ade80}.adm-root .up{color:#4ade80}.adm-root .down{color:#f87171}
+.adm-root .login{display:grid;place-items:center;min-height:100vh}.adm-root .login .card{width:320px;display:flex;flex-direction:column;gap:12px}
+@media(max-width:800px){.adm-root .adm{flex-direction:column}.adm-root .adm aside{width:auto;height:auto;position:static;flex-direction:row;align-items:center;flex-wrap:wrap}.adm-root .adm nav{flex-direction:row;flex-wrap:wrap}.adm-root .grid4{grid-template-columns:1fr 1fr}.adm-root .grid2{grid-template-columns:1fr}.adm-root .adm main{padding:14px}}

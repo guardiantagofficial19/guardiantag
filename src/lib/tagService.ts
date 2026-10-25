@@ -577,6 +577,11 @@ export async function getPublicTagInfo(rawQrId: string): Promise<{
       [cleanId]
     );
 
+    // Disabled from the store manager: the tag must stop working on scan.
+    if (neonData && neonData.status === 'disabled') {
+      return { found: false };
+    }
+
     if (neonData && (neonData.tag_active || neonData.owner_name)) {
       return {
         found: true,
@@ -677,6 +682,11 @@ export async function getTagByQrIdAsync(rawQrId: string): Promise<QrTagRecord | 
       `SELECT * FROM ${tableName} WHERE tag_id = $1 LIMIT 1`,
       [cleanId]
     );
+
+    // Disabled from the store manager: no masked calls or SMS for this tag.
+    if (neonData && neonData.status === 'disabled') {
+      return undefined;
+    }
 
     if (neonData && (neonData.tag_active || neonData.owner_name)) {
       return {

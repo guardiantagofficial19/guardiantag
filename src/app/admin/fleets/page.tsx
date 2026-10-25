@@ -6,7 +6,6 @@ import Footer from '@/components/Footer';
 import Button from '@/components/ui/Button';
 import HardwareCard from '@/components/ui/HardwareCard';
 import Badge from '@/components/ui/Badge';
-import AdminGatekeeper from '@/components/AdminGatekeeper';
 import { Bus, ShieldCheck, CheckCircle2, QrCode, Download, RefreshCw, Layers } from 'lucide-react';
 
 export default function FleetAdminPage() {
@@ -45,7 +44,7 @@ export default function FleetAdminPage() {
   const currentFleet = fleets.find((f) => f.id === selectedFleet) || fleets[0];
 
   return (
-    <AdminGatekeeper>
+    <>
       <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black flex flex-col justify-between">
         <Navbar />
 
@@ -140,6 +139,6 @@ export default function FleetAdminPage() {
 
         <Footer />
       </div>
-    </AdminGatekeeper>
+    </>
   );
 }

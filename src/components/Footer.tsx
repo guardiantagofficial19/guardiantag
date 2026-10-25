@@ -129,6 +129,7 @@ export default function Footer() {
             <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition">Terms of Service</Link>
             <Link href="/security" className="hover:text-white transition">Security Protocol</Link>
+            <Link href="/admin" className="text-neutral-500 hover:text-white transition">Store Manager</Link>
           </div>
         </div>
 
