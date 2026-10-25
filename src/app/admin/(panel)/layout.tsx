@@ -13,6 +13,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         <nav>
           <Link href="/admin">Dashboard</Link>
           <Link href="/admin/orders">Orders</Link>
+          <Link href="/admin/products">Products</Link>
           <Link href="/admin/inventory">Inventory</Link>
           <Link href="/admin/tags">QR Tags</Link>
           <Link href="/admin/fleets">Fleets</Link>

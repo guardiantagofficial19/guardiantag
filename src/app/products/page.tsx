@@ -13,6 +13,7 @@ import confetti from 'canvas-confetti';
 
 export interface ProductCatalogItem {
   id: 'GTB' | 'GTK' | 'GTT' | 'GTU';
+  sku?: string;
   sectionNo: string;
   name: string;
   subtitle: string;
@@ -21,9 +22,11 @@ export interface ProductCatalogItem {
   category: string;
   material: string;
   rating: string;
+  imageUrl?: string;
   description: string;
   features: string[];
   isComingSoon: boolean;
+  stock?: number;
 }
 
 const PRODUCTS_CATALOG: ProductCatalogItem[] = [
@@ -112,6 +115,9 @@ const PRODUCTS_CATALOG: ProductCatalogItem[] = [
 function ProductsContent() {
   const searchParams = useSearchParams();
 
+  // Dynamic Catalog State (Synced with Store Manager)
+  const [catalog, setCatalog] = useState<ProductCatalogItem[]>(PRODUCTS_CATALOG);
+
   // Modal State for Active Product Detail & Customizer
   const [selectedProduct, setSelectedProduct] = useState<ProductCatalogItem | null>(null);
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'CUSTOMIZE' | 'CHECKOUT'>('OVERVIEW');
@@ -122,19 +128,33 @@ function ProductsContent() {
   const [emergencyPhoneNote, setEmergencyPhoneNote] = useState('');
   const [selectedFinish, setSelectedFinish] = useState<'MATTE' | 'GLOSS' | 'REFLECTIVE'>('REFLECTIVE');
 
+  // Fetch live products from Store Manager
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setCatalog(data.products);
+        }
+      })
+      .catch(() => {
+        // Fallback to static catalog if network/server is unavailable
+      });
+  }, []);
+
   // Auto-open modal if model or custom text query params exist
   useEffect(() => {
     const modelParam = searchParams.get('model');
     const textParam = searchParams.get('text');
     if (modelParam || textParam) {
-      const match = PRODUCTS_CATALOG.find((p) => p.id === (modelParam || 'GTB').toUpperCase());
+      const match = catalog.find((p) => p.id === (modelParam || 'GTB').toUpperCase());
       if (match) {
         setSelectedProduct(match);
         setActiveTab('CHECKOUT');
         if (textParam) setCustomText(decodeURIComponent(textParam));
       }
     }
-  }, [searchParams]);
+  }, [searchParams, catalog]);
 
   // Checkout Form State
   const [customerName, setCustomerName] = useState('');
@@ -263,12 +283,12 @@ function ProductsContent() {
         </div>
       </section>
 
-      {/* Minimalist Grid: 3D Image & Product Name ONLY */}
+      {/* Minimalist Grid: 3D Image or Uploaded Image & Product Name */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {PRODUCTS_CATALOG.map((product) => (
+          {catalog.map((product) => (
             <div
-              key={product.id}
+              key={product.sku || product.id}
               onClick={() => handleOpenProduct(product, 'OVERVIEW')}
               className="hardware-card p-8 rounded-3xl border border-white/20 bg-black/90 cursor-pointer flex flex-col items-center justify-center text-center space-y-6 group hover:border-white hover:bg-white/5 transition-all duration-300 shadow-2xl relative overflow-hidden"
             >
@@ -292,9 +312,17 @@ function ProductsContent() {
                 {product.sectionNo}
               </span>
 
-              {/* 3D Tag Image */}
-              <div className="py-2 flex justify-center group-hover:scale-110 transition duration-300 transform">
-                <PhysicalTag3D size="lg" tagType={product.id} serial={`${product.id}-SPECIMEN`} />
+              {/* 3D Tag Image or Uploaded Image */}
+              <div className="py-2 flex justify-center group-hover:scale-110 transition duration-300 transform h-36 items-center w-full">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="max-h-32 max-w-full object-contain rounded-lg drop-shadow-[0_10px_25px_rgba(255,255,255,0.12)]"
+                  />
+                ) : (
+                  <PhysicalTag3D size="lg" tagType={product.id} serial={`${product.id}-SPECIMEN`} />
+                )}
               </div>
 
               {/* Product Name & Price */}
@@ -379,7 +407,15 @@ function ProductsContent() {
             {activeTab === 'OVERVIEW' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in">
                 <div className="lg:col-span-5 bg-black/80 p-6 rounded-2xl border border-white/15 flex flex-col items-center justify-center text-center space-y-4">
-                  <PhysicalTag3D size="lg" tagType={selectedProduct.id} serial={`${selectedProduct.id}-SAMPLE`} />
+                  {selectedProduct.imageUrl ? (
+                    <img
+                      src={selectedProduct.imageUrl}
+                      alt={selectedProduct.name}
+                      className="max-h-56 max-w-full object-contain rounded-xl drop-shadow-[0_15px_30px_rgba(255,255,255,0.18)]"
+                    />
+                  ) : (
+                    <PhysicalTag3D size="lg" tagType={selectedProduct.id} serial={`${selectedProduct.id}-SAMPLE`} />
+                  )}
                   <div className="space-y-1">
                     <span className="text-2xl font-extrabold text-white">{selectedProduct.price}</span>
                     <span className="text-[10px] text-neutral-400 block uppercase font-bold">

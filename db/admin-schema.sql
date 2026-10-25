@@ -7,6 +7,12 @@ CREATE TABLE IF NOT EXISTS store_products (
   stock integer NOT NULL DEFAULT 0 CHECK (stock >= 0),
   low_stock_at integer NOT NULL DEFAULT 10,
   active boolean NOT NULL DEFAULT true,
+  subtitle text DEFAULT '',
+  description text DEFAULT '',
+  category text DEFAULT '',
+  image_url text DEFAULT '',
+  features text DEFAULT '',
+  rating_text text DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

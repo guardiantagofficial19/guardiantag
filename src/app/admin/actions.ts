@@ -60,7 +60,131 @@ export async function updateProductAction(fd: FormData) {
   await sql`UPDATE store_products SET name = ${str(fd, "name")}, price_paise = ${paise(fd, "price")},
     low_stock_at = ${Math.max(0, num(fd, "low_stock_at"))}, active = ${fd.get("active") === "on"} WHERE sku = ${str(fd, "sku")}`;
   revalidatePath("/admin/inventory");
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
   redirect("/admin/inventory");
+}
+
+export async function updateFullProductAction(fd: FormData) {
+  await requireAdmin();
+  const sku = str(fd, "sku");
+  const name = str(fd, "name");
+  const type = str(fd, "tag_type");
+  const subtitle = str(fd, "subtitle");
+  const category = str(fd, "category");
+  const ratingText = str(fd, "rating_text");
+  const description = str(fd, "description");
+  const features = str(fd, "features");
+  let imageUrl = str(fd, "image_url");
+
+  // Handle direct file upload if provided
+  const file = fd.get("image_file") as File | null;
+  if (file && typeof file === "object" && file.size > 0) {
+    try {
+      const bytes = await file.arrayBuffer();
+      const base64 = Buffer.from(bytes).toString("base64");
+      const mime = file.type || "image/png";
+      imageUrl = `data:${mime};base64,${base64}`;
+    } catch {
+      // Keep existing imageUrl if conversion fails
+    }
+  }
+
+  await sql`
+    UPDATE store_products 
+    SET 
+      name = ${name},
+      tag_type = ${type},
+      price_paise = ${paise(fd, "price")},
+      low_stock_at = ${Math.max(0, num(fd, "low_stock_at"))},
+      active = ${fd.get("active") === "on"},
+      subtitle = ${subtitle},
+      category = ${category},
+      rating_text = ${ratingText},
+      description = ${description},
+      features = ${features},
+      image_url = ${imageUrl}
+    WHERE sku = ${sku}
+  `;
+
+  revalidatePath("/admin/products");
+  revalidatePath(`/admin/products/${encodeURIComponent(sku)}`);
+  revalidatePath("/admin/inventory");
+  revalidatePath("/products");
+  redirect(`/admin/products/${encodeURIComponent(sku)}?saved=1`);
+}
+
+export async function createFullProductAction(fd: FormData) {
+  await requireAdmin();
+  const sku = str(fd, "sku").toUpperCase().trim();
+  const name = str(fd, "name").trim();
+  const type = str(fd, "tag_type").toUpperCase().trim();
+  const subtitle = str(fd, "subtitle");
+  const category = str(fd, "category");
+  const ratingText = str(fd, "rating_text");
+  const description = str(fd, "description");
+  const features = str(fd, "features");
+  let imageUrl = str(fd, "image_url");
+
+  if (!sku || !name) redirect("/admin/products/new?error=SKU+and+Name+are+required");
+
+  const file = fd.get("image_file") as File | null;
+  if (file && typeof file === "object" && file.size > 0) {
+    try {
+      const bytes = await file.arrayBuffer();
+      const base64 = Buffer.from(bytes).toString("base64");
+      const mime = file.type || "image/png";
+      imageUrl = `data:${mime};base64,${base64}`;
+    } catch {
+      // fallback
+    }
+  }
+
+  const initialStock = Math.max(0, num(fd, "stock"));
+  let err = "";
+
+  try {
+    const stmts = [
+      sql`
+        INSERT INTO store_products (
+          sku, name, tag_type, price_paise, stock, low_stock_at, active,
+          subtitle, category, rating_text, description, features, image_url
+        ) VALUES (
+          ${sku}, ${name}, ${type}, ${paise(fd, "price")}, ${initialStock},
+          ${Math.max(0, num(fd, "low_stock_at") || 10)}, ${fd.get("active") === "on"},
+          ${subtitle}, ${category}, ${ratingText}, ${description}, ${features}, ${imageUrl}
+        )
+      `,
+    ];
+    if (initialStock > 0) {
+      stmts.push(sql`INSERT INTO stock_movements (sku, delta, reason) VALUES (${sku}, ${initialStock}, 'initial_product_stock')`);
+    }
+    await sql.transaction(stmts);
+  } catch (e: any) {
+    err = e?.message || "SKU already exists";
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/inventory");
+  revalidatePath("/products");
+
+  if (err) {
+    redirect(`/admin/products/new?error=${encodeURIComponent(err)}`);
+  } else {
+    redirect(`/admin/products/${encodeURIComponent(sku)}?saved=1`);
+  }
+}
+
+export async function deleteProductAction(fd: FormData) {
+  await requireAdmin();
+  const sku = str(fd, "sku");
+  try {
+    await sql`UPDATE store_products SET active = false WHERE sku = ${sku}`;
+  } catch {}
+  revalidatePath("/admin/products");
+  revalidatePath("/admin/inventory");
+  revalidatePath("/products");
+  redirect("/admin/products");
 }
 
 export async function adjustStockAction(fd: FormData) {
