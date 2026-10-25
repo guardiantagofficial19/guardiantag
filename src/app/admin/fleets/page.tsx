@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import Button from '@/components/ui/Button';
 import HardwareCard from '@/components/ui/HardwareCard';
 import Badge from '@/components/ui/Badge';
@@ -46,8 +44,6 @@ export default function FleetAdminPage() {
   return (
     <>
       <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black flex flex-col justify-between">
-        <Navbar />
-
         <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-8">
           
           {/* Header */}
@@ -141,8 +137,6 @@ export default function FleetAdminPage() {
           </HardwareCard>
 
         </main>
-
-        <Footer />
       </div>
     </>
   );

@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import JSZip from 'jszip';
 import qrcode from 'qrcode-generator';
 
@@ -706,9 +704,7 @@ export default function AdminQrGeneratorPage() {
         <div className="crt fixed inset-0 pointer-events-none z-50" />
 
         <div className="relative z-10">
-          <Navbar />
-
-          <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto w-full">
+          <div className="pt-8 pb-16 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto w-full">
             
             {/* Header Terminal Pane */}
             <header className="top pane max-w-[1280px] mx-auto mb-5 overflow-hidden rounded-lg bg-[rgba(5,14,8,0.88)] border border-[#17361f]">
@@ -1042,8 +1038,6 @@ export default function AdminQrGeneratorPage() {
             </div>
           </div>
         </div>
-
-        <Footer />
       </div>
     </>
   );
