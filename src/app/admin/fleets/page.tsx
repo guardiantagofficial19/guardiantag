@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import Button from '@/components/ui/Button';
 import HardwareCard from '@/components/ui/HardwareCard';
 import Badge from '@/components/ui/Badge';
-import { Bus, ShieldCheck, CheckCircle2, QrCode, Download, RefreshCw, Layers } from 'lucide-react';
+import { Bus, ShieldCheck, CheckCircle2, QrCode, Download, RefreshCw, Layers, Store, ArrowLeft } from 'lucide-react';
 
 export default function FleetAdminPage() {
   const [selectedFleet, setSelectedFleet] = useState<'DELHI_SCHOOL' | 'BANGALORE_BIKER_CLUB' | 'CORPORATE_ASSETS'>('DELHI_SCHOOL');
@@ -61,9 +61,14 @@ export default function FleetAdminPage() {
               </h1>
             </div>
 
-            <Button href="/admin/qr-generator" icon={<QrCode className="w-4 h-4" />}>
-              Provision New Fleet Batch
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button href="/admin" variant="secondary" icon={<ArrowLeft className="w-4 h-4" />}>
+                Store Manager
+              </Button>
+              <Button href="/admin/qr-generator" icon={<QrCode className="w-4 h-4" />}>
+                Provision Fleet Batch
+              </Button>
+            </div>
           </div>
 
           {/* Fleet Selector Tabs */}

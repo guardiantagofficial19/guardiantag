@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import JSZip from 'jszip';
@@ -720,6 +721,12 @@ export default function AdminQrGeneratorPage() {
                 <span className="path flex-1 text-center font-mono text-[11px] truncate">
                   root@guardiantag: ~/qr-forge — bash — 80×24
                 </span>
+                <Link
+                  href="/admin"
+                  className="px-2.5 py-1 rounded bg-[#17361f] text-[#39ff7a] text-[11px] font-mono hover:bg-[#39ff7a] hover:text-black transition flex items-center gap-1"
+                >
+                  ← Store Manager
+                </Link>
                 <span className="clock text-[#39ff7a] font-mono">{clock}</span>
               </div>
 

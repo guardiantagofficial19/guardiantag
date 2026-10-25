@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, Bebas_Neue, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import WhatsAppWidget from '@/components/WhatsAppWidget';
-import StoreManagerSideButton from '@/components/StoreManagerSideButton';
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: '--font-plus-jakarta',
@@ -69,7 +68,6 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans bg-black text-white selection:bg-white selection:text-black relative">
         {children}
-        <StoreManagerSideButton />
         <WhatsAppWidget />
       </body>
     </html>

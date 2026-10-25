@@ -9,12 +9,13 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   return (
     <div className="adm">
       <aside>
-        <div className="brand">GT <span>Admin</span></div>
+        <div className="brand">GT <span>Store Manager</span></div>
         <nav>
           <Link href="/admin">Dashboard</Link>
           <Link href="/admin/orders">Orders</Link>
           <Link href="/admin/inventory">Inventory</Link>
           <Link href="/admin/tags">QR Tags</Link>
+          <Link href="/admin/fleets">Fleets</Link>
           <Link href="/admin/qr-generator">QR Print Sheets</Link>
         </nav>
         <form action={logoutAction}><button className="ghost">Log out</button></form>
