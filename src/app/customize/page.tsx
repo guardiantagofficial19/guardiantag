@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -253,13 +254,13 @@ function CustomizerContent() {
                     </p>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setOrderSuccess(true)}
+                  <Link
+                    href={`/products?model=${model}&text=${encodeURIComponent(customHeader)}`}
                     className="w-full py-4 rounded-xl bg-white hover:bg-neutral-200 text-black font-extrabold text-sm shadow-xl transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Order Customized Tag (₹{currentProduct.price})</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Link>
                 )}
 
                 <div className="flex items-center justify-center gap-2 text-[10px] text-neutral-400 font-mono">

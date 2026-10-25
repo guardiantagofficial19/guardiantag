@@ -1,152 +1,208 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/lib/supabaseClient';
+import { sql } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
-export interface BackendOrder {
-  order_id: string;
-  customer_name: string;
-  customer_phone: string;
-  address: string;
-  pincode: string;
-  product_model: string;
-  product_name: string;
-  quantity: number;
-  total_amount: number;
-  payment_method: string;
-  payment_status: string;
-  shipping_status: string;
-  created_at: string;
-}
+const GUARDIANTAG_WHATSAPP_NUMBER = '918058800880';
 
-// In-Memory Server Fallback Store for active server session
-let inMemoryOrdersStore: BackendOrder[] = [];
+// Mapping from catalog product ID to store_products SKU
+const SKU_MAP: Record<string, string> = {
+  GTB: 'GTB-KIT',
+  GTK: 'GTK-KIT',
+  GTT: 'GTT-KIT',
+  GTU: 'GTU-KIT',
+};
 
 export async function GET() {
   try {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from('customer_orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      // Map Supabase snake_case columns to camelCase format
-      const formatted = data.map((o: any) => ({
-        orderId: o.order_id,
-        customerName: o.customer_name,
-        customerPhone: o.customer_phone,
-        address: o.address,
-        pincode: o.pincode,
-        productModel: o.product_model,
-        productName: o.product_name,
-        quantity: o.quantity,
-        totalAmount: Number(o.total_amount),
-        paymentMethod: o.payment_method,
-        paymentStatus: o.payment_status,
-        shippingStatus: o.shipping_status,
-        createdAt: o.created_at,
-      }));
-      return NextResponse.json({ success: true, orders: formatted, source: 'supabase' });
-    }
-  } catch {
-    // Fallback if table query fails
+    const orders = await sql`
+      SELECT 
+        o.id,
+        o.order_no,
+        o.customer_name,
+        o.phone,
+        o.email,
+        o.address,
+        o.city,
+        o.state,
+        o.pincode,
+        o.status,
+        o.payment_status,
+        o.total_paise,
+        o.notes,
+        o.created_at,
+        (SELECT COALESCE(sum(qty), 0)::int FROM store_order_items i WHERE i.order_id = o.id) AS units,
+        (SELECT json_agg(json_build_object('sku', i.sku, 'name', i.name, 'qty', i.qty, 'unit_paise', i.unit_paise)) 
+         FROM store_order_items i WHERE i.order_id = o.id) AS items
+      FROM store_orders o
+      ORDER BY o.created_at DESC
+      LIMIT 100
+    `;
+    return NextResponse.json({ success: true, orders });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Failed to fetch store orders' },
+      { status: 500 }
+    );
   }
-
-  const formatted = inMemoryOrdersStore.map((o) => ({
-    orderId: o.order_id,
-    customerName: o.customer_name,
-    customerPhone: o.customer_phone,
-    address: o.address,
-    pincode: o.pincode,
-    productModel: o.product_model,
-    productName: o.product_name,
-    quantity: o.quantity,
-    totalAmount: Number(o.total_amount),
-    paymentMethod: o.payment_method,
-    paymentStatus: o.payment_status,
-    shippingStatus: o.shipping_status,
-    createdAt: o.created_at,
-  }));
-
-  return NextResponse.json({ success: true, orders: formatted, source: 'memory' });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      orderId,
-      customerName,
-      customerPhone,
-      address,
-      pincode,
       productModel,
       productName,
-      quantity,
+      quantity = 1,
       totalAmount,
-      paymentMethod,
-      paymentStatus,
+      customerName,
+      customerPhone,
+      customerEmail,
+      address,
+      city = 'India',
+      state = '',
+      pincode = '',
+      laserEtchingText,
+      notes,
     } = body;
 
-    const newOrder: BackendOrder = {
-      order_id: orderId || 'GT-ORD-' + Math.floor(100000 + Math.random() * 900000),
-      customer_name: customerName || 'Anonymous',
-      customer_phone: customerPhone || '',
-      address: address || '',
-      pincode: pincode || '',
-      product_model: productModel || 'GTB',
-      product_name: productName || 'GuardianTag Hardware',
-      quantity: quantity || 1,
-      total_amount: totalAmount || 499,
-      payment_method: paymentMethod || 'UPI',
-      payment_status: paymentStatus || 'PAID',
-      shipping_status: 'PENDING_DISPATCH',
-      created_at: new Date().toISOString(),
-    };
-
-    inMemoryOrdersStore.unshift(newOrder);
-
-    // Save directly to Supabase PostgreSQL Database
-    try {
-      const supabase = getSupabaseServerClient();
-      await supabase.from('customer_orders').insert([newOrder]);
-    } catch {
-      // Fallback
+    if (!customerName || !customerPhone || !address) {
+      return NextResponse.json(
+        { success: false, error: 'Customer Name, Phone number, and Address are required.' },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ success: true, order: newOrder });
+    const sku = SKU_MAP[productModel] || 'GTB-KIT';
+    const qty = Math.max(1, Number(quantity) || 1);
+    const amountInPaise = totalAmount ? Math.round(Number(totalAmount) * 100) : 49900;
+    const orderId = crypto.randomUUID();
+
+    const orderNotes = [
+      laserEtchingText ? `Etching: ${laserEtchingText}` : '',
+      notes ? notes : '',
+    ].filter(Boolean).join(' | ');
+
+    // 1. Insert order into store_orders and store_order_items
+    // 2. Decrement stock from store_products and log movement
+    const stmts = [
+      sql`
+        INSERT INTO store_orders (
+          id,
+          customer_name,
+          phone,
+          email,
+          address,
+          city,
+          state,
+          pincode,
+          status,
+          payment_status,
+          shipping_paise,
+          total_paise,
+          notes
+        ) VALUES (
+          ${orderId},
+          ${String(customerName).trim()},
+          ${String(customerPhone).trim()},
+          ${String(customerEmail || '').trim()},
+          ${String(address).trim()},
+          ${String(city).trim()},
+          ${String(state).trim()},
+          ${String(pincode).trim()},
+          'new',
+          'unpaid',
+          0,
+          ${amountInPaise},
+          ${orderNotes}
+        )
+      `,
+      sql`
+        INSERT INTO store_order_items (
+          order_id,
+          sku,
+          name,
+          qty,
+          unit_paise
+        ) VALUES (
+          ${orderId},
+          ${sku},
+          ${productName || 'GTB Biker Tag Kit (4-piece)'},
+          ${qty},
+          ${Math.round(amountInPaise / qty)}
+        )
+      `,
+      sql`
+        UPDATE store_products 
+        SET stock = GREATEST(0, stock - ${qty}) 
+        WHERE sku = ${sku}
+      `,
+      sql`
+        INSERT INTO stock_movements (
+          sku,
+          delta,
+          reason,
+          order_id
+        ) VALUES (
+          ${sku},
+          ${-qty},
+          'website_order',
+          ${orderId}
+        )
+      `,
+    ];
+
+    await sql.transaction(stmts);
+
+    // Fetch the auto-generated order_no (e.g. GT-1002)
+    const result = await sql`
+      SELECT order_no, created_at FROM store_orders WHERE id = ${orderId} LIMIT 1
+    `;
+    const orderNo = result[0]?.order_no || `GT-${orderId.slice(0, 8).toUpperCase()}`;
+
+    // Revalidate Store Manager pages so the new order reflects immediately
+    try {
+      revalidatePath('/admin');
+      revalidatePath('/admin/orders');
+      revalidatePath('/admin/inventory');
+    } catch {
+      // Revalidation is non-blocking
+    }
+
+    // 3. Format WhatsApp Details message for customer & merchant
+    const totalRupees = Math.round(amountInPaise / 100);
+    const whatsappMessage = [
+      `🚨 *NEW GUARDIANTAG ORDER: ${orderNo}*`,
+      `━━━━━━━━━━━━━━━━━━`,
+      `📦 *Item:* ${productName || 'GTB Biker Tag Kit'} (Qty: ${qty})`,
+      `💰 *Total Amount:* ₹${totalRupees} (Free Delivery Across India)`,
+      orderNotes ? `🏷️ *Custom Details:* ${orderNotes}` : '',
+      ``,
+      `👤 *Customer Info:*`,
+      `• Name: ${customerName}`,
+      `• Mobile: ${customerPhone}`,
+      customerEmail ? `• Email: ${customerEmail}` : '',
+      `📍 *Delivery Address:*`,
+      `${address}${pincode ? ` - ${pincode}` : ''}`,
+      `━━━━━━━━━━━━━━━━━━`,
+      `✅ *Status:* Order registered in Store Manager. Please confirm delivery/payment.`
+    ].filter(Boolean).join('\n');
+
+    const whatsappUrl = `https://wa.me/${GUARDIANTAG_WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+
+    return NextResponse.json({
+      success: true,
+      orderId,
+      orderNo,
+      totalRupees,
+      whatsappUrl,
+      whatsappMessage,
+      message: 'Order placed successfully and synced with Store Manager.',
+    });
   } catch (error: any) {
+    console.error('Order creation error:', error);
     return NextResponse.json(
-      { success: false, error: error?.message || 'Failed to process order API request' },
+      { success: false, error: error?.message || 'Failed to place order in Store Manager database' },
       { status: 500 }
     );
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    const body = await request.json();
-    const { orderId, shippingStatus } = body;
-
-    if (!orderId || !shippingStatus) {
-      return NextResponse.json({ success: false, error: 'orderId and shippingStatus required' }, { status: 400 });
-    }
-
-    inMemoryOrdersStore = inMemoryOrdersStore.map((o) =>
-      o.order_id === orderId ? { ...o, shipping_status: shippingStatus } : o
-    );
-
-    try {
-      const supabase = getSupabaseServerClient();
-      await supabase
-        .from('customer_orders')
-        .update({ shipping_status: shippingStatus })
-        .eq('order_id', orderId);
-    } catch {
-      // Supabase fallback
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error?.message }, { status: 500 });
   }
 }
