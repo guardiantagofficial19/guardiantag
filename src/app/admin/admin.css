@@ -1,37 +1,827 @@
-/* Store manager styles. Every rule is scoped under .adm-root so nothing leaks onto the public site. */
-.adm-root{--bg:#0b0b0c;--card:#151517;--line:#26262a;--tx:#f2f2f2;--mut:#8b8b93;--ac:#facc15;background:var(--bg);color:var(--tx);min-height:100vh;font:14px/1.5 system-ui,sans-serif}
-.adm-root a{color:var(--ac);text-decoration:none}
-.adm-root .adm{display:flex;min-height:100vh}
-.adm-root .adm aside{width:200px;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:20px;position:sticky;top:0;height:100vh}
-.adm-root .brand{font-weight:800;font-size:18px;color:var(--ac)}.adm-root .brand span{color:var(--tx);font-weight:500}
-.adm-root .adm nav{display:flex;flex-direction:column;gap:4px;flex:1}
-.adm-root .adm nav a{padding:8px 10px;border-radius:8px;color:var(--tx)}.adm-root .adm nav a:hover{background:var(--card)}
-.adm-root .adm main{flex:1;padding:24px;max-width:1100px;min-width:0}
-.adm-root h1{font-size:24px;font-weight:700;margin:0 0 16px}.adm-root h2{font-size:15px;font-weight:600;margin:0 0 10px}
-.adm-root .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
-.adm-root .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.adm-root .grid4 .card{margin:0}
-.adm-root .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.adm-root .stat b{display:block;font-size:22px;color:var(--ac)}.adm-root .stat span,.adm-root .muted{color:var(--mut)}
-.adm-root .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.adm-root table{width:100%;border-collapse:collapse}.adm-root th{text-align:left;color:var(--mut);font-weight:500}
-.adm-root td,.adm-root th{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-.adm-root .scroll{overflow-x:auto}
-.adm-root .pill{padding:2px 9px;border-radius:99px;font-size:12px;background:#26262a;white-space:nowrap}
-.adm-root .pill.new,.adm-root .pill.unpaid,.adm-root .pill.printed{background:#3b3305;color:#facc15}
-.adm-root .pill.packed,.adm-root .pill.shipped{background:#0c2a44;color:#7cc4ff}
-.adm-root .pill.delivered,.adm-root .pill.paid,.adm-root .pill.active,.adm-root .pill.activated{background:#0d3320;color:#4ade80}
-.adm-root .pill.cancelled,.adm-root .pill.disabled,.adm-root .pill.refunded{background:#3a1212;color:#f87171}
-.adm-root .tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
-.adm-root .tabs a{padding:5px 12px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--tx)}
-.adm-root .tabs a.on{background:var(--ac);color:#000}.adm-root .tabs .search{margin-left:auto}
-.adm-root input,.adm-root select,.adm-root textarea,.adm-root button{font:inherit;color:var(--tx);background:#0f0f11;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-.adm-root button,.adm-root .btn{background:var(--ac);color:#000;border:0;font-weight:600;cursor:pointer;padding:8px 14px;border-radius:8px;display:inline-block}
-.adm-root .btn.small{padding:5px 12px}.adm-root button.ghost{background:transparent;color:var(--tx);border:1px solid var(--line);font-weight:500;padding:4px 10px}
-.adm-root button.danger{color:#f87171}
-.adm-root .form{display:flex;flex-direction:column;gap:10px}.adm-root .form label{display:flex;flex-direction:column;gap:4px;color:var(--mut)}
-.adm-root .form label.line{flex-direction:row;justify-content:space-between;align-items:center;color:var(--tx)}.adm-root .form label.line input{width:90px}
-.adm-root .form label.check{flex-direction:row;align-items:center}.adm-root .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.adm-root .form.cols{display:grid}.adm-root .actions{display:flex;gap:6px}.adm-root .actions form{display:inline}
-.adm-root .err{color:#f87171}.adm-root .ok{color:#4ade80}.adm-root .up{color:#4ade80}.adm-root .down{color:#f87171}
-.adm-root .login{display:grid;place-items:center;min-height:100vh}.adm-root .login .card{width:320px;display:flex;flex-direction:column;gap:12px}
-@media(max-width:800px){.adm-root .adm{flex-direction:column}.adm-root .adm aside{width:auto;height:auto;position:static;flex-direction:row;align-items:center;flex-wrap:wrap}.adm-root .adm nav{flex-direction:row;flex-wrap:wrap}.adm-root .grid4{grid-template-columns:1fr 1fr}.adm-root .grid2{grid-template-columns:1fr}.adm-root .adm main{padding:14px}}
+/* ==========================================================================
+   GUARDIANTAG STORE MANAGER — SHOPIFY POLARIS DESIGN SYSTEM
+   Scoped under .adm-root to guarantee 0 leaks to the public customer store.
+   ========================================================================== */
+
+.adm-root {
+  --shopify-bg: #f6f6f7;
+  --shopify-surface: #ffffff;
+  --shopify-sidebar: #0f172a;
+  --shopify-sidebar-hover: #1e293b;
+  --shopify-sidebar-text: #94a3b8;
+  --shopify-sidebar-active: #ffffff;
+  --shopify-border: #e1e3e5;
+  --shopify-border-subtle: #ebebeb;
+  --shopify-text: #202223;
+  --shopify-text-subdued: #6d7175;
+  --shopify-green: #008060;
+  --shopify-green-hover: #006e52;
+  --shopify-green-surface: #f1f8f5;
+  
+  /* Status Colors */
+  --badge-paid-bg: #cbf4c9;
+  --badge-paid-text: #0e6245;
+  --badge-unpaid-bg: #fff0d4;
+  --badge-unpaid-text: #8a5000;
+  --badge-unfulfilled-bg: #ffd8a8;
+  --badge-unfulfilled-text: #78350f;
+  --badge-shipped-bg: #dbeafe;
+  --badge-shipped-text: #1e40af;
+  --badge-delivered-bg: #cbf4c9;
+  --badge-delivered-text: #0e6245;
+  --badge-cancelled-bg: #fed2d2;
+  --badge-cancelled-text: #991b1b;
+  --badge-neutral-bg: #f1f2f4;
+  --badge-neutral-text: #4a4d52;
+
+  background-color: var(--shopify-bg);
+  color: var(--shopify-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.45;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.adm-root * {
+  box-sizing: border-box;
+}
+
+.adm-root a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------------- Layout & Frame ---------------- */
+.adm-root .adm-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.adm-root .shopify-sidebar {
+  width: 240px;
+  background-color: var(--shopify-sidebar);
+  color: var(--shopify-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  z-index: 40;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.adm-root .sidebar-store-header {
+  padding: 16px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.adm-root .store-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-root .store-brand-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #008060, #10b981);
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.adm-root .store-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.adm-root .store-tagline {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adm-root .store-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+  display: inline-block;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.adm-root .sidebar-nav {
+  padding: 12px 10px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-root .nav-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  padding: 10px 10px 4px;
+  margin-top: 6px;
+}
+
+.adm-root .nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--shopify-sidebar-text);
+  transition: all 0.15s ease;
+}
+
+.adm-root .nav-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-root .nav-item:hover {
+  background-color: var(--shopify-sidebar-hover);
+  color: var(--shopify-sidebar-active);
+}
+
+.adm-root .nav-item.active {
+  background-color: #1e293b;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.adm-root .nav-counter-pill {
+  font-size: 11px;
+  font-weight: 600;
+  background-color: #334155;
+  color: #f1f5f9;
+  padding: 1px 7px;
+  border-radius: 99px;
+}
+
+.adm-root .sidebar-footer {
+  padding: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #0b1120;
+}
+
+.adm-root .admin-avatar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.adm-root .admin-avatar {
+  width: 28px;
+  height: 28px;
+  background-color: #334155;
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adm-root .admin-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-root .admin-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.adm-root .admin-role {
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+/* Main Content Area */
+.adm-root .shopify-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--shopify-bg);
+}
+
+/* Top App Bar */
+.adm-root .shopify-top-bar {
+  height: 54px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--shopify-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.adm-root .top-search-wrap {
+  width: 380px;
+  position: relative;
+}
+
+.adm-root .top-search-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 12px 0 32px;
+  border-radius: 8px;
+  border: 1px solid var(--shopify-border);
+  background-color: #f6f6f7;
+  font-size: 13px;
+  color: var(--shopify-text);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.adm-root .top-search-input:focus {
+  background-color: #ffffff;
+  border-color: var(--shopify-green);
+  box-shadow: 0 0 0 1px var(--shopify-green);
+}
+
+.adm-root .top-search-icon {
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  color: var(--shopify-text-subdued);
+}
+
+.adm-root .top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adm-root .view-store-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--shopify-text);
+  border: 1px solid var(--shopify-border);
+  background-color: #ffffff;
+  transition: all 0.15s;
+}
+
+.adm-root .view-store-btn:hover {
+  background-color: #f1f2f4;
+  border-color: #c9cccf;
+}
+
+/* Main Container */
+.adm-root .shopify-content {
+  padding: 24px 32px 48px;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Typography & Headings */
+.adm-root h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--shopify-text);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.adm-root h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--shopify-text);
+  margin: 0 0 14px;
+}
+
+.adm-root h3 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--shopify-text);
+  margin: 0 0 8px;
+}
+
+.adm-root .page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.adm-root .page-subtitle {
+  color: var(--shopify-text-subdued);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* ---------------- Shopify Polaris Cards ---------------- */
+.adm-root .polaris-card {
+  background-color: var(--shopify-surface);
+  border: 1px solid var(--shopify-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+
+.adm-root .polaris-card.flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Metrics & Metric Grid */
+.adm-root .metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.adm-root .metric-card {
+  background-color: var(--shopify-surface);
+  border: 1px solid var(--shopify-border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.adm-root .metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--shopify-text-subdued);
+  font-size: 12.5px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.adm-root .metric-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--shopify-text);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.adm-root .metric-subtext {
+  font-size: 11.5px;
+  color: var(--shopify-text-subdued);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adm-root .trend-up {
+  color: var(--shopify-green);
+  font-weight: 600;
+}
+
+.adm-root .trend-down {
+  color: #d72c0d;
+  font-weight: 600;
+}
+
+/* Action Banner (Things to do) */
+.adm-root .action-banner {
+  background: linear-gradient(to right, #f0fdf4, #ffffff);
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.adm-root .action-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.adm-root .action-banner-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ---------------- Polaris Buttons ---------------- */
+.adm-root .btn-polaris-primary {
+  background-color: var(--shopify-green);
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.adm-root .btn-polaris-primary:hover {
+  background-color: var(--shopify-green-hover);
+}
+
+.adm-root .btn-polaris-secondary {
+  background-color: #ffffff;
+  color: var(--shopify-text) !important;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--shopify-border);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.adm-root .btn-polaris-secondary:hover {
+  background-color: #f6f6f7;
+  border-color: #c9cccf;
+}
+
+.adm-root .btn-polaris-danger {
+  background-color: #ffffff;
+  color: #d72c0d !important;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid #fed2d2;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.adm-root .btn-polaris-danger:hover {
+  background-color: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.adm-root .btn-polaris-whatsapp {
+  background-color: #25d366;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.adm-root .btn-polaris-whatsapp:hover {
+  background-color: #20bd5a;
+}
+
+/* ---------------- Polaris Status Badges ---------------- */
+.adm-root .polaris-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.adm-root .polaris-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Paid / Active / Delivered */
+.adm-root .polaris-badge.paid,
+.adm-root .polaris-badge.active,
+.adm-root .polaris-badge.activated,
+.adm-root .polaris-badge.delivered {
+  background-color: var(--badge-paid-bg);
+  color: var(--badge-paid-text);
+}
+.adm-root .polaris-badge.paid::before,
+.adm-root .polaris-badge.active::before,
+.adm-root .polaris-badge.activated::before,
+.adm-root .polaris-badge.delivered::before {
+  background-color: var(--badge-paid-text);
+}
+
+/* Unpaid / Pending */
+.adm-root .polaris-badge.unpaid,
+.adm-root .polaris-badge.pending,
+.adm-root .polaris-badge.printed {
+  background-color: var(--badge-unpaid-bg);
+  color: var(--badge-unpaid-text);
+}
+.adm-root .polaris-badge.unpaid::before,
+.adm-root .polaris-badge.pending::before,
+.adm-root .polaris-badge.printed::before {
+  background-color: var(--badge-unpaid-text);
+}
+
+/* Unfulfilled / New */
+.adm-root .polaris-badge.new,
+.adm-root .polaris-badge.unfulfilled {
+  background-color: var(--badge-unfulfilled-bg);
+  color: var(--badge-unfulfilled-text);
+}
+.adm-root .polaris-badge.new::before,
+.adm-root .polaris-badge.unfulfilled::before {
+  background-color: var(--badge-unfulfilled-text);
+}
+
+/* Shipped / Packed */
+.adm-root .polaris-badge.shipped,
+.adm-root .polaris-badge.packed {
+  background-color: var(--badge-shipped-bg);
+  color: var(--badge-shipped-text);
+}
+.adm-root .polaris-badge.shipped::before,
+.adm-root .polaris-badge.packed::before {
+  background-color: var(--badge-shipped-text);
+}
+
+/* Cancelled / Disabled / Low Stock */
+.adm-root .polaris-badge.cancelled,
+.adm-root .polaris-badge.disabled,
+.adm-root .polaris-badge.danger,
+.adm-root .polaris-badge.low_stock {
+  background-color: var(--badge-cancelled-bg);
+  color: var(--badge-cancelled-text);
+}
+.adm-root .polaris-badge.cancelled::before,
+.adm-root .polaris-badge.disabled::before,
+.adm-root .polaris-badge.danger::before,
+.adm-root .polaris-badge.low_stock::before {
+  background-color: var(--badge-cancelled-text);
+}
+
+/* Draft / Neutral */
+.adm-root .polaris-badge.draft,
+.adm-root .polaris-badge.neutral {
+  background-color: var(--badge-neutral-bg);
+  color: var(--badge-neutral-text);
+}
+.adm-root .polaris-badge.draft::before,
+.adm-root .polaris-badge.neutral::before {
+  background-color: var(--badge-neutral-text);
+}
+
+/* ---------------- Polaris Segmented Tabs & Filters ---------------- */
+.adm-root .filter-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--shopify-border);
+  gap: 12px;
+  flex-wrap: wrap;
+  background-color: #fafbfb;
+}
+
+.adm-root .polaris-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.adm-root .polaris-tab {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--shopify-text-subdued);
+  transition: all 0.15s;
+}
+
+.adm-root .polaris-tab:hover {
+  color: var(--shopify-text);
+  background-color: #f1f2f4;
+}
+
+.adm-root .polaris-tab.active {
+  color: var(--shopify-text);
+  background-color: #e4e5e7;
+  font-weight: 600;
+}
+
+.adm-root .filter-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 320px;
+  margin-left: auto;
+}
+
+.adm-root .filter-input {
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--shopify-border);
+  border-radius: 6px;
+  font-size: 12.5px;
+  background-color: #ffffff;
+  color: var(--shopify-text);
+  outline: none;
+}
+
+.adm-root .filter-input:focus {
+  border-color: var(--shopify-green);
+  box-shadow: 0 0 0 1px var(--shopify-green);
+}
+
+/* ---------------- Polaris Data Table ---------------- */
+.adm-root .polaris-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.adm-root .polaris-table thead th {
+  background-color: #fafbfb;
+  color: var(--shopify-text-subdued);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--shopify-border);
+  white-space: nowrap;
+}
+
+.adm-root .polaris-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--shopify-border-subtle);
+  font-size: 13px;
+  color: var(--shopify-text);
+  vertical-align: middle;
+}
+
+.adm-root .polaris-table tbody tr {
+  transition: background-color 0.1s ease;
+}
+
+.adm-root .polaris-table tbody tr:hover {
+  background-color: #fafbfb;
+}
+
+.adm-root .table-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--shopify-border);
+  background-color: #f1f2f4;
+  flex-shrink: 0;
+}
+
+.adm-root .product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adm-root .product-cell-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-root .product-cell-name {
+  font-weight: 600;
+  color: var(--shopify-text);
+}
+
+.adm-root .product-cell-name:hover {
+  color: var(--shopify-green);
+}
+
+.adm-root .product-cell-sub {
+  font-size: 11.5px;
+  color: var(--shopify-text-subdued);
+}
+
+/* ---------------- Form Controls & Inputs ---------------- */
+.adm-root .polaris-form-group {
+  margin-bottom: 16px;
+}
+
+.adm-root .polaris-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--shopify-text);
+  margin-bottom: 6px;
+}
+
+.adm-root .polaris-input,
+.adm-root .polaris-select,
+.adm-root .polaris-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--shopify-border);
+  background-color: #ffffff;
+  color: var(--shopify-text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.adm-root .polaris-input:focus,
+.adm-root .polaris-select:focus,
+.adm-root .polaris-textarea:focus {
+  border-color: var(--shopify-green);
+  box-shadow: 0 0 0 1px var(--shopify-green);
+}
+
+.adm-root .polaris-help-text {
+  font-size: 11.5px;
+  color: var(--shopify-text-subdued);
+  margin-top: 4px;
+}
+
+/* Responsive Overrides */
+@media (max-width: 900px) {
+  .adm-root .adm-shell {
+    flex-direction: column;
+  }
+  .adm-root .shopify-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+  .adm-root .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .adm-root .shopify-content {
+    padding: 16px;
+  }
+}
