@@ -78,6 +78,12 @@ export async function updateFullProductAction(fd: FormData) {
   const ratingText = str(fd, "rating_text");
   const description = str(fd, "description");
   const features = str(fd, "features");
+  const compareAtPaise = paise(fd, "compare_at_price");
+  const costPerItemPaise = paise(fd, "cost_per_item");
+  const barcode = str(fd, "barcode");
+  const vendor = str(fd, "vendor") || "GuardianTag Official";
+  const tags = str(fd, "tags");
+  const collectionId = str(fd, "collection_id");
   let imageUrl = str(fd, "image_url");
 
   // Handle direct file upload if provided
@@ -99,6 +105,12 @@ export async function updateFullProductAction(fd: FormData) {
       name = ${name},
       tag_type = ${type},
       price_paise = ${paise(fd, "price")},
+      compare_at_price_paise = ${compareAtPaise},
+      cost_per_item_paise = ${costPerItemPaise},
+      barcode = ${barcode},
+      vendor = ${vendor},
+      tags = ${tags},
+      collection_id = ${collectionId},
       low_stock_at = ${Math.max(0, num(fd, "low_stock_at"))},
       active = ${fd.get("active") === "on"},
       subtitle = ${subtitle},
@@ -127,6 +139,12 @@ export async function createFullProductAction(fd: FormData) {
   const ratingText = str(fd, "rating_text");
   const description = str(fd, "description");
   const features = str(fd, "features");
+  const compareAtPaise = paise(fd, "compare_at_price");
+  const costPerItemPaise = paise(fd, "cost_per_item");
+  const barcode = str(fd, "barcode");
+  const vendor = str(fd, "vendor") || "GuardianTag Official";
+  const tags = str(fd, "tags");
+  const collectionId = str(fd, "collection_id");
   let imageUrl = str(fd, "image_url");
 
   if (!sku || !name) redirect("/admin/products/new?error=SKU+and+Name+are+required");
@@ -150,10 +168,12 @@ export async function createFullProductAction(fd: FormData) {
     const stmts = [
       sql`
         INSERT INTO store_products (
-          sku, name, tag_type, price_paise, stock, low_stock_at, active,
+          sku, name, tag_type, price_paise, compare_at_price_paise, cost_per_item_paise,
+          barcode, vendor, tags, collection_id, stock, low_stock_at, active,
           subtitle, category, rating_text, description, features, image_url
         ) VALUES (
-          ${sku}, ${name}, ${type}, ${paise(fd, "price")}, ${initialStock},
+          ${sku}, ${name}, ${type}, ${paise(fd, "price")}, ${compareAtPaise}, ${costPerItemPaise},
+          ${barcode}, ${vendor}, ${tags}, ${collectionId}, ${initialStock},
           ${Math.max(0, num(fd, "low_stock_at") || 10)}, ${fd.get("active") === "on"},
           ${subtitle}, ${category}, ${ratingText}, ${description}, ${features}, ${imageUrl}
         )
@@ -321,4 +341,113 @@ export async function tagStatusAction(fd: FormData) {
   }
   revalidatePath("/admin/tags");
   redirect("/admin/tags");
+}
+
+/* ---------- Shopify Discounts ---------- */
+export async function createDiscountAction(fd: FormData) {
+  await requireAdmin();
+  const code = str(fd, "code").toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  const type = str(fd, "discount_type");
+  const value = num(fd, "value");
+  const minSpend = paise(fd, "min_spend");
+  const maxUses = fd.get("max_uses") ? num(fd, "max_uses") : null;
+
+  if (!code) redirect("/admin/discounts?error=Discount+code+is+required");
+
+  try {
+    await sql`
+      INSERT INTO store_discounts (code, discount_type, value, min_spend_paise, max_uses, active)
+      VALUES (${code}, ${type}, ${value}, ${minSpend}, ${maxUses}, true)
+    `;
+  } catch {
+    redirect("/admin/discounts?error=Discount+code+already+exists");
+  }
+
+  revalidatePath("/admin/discounts");
+  redirect("/admin/discounts");
+}
+
+export async function toggleDiscountAction(fd: FormData) {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const active = fd.get("active") === "true";
+  await sql`UPDATE store_discounts SET active = ${!active} WHERE id = ${id}::uuid`;
+  revalidatePath("/admin/discounts");
+  redirect("/admin/discounts");
+}
+
+export async function deleteDiscountAction(fd: FormData) {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await sql`DELETE FROM store_discounts WHERE id = ${id}::uuid`;
+  revalidatePath("/admin/discounts");
+  redirect("/admin/discounts");
+}
+
+/* ---------- Shopify Collections ---------- */
+export async function createCollectionAction(fd: FormData) {
+  await requireAdmin();
+  const title = str(fd, "title");
+  const id = str(fd, "id").toLowerCase().replace(/[^a-z0-9_-]/g, "-") || title.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+  const description = str(fd, "description");
+  const imageUrl = str(fd, "image_url");
+
+  if (!title) redirect("/admin/collections?error=Title+is+required");
+
+  try {
+    await sql`
+      INSERT INTO store_collections (id, title, description, image_url)
+      VALUES (${id}, ${title}, ${description}, ${imageUrl})
+    `;
+  } catch {
+    redirect("/admin/collections?error=Collection+slug+already+exists");
+  }
+
+  revalidatePath("/admin/collections");
+  redirect("/admin/collections");
+}
+
+export async function deleteCollectionAction(fd: FormData) {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await sql`DELETE FROM store_collections WHERE id = ${id}`;
+  revalidatePath("/admin/collections");
+  redirect("/admin/collections");
+}
+
+/* ---------- Shopify Settings ---------- */
+export async function updateStoreSettingsAction(fd: FormData) {
+  await requireAdmin();
+  const entries: [string, string][] = [
+    ["store_name", str(fd, "store_name")],
+    ["store_email", str(fd, "store_email")],
+    ["whatsapp_number", str(fd, "whatsapp_number").replace(/[^0-9]/g, "")],
+    ["tax_gst_percent", str(fd, "tax_gst_percent")],
+    ["gstin_number", str(fd, "gstin_number")],
+    ["free_shipping_threshold", str(fd, "free_shipping_threshold")],
+    ["policy_refund", str(fd, "policy_refund")],
+    ["policy_shipping", str(fd, "policy_shipping")],
+  ];
+
+  for (const [key, value] of entries) {
+    if (value) {
+      await sql`
+        INSERT INTO store_settings (key, value, updated_at)
+        VALUES (${key}, ${value}, now())
+        ON CONFLICT (key) DO UPDATE SET value = ${value}, updated_at = now()
+      `;
+    }
+  }
+
+  revalidatePath("/admin/settings");
+  redirect("/admin/settings?saved=1");
+}
+
+/* ---------- Shopify Abandoned Checkout Recovery ---------- */
+export async function recoverAbandonedCheckoutAction(fd: FormData) {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await sql`UPDATE store_abandoned_checkouts SET recovered = true, recovery_sent_at = now() WHERE id = ${id}::uuid`;
+  revalidatePath("/admin/orders/abandoned");
+  redirect("/admin/orders/abandoned");
 }

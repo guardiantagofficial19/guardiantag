@@ -3,10 +3,24 @@ import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import { inr, TAG_TYPES } from "@/lib/format";
 import { updateFullProductAction, deleteProductAction } from "../../../actions";
+import ConfirmButton from "@/components/ConfirmButton";
+import {
+  ArrowLeft,
+  Tag,
+  DollarSign,
+  Package,
+  Layers,
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink,
+  Eye,
+  Trash2,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditProductPage({
+export default async function ShopifyEditProductPage({
   params,
   searchParams,
 }: {
@@ -16,293 +30,422 @@ export default async function EditProductPage({
   const { sku } = await params;
   const { saved, error } = await searchParams;
 
-  const rows = await sql`
-    SELECT * FROM store_products WHERE sku = ${decodeURIComponent(sku)} LIMIT 1
-  `;
-  const product = rows[0];
+  const [rows, collections] = await Promise.all([
+    sql`SELECT * FROM store_products WHERE sku = ${decodeURIComponent(sku)} LIMIT 1`,
+    sql`SELECT id, title FROM store_collections ORDER BY sort_order ASC`,
+  ]);
 
+  const product = rows[0];
   if (!product) notFound();
+
+  const priceRupees = (product.price_paise || 0) / 100;
+  const compareAtRupees = (product.compare_at_price_paise || 0) / 100;
+  const costRupees = (product.cost_per_item_paise || 0) / 100;
 
   return (
     <>
       <div style={{ marginBottom: 16 }}>
-        <Link href="/admin/products" className="muted" style={{ fontSize: 13 }}>
-          ← Back to Products Catalog
+        <Link
+          href="/admin/products"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 13,
+            color: "var(--shopify-text-subdued)",
+            fontWeight: 500,
+          }}
+        >
+          <ArrowLeft size={14} />
+          <span>Products</span>
         </Link>
-        <div className="row" style={{ marginTop: 8 }}>
-          <h1>
-            Edit Product: <span style={{ color: "#facc15" }}>{product.name}</span>
-          </h1>
-          <span className="pill" style={{ fontSize: 13, background: "#222" }}>
-            SKU: {product.sku}
-          </span>
+      </div>
+
+      <div className="page-header">
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h1>{product.name}</h1>
+            <span className={`polaris-badge ${product.active ? "active" : "draft"}`}>
+              {product.active ? "Active" : "Draft"}
+            </span>
+          </div>
+          <div className="page-subtitle">SKU: {product.sku}</div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <a
+            href="/products"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-polaris-secondary"
+          >
+            <span>View in Store</span>
+            <ExternalLink size={13} />
+          </a>
         </div>
       </div>
 
       {saved && (
         <div
-          className="card ok"
           style={{
-            background: "rgba(74, 222, 128, 0.1)",
-            border: "1px solid #4ade80",
-            padding: 12,
-            marginBottom: 16,
+            backgroundColor: "#f0fdf4",
+            border: "1px solid #bbf7d0",
+            color: "#166534",
+            padding: "10px 14px",
             borderRadius: 8,
-            fontWeight: 600,
+            marginBottom: 16,
+            fontSize: 13,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
-          ✓ Product details, pricing, and images updated successfully!
+          <CheckCircle2 size={16} />
+          <span>Product updated successfully! Changes are live on your customer storefront.</span>
         </div>
       )}
 
       {error && (
         <div
-          className="card err"
           style={{
-            background: "rgba(248, 113, 113, 0.1)",
-            border: "1px solid #f87171",
-            padding: 12,
-            marginBottom: 16,
+            backgroundColor: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#b91c1c",
+            padding: "10px 14px",
             borderRadius: 8,
+            marginBottom: 16,
+            fontSize: 13,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
-          {error}
+          <AlertCircle size={16} />
+          <span>{error}</span>
         </div>
       )}
 
-      <div className="grid2" style={{ alignItems: "start" }}>
-        {/* Left Column: Product Details Form */}
-        <section className="card">
-          <h2>Product Information</h2>
+      <form action={updateFullProductAction}>
+        <input type="hidden" name="sku" value={product.sku} />
 
-          <form action={updateFullProductAction} className="form" encType="multipart/form-data">
-            <input type="hidden" name="sku" value={product.sku} />
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
+          {/* Main Left Column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Title & Description */}
+            <div className="polaris-card">
+              <h3 style={{ margin: "0 0 14px", borderBottom: "1px solid var(--shopify-border)", paddingBottom: 8 }}>
+                Product Details
+              </h3>
 
-            <div className="cols">
-              <label>
-                Product Name *
-                <input name="name" defaultValue={product.name} required />
-              </label>
-
-              <label>
-                Tag Type *
-                <select name="tag_type" defaultValue={product.tag_type}>
-                  {TAG_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                  <option value="CUSTOM">CUSTOM</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="cols">
-              <label>
-                Price in INR (₹) *
+              <div className="polaris-form-group">
+                <label className="polaris-label">Title</label>
                 <input
-                  name="price"
-                  type="number"
-                  step="0.01"
-                  min={0}
-                  defaultValue={product.price_paise / 100}
+                  name="name"
+                  defaultValue={product.name}
                   required
+                  className="polaris-input"
                 />
-              </label>
+              </div>
 
-              <label>
-                Low-Stock Alert Level
+              <div className="polaris-form-group">
+                <label className="polaris-label">Subtitle / Highlight Tagline</label>
                 <input
-                  name="low_stock_at"
-                  type="number"
-                  min={0}
-                  defaultValue={product.low_stock_at}
+                  name="subtitle"
+                  defaultValue={product.subtitle || ""}
+                  placeholder="e.g. 4-Piece Ultra-Shield Kit for Bikers"
+                  className="polaris-input"
                 />
-              </label>
+              </div>
+
+              <div className="polaris-form-group">
+                <label className="polaris-label">Description</label>
+                <textarea
+                  name="description"
+                  rows={4}
+                  defaultValue={product.description || ""}
+                  placeholder="Full customer-facing product description…"
+                  className="polaris-textarea"
+                />
+              </div>
+
+              <div className="polaris-form-group" style={{ marginBottom: 0 }}>
+                <label className="polaris-label">Key Safety Features (1 per line)</label>
+                <textarea
+                  name="features"
+                  rows={4}
+                  defaultValue={product.features || ""}
+                  placeholder="Instant bystander emergency scan&#10;Zero app installation required&#10;Waterproof 3M military adhesive"
+                  className="polaris-textarea"
+                />
+              </div>
             </div>
 
-            <label>
-              Subtitle (Tagline)
-              <input
-                name="subtitle"
-                defaultValue={product.subtitle || ""}
-                placeholder="e.g. 4-Piece Motorcycle Emergency Safety Kit"
-              />
-            </label>
+            {/* Media Upload */}
+            <div className="polaris-card">
+              <h3 style={{ margin: "0 0 14px", borderBottom: "1px solid var(--shopify-border)", paddingBottom: 8 }}>
+                Media & Imagery
+              </h3>
 
-            <div className="cols">
-              <label>
-                Category
-                <input
-                  name="category"
-                  defaultValue={product.category || ""}
-                  placeholder="e.g. Motorcycle & Helmet Safety"
-                />
-              </label>
-
-              <label>
-                Badge / Rating Text
-                <input
-                  name="rating_text"
-                  defaultValue={product.rating_text || ""}
-                  placeholder="e.g. 100% Waterproof & UV Weather Resistant"
-                />
-              </label>
-            </div>
-
-            <label>
-              Full Description
-              <textarea
-                name="description"
-                rows={5}
-                defaultValue={product.description || ""}
-                placeholder="Detailed description of the product, benefits, and how it protects the user..."
-              />
-            </label>
-
-            <label>
-              Key Safety Features (one per line)
-              <textarea
-                name="features"
-                rows={4}
-                defaultValue={product.features || ""}
-                placeholder="1. High-Impact PVC Helmet Tag&#10;2. Emergency Key Chain Tag&#10;3. Waterproof Visor Stickers"
-              />
-            </label>
-
-            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14, marginTop: 4 }}>
-              <h3 style={{ fontSize: 14, marginBottom: 8 }}>Product Image</h3>
-              <label>
-                Image URL (or public path)
-                <input
-                  name="image_url"
-                  defaultValue={product.image_url || ""}
-                  placeholder="e.g. /gt-logo.png or https://example.com/tag.jpg"
-                />
-              </label>
-
-              <label style={{ marginTop: 8 }}>
-                Upload New Image File (from device)
-                <input
-                  name="image_file"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                  style={{ background: "#1a1a1e", padding: 6 }}
-                />
-              </label>
-            </div>
-
-            <label className="check" style={{ marginTop: 10 }}>
-              <input type="checkbox" name="active" defaultChecked={product.active} />
-              <strong>Active &amp; Available in Store</strong> (uncheck to mark as Coming Soon / Hidden)
-            </label>
-
-            <div style={{ marginTop: 12 }}>
-              <button type="submit" className="btn">
-                Save Product Changes
-              </button>
-            </div>
-          </form>
-        </section>
-
-        {/* Right Column: Live Store Preview & Stock Status */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <section className="card">
-            <h2>Live Store Preview</h2>
-            <div
-              style={{
-                background: "#08080a",
-                border: "1px solid #222",
-                borderRadius: 12,
-                padding: 16,
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  height: 180,
-                  background: "#121215",
-                  borderRadius: 8,
-                  overflow: "hidden",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 12,
-                  border: "1px solid #282830",
-                }}
-              >
+              <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 14 }}>
                 {product.image_url ? (
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    style={{
+                      width: 90,
+                      height: 90,
+                      objectFit: "cover",
+                      borderRadius: 8,
+                      border: "1px solid var(--shopify-border)",
+                    }}
                   />
                 ) : (
-                  <div style={{ color: "#666", fontSize: 13, fontFamily: "monospace" }}>
-                    [ 3D Tag Type: {product.tag_type} ]
+                  <div
+                    style={{
+                      width: 90,
+                      height: 90,
+                      borderRadius: 8,
+                      border: "1px dashed var(--shopify-border)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--shopify-text-subdued)",
+                    }}
+                  >
+                    <ImageIcon size={24} />
                   </div>
                 )}
-              </div>
 
-              <div style={{ textAlign: "left" }}>
-                <span className={`pill ${product.active ? "active" : "disabled"}`} style={{ fontSize: 10 }}>
-                  {product.active ? "AVAILABLE NOW" : "COMING SOON"}
-                </span>
-                <h3 style={{ fontSize: 18, margin: "6px 0 2px" }}>{product.name}</h3>
-                <div style={{ color: "#facc15", fontWeight: 700, fontSize: 16 }}>
-                  {inr(product.price_paise)}
+                <div style={{ flex: 1 }}>
+                  <div className="polaris-form-group" style={{ marginBottom: 10 }}>
+                    <label className="polaris-label">Upload New Image from Device</label>
+                    <input
+                      name="image_file"
+                      type="file"
+                      accept="image/*"
+                      className="polaris-input"
+                    />
+                  </div>
+
+                  <div className="polaris-form-group" style={{ marginBottom: 0 }}>
+                    <label className="polaris-label">Or Image URL</label>
+                    <input
+                      name="image_url"
+                      defaultValue={product.image_url || ""}
+                      placeholder="https://... or /products/..."
+                      className="polaris-input"
+                    />
+                  </div>
                 </div>
-                {product.subtitle && (
-                  <p className="muted" style={{ fontSize: 12, margin: "4px 0 8px" }}>
-                    {product.subtitle}
-                  </p>
-                )}
               </div>
             </div>
 
-            <div style={{ marginTop: 14 }}>
-              <Link
-                href="/products"
-                target="_blank"
-                style={{ fontSize: 12, color: "var(--ac)" }}
-              >
-                View Public Store Page ↗
-              </Link>
-            </div>
-          </section>
+            {/* Shopify Pricing Card */}
+            <div className="polaris-card">
+              <h3 style={{ margin: "0 0 14px", borderBottom: "1px solid var(--shopify-border)", paddingBottom: 8 }}>
+                Pricing
+              </h3>
 
-          <section className="card">
-            <h2>Inventory &amp; Stock Level</h2>
-            <div className="row" style={{ marginBottom: 12 }}>
-              <span>Current Available Units:</span>
-              <span className={`pill ${product.stock <= product.low_stock_at ? "cancelled" : "delivered"}`}>
-                {product.stock} units
-              </span>
-            </div>
-            <p className="muted" style={{ fontSize: 12 }}>
-              To add or subtract stock units, use the{" "}
-              <Link href="/admin/inventory" style={{ textDecoration: "underline" }}>
-                Inventory Section
-              </Link>
-              .
-            </p>
-          </section>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                <div className="polaris-form-group">
+                  <label className="polaris-label">Price (₹)</label>
+                  <input
+                    name="price"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    defaultValue={priceRupees}
+                    required
+                    className="polaris-input"
+                  />
+                </div>
 
-          <section className="card" style={{ border: "1px solid #3a1212" }}>
-            <h2 style={{ color: "#f87171" }}>Deactivate Product</h2>
-            <p className="muted" style={{ fontSize: 12 }}>
-              Hides this product from the customer store catalog without deleting past order records.
-            </p>
-            <form action={deleteProductAction}>
-              <input type="hidden" name="sku" value={product.sku} />
-              <button type="submit" className="ghost danger">
-                Deactivate &amp; Hide from Store
+                <div className="polaris-form-group">
+                  <label className="polaris-label">Compare-at Price (₹)</label>
+                  <input
+                    name="compare_at_price"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    defaultValue={compareAtRupees || ""}
+                    placeholder="e.g. 999.00"
+                    className="polaris-input"
+                  />
+                  <div className="polaris-help-text">Strikethrough original price</div>
+                </div>
+
+                <div className="polaris-form-group">
+                  <label className="polaris-label">Cost per item (₹)</label>
+                  <input
+                    name="cost_per_item"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    defaultValue={costRupees || ""}
+                    placeholder="e.g. 120.00"
+                    className="polaris-input"
+                  />
+                  <div className="polaris-help-text">Customers won't see this</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory Card */}
+            <div className="polaris-card">
+              <h3 style={{ margin: "0 0 14px", borderBottom: "1px solid var(--shopify-border)", paddingBottom: 8 }}>
+                Inventory & SKU
+              </h3>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="polaris-form-group">
+                  <label className="polaris-label">SKU (Stock Keeping Unit)</label>
+                  <input
+                    readOnly
+                    defaultValue={product.sku}
+                    className="polaris-input"
+                    style={{ backgroundColor: "#f1f2f4" }}
+                  />
+                </div>
+
+                <div className="polaris-form-group">
+                  <label className="polaris-label">Barcode / QR Identifier</label>
+                  <input
+                    name="barcode"
+                    defaultValue={product.barcode || ""}
+                    placeholder="e.g. 890123456789"
+                    className="polaris-input"
+                  />
+                </div>
+
+                <div className="polaris-form-group">
+                  <label className="polaris-label">Low Stock Alert Threshold</label>
+                  <input
+                    name="low_stock_at"
+                    type="number"
+                    min={0}
+                    defaultValue={product.low_stock_at}
+                    className="polaris-input"
+                  />
+                </div>
+
+                <div className="polaris-form-group">
+                  <label className="polaris-label">Hardware Type</label>
+                  <select name="tag_type" defaultValue={product.tag_type} className="polaris-select">
+                    {TAG_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar Column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Status Card */}
+            <div className="polaris-card">
+              <h3 style={{ margin: "0 0 12px", borderBottom: "1px solid var(--shopify-border)", paddingBottom: 8 }}>
+                Product Status
+              </h3>
+
+              <div className="polaris-form-group" style={{ marginBottom: 12 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    name="active"
+                    defaultChecked={product.active}
+                  />
+                  <span style={{ fontWeight: 600 }}>Active in Online Store</span>
+                </label>
+                <div className="polaris-help-text" style={{ marginTop: 4 }}>
+                  When unchecked, the product is saved as Draft and hidden from customers.
+                </div>
+              </div>
+
+              <button type="submit" className="btn-polaris-primary" style={{ width: "100%", justifyContent: "center" }}>
+                Save Changes
               </button>
-            </form>
-          </section>
+            </div>
+
+            {/* Organization Card */}
+            <div className="polaris-card">
+              <h3 style={{ margin: "0 0 12px", borderBottom: "1px solid var(--shopify-border)", paddingBottom: 8 }}>
+                Product Organization
+              </h3>
+
+              <div className="polaris-form-group">
+                <label className="polaris-label">Collection</label>
+                <select name="collection_id" defaultValue={product.collection_id || ""} className="polaris-select">
+                  <option value="">No Collection</option>
+                  {collections.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="polaris-form-group">
+                <label className="polaris-label">Category</label>
+                <input
+                  name="category"
+                  defaultValue={product.category || ""}
+                  placeholder="e.g. Safety Decals, Wearables"
+                  className="polaris-input"
+                />
+              </div>
+
+              <div className="polaris-form-group">
+                <label className="polaris-label">Vendor / Manufacturer</label>
+                <input
+                  name="vendor"
+                  defaultValue={product.vendor || "GuardianTag Official"}
+                  className="polaris-input"
+                />
+              </div>
+
+              <div className="polaris-form-group" style={{ marginBottom: 0 }}>
+                <label className="polaris-label">Tags (comma separated)</label>
+                <input
+                  name="tags"
+                  defaultValue={product.tags || ""}
+                  placeholder="biker, helmet, water-resistant"
+                  className="polaris-input"
+                />
+              </div>
+            </div>
+
+            {/* Google Search Engine Preview */}
+            <div className="polaris-card">
+              <h3 style={{ margin: "0 0 10px", borderBottom: "1px solid var(--shopify-border)", paddingBottom: 8 }}>
+                Search Engine Listing
+              </h3>
+              <div style={{ fontSize: 11, color: "#1a0dab", fontWeight: 500, lineHeight: 1.3 }}>
+                {product.name} — GuardianTag Official Store
+              </div>
+              <div style={{ fontSize: 10, color: "#006621", marginTop: 2 }}>
+                https://guardiantag.vercel.app/products/{product.sku.toLowerCase()}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--shopify-text-subdued)", marginTop: 4, lineHeight: 1.3 }}>
+                {product.description ? product.description.slice(0, 100) + "…" : "Official emergency smart QR tag for bikers and travelers."}
+              </div>
+            </div>
+
+            {/* Delete Product */}
+            <div className="polaris-card">
+              <ConfirmButton
+                message={`Are you sure you want to deactivate ${product.name}?`}
+                className="btn-polaris-danger"
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                Archive Product
+              </ConfirmButton>
+            </div>
+          </div>
         </div>
-      </div>
+      </form>
     </>
   );
 }

@@ -85,7 +85,12 @@ export default async function ShopifyCustomersPage({
                 return (
                   <tr key={i}>
                     <td>
-                      <div style={{ fontWeight: 600, color: "var(--shopify-text)" }}>{c.name}</div>
+                      <Link
+                        href={`/admin/customers/${encodeURIComponent(c.phone)}`}
+                        style={{ fontWeight: 600, color: "var(--shopify-green)" }}
+                      >
+                        {c.name}
+                      </Link>
                       {c.orders_count > 1 && (
                         <span
                           style={{
