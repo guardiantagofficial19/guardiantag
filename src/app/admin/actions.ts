@@ -17,6 +17,9 @@ const paise = (fd: FormData, k: string) => Math.round(Number(fd.get(k) || 0) * 1
 /* ---------- auth ---------- */
 export async function loginAction(fd: FormData) {
   const pw = str(fd, "password");
+  if (process.env.NODE_ENV === "production" && !process.env.ADMIN_PASSWORD) {
+    console.warn("⚠️ [SECURITY WARNING] ADMIN_PASSWORD environment variable is not defined. Using default.");
+  }
   const expected = (process.env.ADMIN_PASSWORD || "guardiantag_admin_2026!").trim();
   if (!safeEqual(pw, expected) && pw !== expected) {
     await new Promise((r) => setTimeout(r, 600));

@@ -16,9 +16,10 @@ export async function POST(request: Request) {
     const cleanPhone = phone.trim();
     const cleanOtp = otp.trim();
 
-    // Universal test fallback OTP for development/testing ease
-    if (cleanOtp === '123456') {
-      return NextResponse.json({ success: true, message: 'OTP verified successfully.' });
+    // Universal test fallback OTP for local development only if explicitly enabled
+    const isDevOtpEnabled = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEV_OTP === 'true';
+    if (isDevOtpEnabled && cleanOtp === '123456') {
+      return NextResponse.json({ success: true, message: 'OTP verified successfully (Dev mode).' });
     }
 
     const store = getOwnerOtpStore();

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { COOKIE, verifyToken } from '@/lib/admin-auth';
 
 const GUARDIANTAG_WHATSAPP_NUMBER = '918058800880';
 
@@ -12,8 +14,30 @@ const SKU_MAP: Record<string, string> = {
   GTU: 'GTU-KIT',
 };
 
+// Rate limiting store for order placement: max 6 orders per IP per 10 minutes
+const orderRateLimit = new Map<string, { count: number; expiresAt: number }>();
+
+function isOrderRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = orderRateLimit.get(ip);
+  if (!record || now > record.expiresAt) {
+    orderRateLimit.set(ip, { count: 1, expiresAt: now + 10 * 60 * 1000 });
+    return false;
+  }
+  if (record.count >= 6) return true;
+  record.count += 1;
+  return false;
+}
+
+// Protected: Only authorized Store Manager administrators can fetch full order records
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(COOKIE)?.value;
+    if (!(await verifyToken(token))) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const orders = await sql`
       SELECT 
         o.id,
@@ -48,6 +72,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+    if (isOrderRateLimited(ip)) {
+      return NextResponse.json(
+        { success: false, error: 'Too many order requests. Please wait a few minutes before trying again.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const {
       productModel,
@@ -65,21 +97,31 @@ export async function POST(request: Request) {
       notes,
     } = body;
 
-    if (!customerName || !customerPhone || !address) {
+    const cleanName = String(customerName || '').trim().slice(0, 100);
+    const cleanPhone = String(customerPhone || '').trim().slice(0, 20);
+    const cleanAddress = String(address || '').trim().slice(0, 500);
+    const cleanEmail = String(customerEmail || '').trim().slice(0, 100);
+    const cleanCity = String(city || 'India').trim().slice(0, 100);
+    const cleanState = String(state || '').trim().slice(0, 100);
+    const cleanPincode = String(pincode || '').trim().slice(0, 15);
+    const cleanEtching = String(laserEtchingText || '').trim().slice(0, 60);
+    const cleanNotes = String(notes || '').trim().slice(0, 300);
+
+    if (!cleanName || !cleanPhone || !cleanAddress) {
       return NextResponse.json(
         { success: false, error: 'Customer Name, Phone number, and Address are required.' },
         { status: 400 }
       );
     }
 
+    const parsedQty = Math.max(1, Math.min(25, Math.trunc(Number(quantity) || 1)));
     const sku = SKU_MAP[productModel] || 'GTB-KIT';
-    const qty = Math.max(1, Number(quantity) || 1);
-    const amountInPaise = totalAmount ? Math.round(Number(totalAmount) * 100) : 49900;
+    const amountInPaise = totalAmount ? Math.min(10000000, Math.round(Number(totalAmount) * 100)) : 49900;
     const orderId = crypto.randomUUID();
 
     const orderNotes = [
-      laserEtchingText ? `Etching: ${laserEtchingText}` : '',
-      notes ? notes : '',
+      cleanEtching ? `Etching: ${cleanEtching}` : '',
+      cleanNotes ? cleanNotes : '',
     ].filter(Boolean).join(' | ');
 
     // 1. Insert order into store_orders and store_order_items
@@ -102,13 +144,13 @@ export async function POST(request: Request) {
           notes
         ) VALUES (
           ${orderId},
-          ${String(customerName).trim()},
-          ${String(customerPhone).trim()},
-          ${String(customerEmail || '').trim()},
-          ${String(address).trim()},
-          ${String(city).trim()},
-          ${String(state).trim()},
-          ${String(pincode).trim()},
+          ${cleanName},
+          ${cleanPhone},
+          ${cleanEmail},
+          ${cleanAddress},
+          ${cleanCity},
+          ${cleanState},
+          ${cleanPincode},
           'new',
           'unpaid',
           0,
@@ -127,13 +169,13 @@ export async function POST(request: Request) {
           ${orderId},
           ${sku},
           ${productName || 'GTB Biker Tag Kit (4-piece)'},
-          ${qty},
-          ${Math.round(amountInPaise / qty)}
+          ${parsedQty},
+          ${Math.round(amountInPaise / parsedQty)}
         )
       `,
       sql`
         UPDATE store_products 
-        SET stock = GREATEST(0, stock - ${qty}) 
+        SET stock = GREATEST(0, stock - ${parsedQty}) 
         WHERE sku = ${sku}
       `,
       sql`
@@ -144,7 +186,7 @@ export async function POST(request: Request) {
           order_id
         ) VALUES (
           ${sku},
-          ${-qty},
+          ${-parsedQty},
           'website_order',
           ${orderId}
         )
@@ -173,16 +215,16 @@ export async function POST(request: Request) {
     const whatsappMessage = [
       `🚨 *NEW GUARDIANTAG ORDER: ${orderNo}*`,
       `━━━━━━━━━━━━━━━━━━`,
-      `📦 *Item:* ${productName || 'GTB Biker Tag Kit'} (Qty: ${qty})`,
+      `📦 *Item:* ${productName || 'GTB Biker Tag Kit'} (Qty: ${parsedQty})`,
       `💰 *Total Amount:* ₹${totalRupees} (Free Delivery Across India)`,
       orderNotes ? `🏷️ *Custom Details:* ${orderNotes}` : '',
       ``,
       `👤 *Customer Info:*`,
-      `• Name: ${customerName}`,
-      `• Mobile: ${customerPhone}`,
-      customerEmail ? `• Email: ${customerEmail}` : '',
+      `• Name: ${cleanName}`,
+      `• Mobile: ${cleanPhone}`,
+      cleanEmail ? `• Email: ${cleanEmail}` : '',
       `📍 *Delivery Address:*`,
-      `${address}${pincode ? ` - ${pincode}` : ''}`,
+      `${cleanAddress}${cleanPincode ? ` - ${cleanPincode}` : ''}`,
       `━━━━━━━━━━━━━━━━━━`,
       `✅ *Status:* Order registered in Store Manager. Please confirm delivery/payment.`
     ].filter(Boolean).join('\n');

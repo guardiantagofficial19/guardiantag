@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { provisionNewTags, getAllTags } from '@/lib/tagService';
 import { TagType } from '@/lib/types';
+import { COOKIE, verifyToken } from '@/lib/admin-auth';
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(COOKIE)?.value;
+    if (!(await verifyToken(token))) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin privileges required.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { tagType, quantity } = body;
 

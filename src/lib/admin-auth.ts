@@ -3,6 +3,10 @@ export const COOKIE = "gt_admin";
 
 const DEFAULT_SECRET = "e9b46f0436d4f938c538a7c1b41db52ea8290f6580a8f89e2469a4713da581c7f12a3d0b178c7e923e41980f765293da27b6c7a91873e2a9b48c6712398ab451";
 
+if (process.env.NODE_ENV === "production" && !process.env.ADMIN_SESSION_SECRET) {
+  console.warn("⚠️ [SECURITY WARNING] ADMIN_SESSION_SECRET is not defined in environment variables. Please configure it in your Vercel/hosting environment.");
+}
+
 async function hmac(msg: string) {
   const secret = process.env.ADMIN_SESSION_SECRET || DEFAULT_SECRET;
   const key = await crypto.subtle.importKey(

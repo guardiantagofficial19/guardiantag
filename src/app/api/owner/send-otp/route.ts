@@ -55,8 +55,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `6-Digit OTP sent to ${cleanPhone} via Twilio SMS.`,
-      // For development ease, fallback OTP 123456 is also accepted
+      message: `6-Digit OTP sent to ${cleanPhone} via SMS.`,
     });
   } catch (error: any) {
     return NextResponse.json(

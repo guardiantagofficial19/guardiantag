@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { updateOwnerDetails, getTagByQrId } from '@/lib/tagService';
+import { OWNER_COOKIE, verifyOwnerToken } from '@/lib/security/ownerAuth';
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +24,18 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: 'QR ID is required.' },
         { status: 400 }
+      );
+    }
+
+    // STRICT AUTHENTICATION: Require valid HMAC-signed owner session matching this QR ID
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(OWNER_COOKIE)?.value;
+    const session = verifyOwnerToken(sessionCookie, cleanId);
+
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: You must be logged in as the verified owner of this tag to make changes.' },
+        { status: 401 }
       );
     }
 

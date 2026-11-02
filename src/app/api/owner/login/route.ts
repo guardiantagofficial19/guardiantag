@@ -3,6 +3,7 @@ import { getTagByQrId } from '@/lib/tagService';
 import { verifyPin } from '@/lib/security/pinHash';
 import { checkLockoutStatus, recordFailedAttempt, resetAttempts } from '@/lib/security/rateLimit';
 import { getOwnerOtpStore } from '../send-otp/route';
+import { createOwnerToken, OWNER_COOKIE } from '@/lib/security/ownerAuth';
 
 export async function POST(request: Request) {
   try {
@@ -72,13 +73,15 @@ export async function POST(request: Request) {
         );
       }
 
-      // Universal test fallback OTP for testing ease
-      if (cleanOtp !== '123456') {
+      const isDevOtpEnabled = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEV_OTP === 'true';
+      const isTestCode = isDevOtpEnabled && cleanOtp === '123456';
+
+      if (!isTestCode) {
         const store = getOwnerOtpStore();
         const record = tag.ownerPhone ? store.get(tag.ownerPhone.trim()) : null;
 
         if (!record || Date.now() > record.expiresAt || record.otp !== cleanOtp) {
-          return genericAuthError('Incorrect or expired OTP code. Try fallback code 123456.');
+          return genericAuthError('Incorrect or expired OTP code. Please request a new OTP.');
         }
 
         // Consume OTP on success
@@ -97,8 +100,9 @@ export async function POST(request: Request) {
       if (tag.pinHash && tag.pinSalt) {
         pinValid = verifyPin(pin, tag.pinHash, tag.pinSalt);
       } else {
-        // Fallback default test PIN
-        pinValid = pin === '1234';
+        // Only allow fallback in explicit non-production dev mode if salt/hash not yet created
+        const isDevFallback = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEV_OTP === 'true';
+        pinValid = isDevFallback && pin === '1234';
       }
 
       if (!pinValid) {
@@ -109,12 +113,8 @@ export async function POST(request: Request) {
     // 4. Reset Lockout Attempts on Success
     resetAttempts(cleanId, ip);
 
-    // 5. Create Secure Session Cookie
-    const sessionToken = Buffer.from(JSON.stringify({
-      qrId: tag.qrId,
-      ownerId: tag.id,
-      exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-    })).toString('base64');
+    // 5. Create Cryptographically Signed Owner Session Cookie
+    const sessionToken = createOwnerToken(tag.qrId, tag.id);
 
     const response = NextResponse.json({
       success: true,
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       },
     });
 
-    response.cookies.set('gt_owner_session', sessionToken, {
+    response.cookies.set(OWNER_COOKIE, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
