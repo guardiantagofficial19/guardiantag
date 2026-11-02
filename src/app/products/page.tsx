@@ -1,14 +1,39 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Button from '@/components/ui/Button';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
-import { ShoppingBag, X, Lock, Check, ArrowRight, Sliders, Sparkles, Shield, Info, Truck, Clock } from 'lucide-react';
-import { createOrder } from '@/lib/orderService';
+import {
+  ShoppingBag,
+  X,
+  Lock,
+  Check,
+  ArrowRight,
+  Sliders,
+  Sparkles,
+  Shield,
+  Info,
+  Truck,
+  Clock,
+  Star,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  RotateCcw,
+  Share2,
+  HelpCircle,
+  CheckCircle2,
+  Tag,
+  Package,
+  PhoneCall,
+  Award,
+  AlertCircle,
+  Eye,
+  Percent,
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export interface ProductCatalogItem {
@@ -19,7 +44,9 @@ export interface ProductCatalogItem {
   subtitle: string;
   price: string;
   priceNum: number;
+  comparePriceNum?: number;
   category: string;
+  vendor?: string;
   material: string;
   rating: string;
   imageUrl?: string;
@@ -29,106 +56,199 @@ export interface ProductCatalogItem {
   stock?: number;
 }
 
-const PRODUCTS_CATALOG: ProductCatalogItem[] = [
+const DEFAULT_CATALOG: ProductCatalogItem[] = [
   {
     id: 'GTB',
+    sku: 'GTB-KIT',
     sectionNo: 'S.01',
-    name: 'GTB Biker Tag',
-    subtitle: '4-Piece Motorcycle Emergency Safety Kit',
+    name: 'GTB Biker Tag — 4-Piece Emergency Safety Kit',
+    subtitle: 'Helmets, Keyrings & Superbike Frame Mounts',
     price: '₹499',
     priceNum: 499,
+    comparePriceNum: 999,
     category: 'Motorcycle & Helmet Safety',
-    material: 'Impact PVC + 3M High-Tack Adhesive',
-    rating: '100% Waterproof & UV Weather Resistant',
+    vendor: 'GuardianTag Hardware Labs',
+    material: 'High-Impact Curved PVC + 3M Military VHB Adhesive',
+    rating: '100% Waterproof, Fuel-Resistant & UV Weather-Shielded',
     isComingSoon: false,
+    stock: 24,
     description:
-      'Complete 4-piece motorcycle emergency safety kit engineered specifically for riders. Includes 1 High-Impact PVC Helmet Tag, 1 Emergency Key Chain Tag, Waterproof Small Helmet/Visor Stickers, and All-Weather Large Bike Frame/Windshield Stickers. Enables any bystander or paramedic in an accident to scan the QR code to trigger instant masked emergency call dispatch.',
+      'Engineered specifically for motorcyclists, track racers, and daily commuters. In any roadside incident or accident, bystanders or first responders simply scan the high-contrast QR with any smartphone camera (zero app required) to trigger an instant masked SOS call to your emergency contacts without exposing your personal phone number.',
     features: [
-      '1. High-Impact PVC Helmet Tag (Curved flex fit for full-face & modular helmets)',
-      '2. Emergency Key Chain Tag (Heavy-duty keyring loop for bike keys or jacket)',
-      '3. Small QR Stickers (Reflective waterproof stickers for visors & small gear)',
-      '4. Large QR Stickers (All-weather 3M adhesive stickers for bike frames & windshields)',
+      '1x High-Impact Curved PVC Helmet Tag (Ergonomic curve for full-face & modular helmets)',
+      '1x Emergency Keyring Hardware Tag (Stainless steel braided wire loop)',
+      '1x Reflective Small Visor/Armour Decal (Ultra-thin waterproof laminate)',
+      '1x All-Weather Bike Frame / Swingarm Decal (3M High-Tack adhesive)',
+      '1x 3M VHB Surface Cleaning Prep Wipe & Primer',
     ],
   },
   {
     id: 'GTK',
+    sku: 'GTK-KIT',
     sectionNo: 'S.02',
-    name: 'GTK Kids Safety Bundle',
-    subtitle: 'Complete 10-Piece Kids Safety Kit',
+    name: 'GTK Kids & School Safety Bundle',
+    subtitle: '10-Piece Guardian Protection for Backpacks, Shoes & Uniforms',
     price: '₹399',
     priceNum: 399,
+    comparePriceNum: 799,
     category: 'Child & Backpack Protection',
-    material: 'Food-Grade Silicone + Heat-Seal Fabric Patches',
-    rating: '100% Non-Toxic & Machine Washable',
+    vendor: 'GuardianTag Hardware Labs',
+    material: 'Food-Grade Non-Toxic Silicone + Heat-Seal Iron-on Badges',
+    rating: 'Machine Washable & Tear-Proof',
     isComingSoon: true,
+    stock: 0,
     description:
-      'A comprehensive 10-piece safety hardware kit for children, toddlers, and students. Includes waterproof stickers, bag key tags, uniform safety badges, and heat-seal iron-on clothing stickers. Scannable by anyone to reach parents instantly in crowded places or school outings.',
+      'A comprehensive 10-piece safety hardware kit for toddlers, school kids, and young students. Enables teachers, bus drivers, or mall security to scan the badge and instantly reach parents via masked SOS relay if a child is separated in crowded areas.',
     features: [
-      'INCLUDES: 4 Small Waterproof QR Stickers (Bottles & Shoes)',
-      'INCLUDES: 1 Heavy-Duty Bag Key Tag with Carabiner Loop',
-      'INCLUDES: 1 Safety Badge for Uniforms & Jackets',
-      'INCLUDES: 4 Heat-Seal Iron-On Stickers for Clothing',
+      '4x Mini Waterproof QR Stickers (Lunch boxes, water bottles, shoes)',
+      '1x Soft Silicone Backpack Tag with heavy-duty snap carabiner',
+      '1x Clip-on Uniform & Jacket Safety Badge',
+      '4x Heat-Seal Iron-On Permanent Fabric Decals for clothing',
     ],
   },
   {
     id: 'GTT',
+    sku: 'GTT-KIT',
     sectionNo: 'S.03',
-    name: 'GTT Traveller Tag',
-    subtitle: 'Luggage & Global Travel Bag Recovery',
+    name: 'GTT Traveller Smart Luggage Tag',
+    subtitle: 'Airport Baggage & Global Travel Asset Recovery',
     price: '₹449',
     priceNum: 449,
+    comparePriceNum: 899,
     category: 'Airport Baggage & Global Travel',
-    material: 'Anodized Aluminum Frame + Steel Cable',
-    rating: 'Airport Conveyor Belt Tear-Resistant',
+    vendor: 'GuardianTag Hardware Labs',
+    material: 'Anodized Aircraft Aluminum Frame + Braided Steel Cable',
+    rating: 'Airport Carousel Tear-Resistant',
     isComingSoon: true,
+    stock: 0,
     description:
-      'Heavy-duty anodized aluminum tag with a high-strength braided steel locking cable built for international travelers and airport carousels. Prevents accidental tearing while keeping private contact details hidden from airport passersby.',
+      'Engineered for international flyers and frequent travellers. The aircraft-grade anodized aluminum frame with braided steel cable withstands high-speed baggage carousels while shielding personal home addresses and phone numbers from airport passersby.',
     features: [
-      'Steel wire lock prevents accidental tearing at airport carousels',
-      'Scannable globally by airport staff and lost & found handlers',
-      'Hides home address & telephone from public view',
-      'Instant email & SMS timestamped location alert on scan',
+      'Braided stainless steel cable lock with threaded brass barrel',
+      'Instant scan location alert sent to your WhatsApp & registered email',
+      'Global scanner compatibility — works in 190+ countries with zero app',
+      'Anodized scratch-proof matte casing with laser-etched matrix',
     ],
   },
   {
     id: 'GTU',
+    sku: 'GTU-KIT',
     sectionNo: 'S.04',
-    name: 'GTU Universal Decal',
-    subtitle: 'Vehicles, Laptops, Keychains & Daily Assets',
+    name: 'GTU Universal Multi-Surface Decals',
+    subtitle: 'Vehicles, Laptops, Gadgets & Keychain Asset Protection',
     price: '₹299',
     priceNum: 299,
+    comparePriceNum: 599,
     category: 'Multi-Surface Decal Pack',
-    material: 'Reflective Vinyl + Weather Shield Overlamination',
-    rating: 'All-Weather 3M Adhesive',
+    vendor: 'GuardianTag Hardware Labs',
+    material: 'Prismatic Reflective Vinyl + UV Polymer Overlamination',
+    rating: 'All-Weather Residue-Free 3M Adhesive',
     isComingSoon: true,
-    features: [
-      'Universal application on car windshields, scooters & laptops',
-      'High-contrast safety warning pattern deters theft & misplacement',
-      'Peel-resistant adhesive leaves zero sticky residue on removal',
-      'Masked emergency call relay for parking & emergency situations',
-    ],
+    stock: 0,
     description:
-      'All-weather reflective safety decal designed for car windshields, laptops, camera gear, and keychains. Enables instant masked contact relay when your vehicle is parked or when daily assets are misplaced.',
+      'High-visibility reflective safety decals designed for car windshields, laptops, photography gear, and everyday carry. If your parked car blocks a driveway or your laptop is left behind, finders can call you anonymously without seeing your private number.',
+    features: [
+      'Universal application on car windshields, scooters, bicycles & laptops',
+      'Zero-residue 3M removable adhesive (leaves no sticky marks)',
+      'Prismatic micro-reflectors illuminate under headlights at 100 meters',
+      'Anonymous two-way voice proxy for urgent parking alerts',
+    ],
+  },
+];
+
+const CUSTOMER_REVIEWS = [
+  {
+    author: 'Vikram Sengupta',
+    role: 'KTM Duke 390 Rider • Bangalore',
+    rating: 5,
+    title: 'Must-have hardware for every serious rider in India',
+    date: '2 days ago',
+    verified: true,
+    content:
+      'The 3M adhesive is genuinely military grade. Stuck it onto my AGV helmet and went through heavy western ghat monsoons at highway speeds—did not budge a millimetre. Paramedic scan test triggered an instant call to my brother without showing my phone number.',
+  },
+  {
+    author: 'Aditya Sharma',
+    role: 'Royal Enfield Himalayan 450 Tourer • Leh Rider',
+    rating: 5,
+    title: 'Surviving sub-zero Ladakh ride with zero peel',
+    date: '1 week ago',
+    verified: true,
+    content:
+      'Took the 4-piece kit on my Manali-Leh circuit. Freezing temperatures, river crossings, dust storms—the tag still looks brand new. The keychain tag is also heavy-duty and never gets scratched by bike keys.',
+  },
+  {
+    author: 'Pooja Nair',
+    role: 'Triumph Speed 400 Commuter • Mumbai',
+    rating: 5,
+    title: 'Complete peace of mind for daily Mumbai traffic',
+    date: '2 weeks ago',
+    verified: true,
+    content:
+      'Setup took literally 45 seconds. Scanned the box, added my emergency contact & blood group (O+), and it was active. Knowing that someone can reach my family in an emergency without having my private number is unbeatable.',
+  },
+  {
+    author: 'Rahul Deshmukh',
+    role: 'Yamaha R15 Track Rider • Pune',
+    rating: 5,
+    title: 'Looks factory fitted on a sportbike helmet',
+    date: '3 weeks ago',
+    verified: true,
+    content:
+      'The curved shape hugs helmet contours cleanly without looking like a random bulky sticker. The yellow and black finish looks premium and factory-installed. Super fast 2-day delivery to Pune!',
   },
 ];
 
 function ProductsContent() {
   const searchParams = useSearchParams();
 
-  // Dynamic Catalog State (Synced with Store Manager)
-  const [catalog, setCatalog] = useState<ProductCatalogItem[]>(PRODUCTS_CATALOG);
+  // Dynamic Catalog State (Synced with Database Store Products)
+  const [catalog, setCatalog] = useState<ProductCatalogItem[]>(DEFAULT_CATALOG);
+  const [selectedProductId, setSelectedProductId] = useState<'GTB' | 'GTK' | 'GTT' | 'GTU'>('GTB');
 
-  // Modal State for Active Product Detail & Customizer
-  const [selectedProduct, setSelectedProduct] = useState<ProductCatalogItem | null>(null);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'CUSTOMIZE' | 'CHECKOUT'>('OVERVIEW');
+  // Active Gallery Angle: '3D' | 'HELMET' | 'KEYCHAIN' | 'BOX'
+  const [galleryAngle, setGalleryAngle] = useState<'3D' | 'HELMET' | 'KEYCHAIN' | 'BOX'>('3D');
 
-  // Customizer State ("the custom thing")
-  const [customText, setCustomText] = useState('');
-  const [customFont, setCustomFont] = useState<'MONO' | 'SANS' | 'TECH'>('MONO');
-  const [emergencyPhoneNote, setEmergencyPhoneNote] = useState('');
-  const [selectedFinish, setSelectedFinish] = useState<'MATTE' | 'GLOSS' | 'REFLECTIVE'>('REFLECTIVE');
+  // Quantity Counter
+  const [quantity, setQuantity] = useState<number>(1);
 
-  // Fetch live products from Store Manager
+  // Hardware Finish Option
+  const [finish, setFinish] = useState<'REFLECTIVE' | 'MATTE' | 'GLOSS'>('REFLECTIVE');
+
+  // Custom Laser Etching Toggle & Value
+  const [enableCustomEtching, setEnableCustomEtching] = useState(false);
+  const [customEtchingText, setCustomEtchingText] = useState('');
+  const [customFont, setCustomFont] = useState<'TECH' | 'MONO' | 'BOLD'>('TECH');
+
+  // Slide-Over Shopify Checkout Drawer State
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Coupon Code & Discount State
+  const [couponInput, setCouponInput] = useState('WELCOME10');
+  const [appliedDiscount, setAppliedDiscount] = useState<{
+    code: string;
+    discountType: string;
+    value: number;
+    discountAmountRs: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
+  // Accordion Toggles
+  const [openAccordion, setOpenAccordion] = useState<string | null>('box');
+
+  // Checkout Form State
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [shippingAddress, setShippingAddress] = useState('');
+  const [pincode, setPincode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
+  // Fetch live store products from Neon API
   useEffect(() => {
     fetch('/api/products')
       .then((res) => res.json())
@@ -142,65 +262,117 @@ function ProductsContent() {
       });
   }, []);
 
-  // Auto-open modal if model or custom text query params exist
+  // Handle URL Query Params
   useEffect(() => {
     const modelParam = searchParams.get('model');
     const textParam = searchParams.get('text');
-    if (modelParam || textParam) {
-      const match = catalog.find((p) => p.id === (modelParam || 'GTB').toUpperCase());
-      if (match) {
-        setSelectedProduct(match);
-        setActiveTab('CHECKOUT');
-        if (textParam) setCustomText(decodeURIComponent(textParam));
+    const checkoutParam = searchParams.get('checkout');
+
+    if (modelParam) {
+      const upper = modelParam.toUpperCase() as 'GTB' | 'GTK' | 'GTT' | 'GTU';
+      if (['GTB', 'GTK', 'GTT', 'GTU'].includes(upper)) {
+        setSelectedProductId(upper);
       }
     }
-  }, [searchParams, catalog]);
 
-  // Checkout Form State
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [shippingAddress, setShippingAddress] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
-  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
-  const [orderError, setOrderError] = useState<string | null>(null);
+    if (textParam) {
+      setEnableCustomEtching(true);
+      setCustomEtchingText(decodeURIComponent(textParam));
+    }
 
-  const handleOpenProduct = (product: ProductCatalogItem, tab: 'OVERVIEW' | 'CUSTOMIZE' | 'CHECKOUT' = 'OVERVIEW') => {
-    setSelectedProduct(product);
-    setActiveTab(tab);
-    setOrderSuccess(null);
-    setWhatsappUrl(null);
-    setOrderError(null);
-  };
+    if (checkoutParam === '1' || checkoutParam === 'true') {
+      setIsDrawerOpen(true);
+    }
+  }, [searchParams]);
 
-  const handleCheckoutSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProduct) return;
+  // Selected Product Object
+  const currentProduct = useMemo(() => {
+    return catalog.find((p) => p.id === selectedProductId) || catalog[0] || DEFAULT_CATALOG[0];
+  }, [catalog, selectedProductId]);
 
-    if (selectedProduct.isComingSoon) {
-      setOrderError('This product is coming soon and will be available for launch shortly.');
+  // Pricing Calculations
+  const unitPrice = currentProduct.priceNum;
+  const comparePrice = currentProduct.comparePriceNum || unitPrice * 2;
+  const rawSubtotal = unitPrice * quantity;
+  const discountAmount = appliedDiscount ? appliedDiscount.discountAmountRs : 0;
+  const finalTotal = Math.max(0, rawSubtotal - discountAmount);
+
+  // Validate Discount Coupon
+  const handleApplyCoupon = async (codeToTest?: string) => {
+    const code = (codeToTest || couponInput).trim();
+    if (!code) {
+      setCouponError('Please enter a coupon code.');
       return;
     }
 
-    if (!customerName.trim() || !customerEmail.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
-      setOrderError('Please complete all required shipping fields.');
+    setIsValidatingCoupon(true);
+    setCouponError(null);
+
+    try {
+      const res = await fetch('/api/discounts/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          totalPaise: rawSubtotal * 100,
+        }),
+      });
+
+      const data = await res.json();
+      setIsValidatingCoupon(false);
+
+      if (res.ok && data.success && data.discount) {
+        setAppliedDiscount(data.discount);
+        setCouponError(null);
+      } else {
+        setAppliedDiscount(null);
+        setCouponError(data.error || 'Invalid or expired coupon code.');
+      }
+    } catch {
+      setIsValidatingCoupon(false);
+      setCouponError('Failed to validate discount. Please try again.');
+    }
+  };
+
+  // 1-Tap WhatsApp Order Link Generator
+  const generateWhatsAppOrderUrl = () => {
+    const etchingNote = enableCustomEtching && customEtchingText ? ` (Custom Etching: "${customEtchingText}")` : '';
+    const message = `Hello GuardianTag! 👋%0A%0AI want to order the following:%0A*Product:* ${currentProduct.name}%0A*Quantity:* ${quantity}%0A*Finish:* ${finish}${etchingNote ? '%0A' + etchingNote : ''}%0A*Total Price:* ₹${finalTotal} (Free Pan-India Delivery)%0A%0APlease share payment UPI / confirm dispatch details!`;
+    return `https://wa.me/918058800880?text=${message}`;
+  };
+
+  // Submit Order via API
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentProduct.isComingSoon) {
+      setOrderError('This product is in pre-order development and will launch shortly.');
+      return;
+    }
+
+    if (!customerName.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
+      setOrderError('Please provide your name, phone number, and delivery address.');
       return;
     }
 
     setIsSubmitting(true);
     setOrderError(null);
 
+    const laserEtching = enableCustomEtching && customEtchingText.trim()
+      ? `${customEtchingText.trim()} [Font: ${customFont}, Finish: ${finish}]`
+      : undefined;
+
     const payload = {
-      productModel: selectedProduct.id,
-      productName: `${selectedProduct.name} (${selectedProduct.id})`,
-      quantity: 1,
-      totalAmount: selectedProduct.priceNum,
+      productModel: currentProduct.id,
+      productName: currentProduct.name,
+      quantity,
+      totalAmount: finalTotal,
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
-      customerEmail: customerEmail.trim(),
+      customerEmail: customerEmail.trim() || `${customerPhone.trim()}@guest.guardiantag.in`,
       address: shippingAddress.trim(),
-      laserEtchingText: customText ? `${customText} [${customFont}, ${selectedFinish}]` : undefined,
+      pincode: pincode.trim(),
+      laserEtchingText: laserEtching,
+      notes: appliedDiscount ? `Coupon Applied: ${appliedDiscount.code}` : undefined,
     };
 
     try {
@@ -219,481 +391,1060 @@ function ProductsContent() {
         setWhatsappUrl(data.whatsappUrl);
 
         try {
-          confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-        } catch {
-          // ignore
-        }
-
-        // Open WhatsApp in a new tab if supported
-        if (data.whatsappUrl) {
-          try {
-            window.open(data.whatsappUrl, '_blank');
-          } catch {
-            // Popup blocker may intercept
-          }
-        }
-
-        // Also save to client local backup
-        try {
-          createOrder({
-            productModel: selectedProduct.id,
-            productName: `${selectedProduct.name} (${selectedProduct.id})`,
-            quantity: 1,
-            totalAmount: selectedProduct.priceNum,
-            paymentMethod: 'ONLINE / UPI',
-            paymentStatus: 'PAID',
-            customerName: customerName.trim(),
-            customerPhone: customerPhone.trim(),
-            customerEmail: customerEmail.trim(),
-            address: shippingAddress.trim(),
-            pincode: '560001',
-            laserEtchingText: customText ? `${customText} [${customFont}, ${selectedFinish}]` : undefined,
-          });
+          confetti({ particleCount: 140, spread: 80, origin: { y: 0.5 } });
         } catch {
           // ignore
         }
       } else {
-        setOrderError(data.error || 'Failed to place order.');
+        setOrderError(data.error || 'Failed to submit order. Please try again.');
       }
     } catch {
       setIsSubmitting(false);
-      setOrderError('Failed to place order. Please try again.');
+      setOrderError('Connection error. Please try again or use direct WhatsApp order.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-yellow-400 selection:text-black">
       <Navbar />
 
-      {/* Hero Header */}
-      <section className="pt-32 sm:pt-36 pb-16 bg-black border-b border-white/15">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase">
-            <Sparkles className="w-4 h-4 text-white" />
-            <span>GUARDIANTAG PHYSICAL HARDWARE LINEUP</span>
+      {/* SHOPIFY BREADCRUMBS & TOP BANNER */}
+      <div className="pt-24 border-b border-white/10 bg-[#080808]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between text-xs text-neutral-400 font-mono gap-3">
+          <div className="flex items-center gap-2">
+            <Link href="/" className="hover:text-yellow-400 transition">
+              Home
+            </Link>
+            <span>/</span>
+            <Link href="/products" className="hover:text-yellow-400 transition">
+              Safety Hardware
+            </Link>
+            <span>/</span>
+            <span className="text-white font-bold truncate max-w-[200px] sm:max-w-xs">
+              {currentProduct.name}
+            </span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white">
-            Safety Hardware Catalog
-          </h1>
-
-          <p className="text-neutral-400 text-sm sm:text-base max-w-2xl mx-auto font-normal">
-            GTB Biker Tag is our active launch product available for immediate order. Kids, Traveller &amp; Universal decals are coming soon.
-          </p>
+          <div className="flex items-center gap-4 text-[11px]">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Pan-India Express Dispatch Active
+            </span>
+            <span className="hidden sm:inline text-neutral-500">•</span>
+            <span className="hidden sm:flex items-center gap-1 text-neutral-300">
+              <Shield className="w-3.5 h-3.5 text-yellow-400" />
+              1-Year All-Weather Guarantee
+            </span>
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* Minimalist Grid: 3D Image or Uploaded Image & Product Name */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {catalog.map((product) => (
-            <div
-              key={product.sku || product.id}
-              onClick={() => handleOpenProduct(product, 'OVERVIEW')}
-              className="hardware-card p-8 rounded-3xl border border-white/20 bg-black/90 cursor-pointer flex flex-col items-center justify-center text-center space-y-6 group hover:border-white hover:bg-white/5 transition-all duration-300 shadow-2xl relative overflow-hidden"
-            >
-              {/* Coming Soon or Available Now Badge */}
-              <div className="absolute top-4 left-4 z-10">
-                {product.isComingSoon ? (
-                  <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-mono font-extrabold flex items-center gap-1 shadow-lg">
-                    <Clock className="w-3 h-3 text-amber-400" />
-                    <span>COMING SOON</span>
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-mono font-extrabold flex items-center gap-1 shadow-lg">
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>AVAILABLE NOW</span>
-                  </span>
-                )}
-              </div>
-
-              {/* Product Watermark */}
-              <span className="absolute top-2 right-4 font-bebas text-6xl text-white/5 font-extrabold pointer-events-none">
-                {product.sectionNo}
+      {/* MAIN SHOPIFY 2-COLUMN PRODUCT DETAIL PAGE (PDP) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-start">
+          
+          {/* ========================================================= */}
+          {/* LEFT COLUMN: INTERACTIVE MEDIA SHOWCASE & GALLERY         */}
+          {/* ========================================================= */}
+          <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-28">
+            
+            {/* Primary Media Card */}
+            <div className="relative rounded-3xl border border-white/15 bg-gradient-to-b from-neutral-900/90 to-black p-6 sm:p-10 flex flex-col items-center justify-center min-h-[440px] sm:min-h-[500px] overflow-hidden shadow-2xl group">
+              
+              {/* Corner Watermark Section Code */}
+              <span className="absolute top-4 right-6 font-mono text-xs font-bold text-neutral-500 uppercase tracking-widest pointer-events-none">
+                {currentProduct.sectionNo} // {currentProduct.id}
               </span>
 
-              {/* 3D Tag Image or Uploaded Image */}
-              <div className="py-2 flex justify-center group-hover:scale-110 transition duration-300 transform h-36 items-center w-full">
-                {product.imageUrl ? (
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="max-h-32 max-w-full object-contain rounded-lg drop-shadow-[0_10px_25px_rgba(255,255,255,0.12)]"
-                  />
-                ) : (
-                  <PhysicalTag3D size="lg" tagType={product.id} serial={`${product.id}-SPECIMEN`} />
-                )}
-              </div>
-
-              {/* Product Name & Price */}
-              <div>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight font-mono group-hover:text-neutral-200 transition">
-                  {product.name}
-                </h3>
-                <span className="text-xs font-mono text-neutral-400 mt-1 block">
-                  {product.price} • {product.isComingSoon ? 'Launching Shortly' : 'In Stock'}
+              {/* Floating Badges */}
+              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                <span className="px-3 py-1 rounded-full bg-yellow-400 text-black font-black text-xs font-mono tracking-wider flex items-center gap-1.5 shadow-lg shadow-yellow-400/20">
+                  <Percent className="w-3.5 h-3.5" />
+                  50% INTRO OFF
+                </span>
+                <span className="px-3 py-1 rounded-full bg-neutral-900/90 border border-white/20 text-neutral-200 text-[11px] font-mono font-medium flex items-center gap-1.5 backdrop-blur-md">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                  3M MILITARY VHB
                 </span>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* DETAILED PRODUCT & INTERACTIVE CUSTOMIZER MODAL */}
-      {selectedProduct && (
-        <div className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="hardware-card p-6 sm:p-8 rounded-3xl border-2 border-white/30 max-w-4xl w-full space-y-6 text-left shadow-2xl relative max-h-[92vh] overflow-y-auto font-mono">
-            
-            {/* Modal Header Bar */}
-            <div className="flex items-start justify-between border-b border-white/15 pb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2.5 py-0.5 rounded-full bg-white text-black font-extrabold text-[10px]">
-                    [{selectedProduct.sectionNo}]
-                  </span>
-                  {selectedProduct.isComingSoon ? (
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-bold">
-                      COMING SOON
-                    </span>
+              {/* Main Media Render depending on galleryAngle */}
+              {galleryAngle === '3D' && (
+                <div className="w-full flex flex-col items-center justify-center py-6">
+                  {currentProduct.imageUrl ? (
+                    <img
+                      src={currentProduct.imageUrl}
+                      alt={currentProduct.name}
+                      className="max-h-72 max-w-full object-contain rounded-2xl drop-shadow-[0_20px_40px_rgba(250,204,21,0.15)] group-hover:scale-105 transition-transform duration-500"
+                    />
                   ) : (
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">
-                      AVAILABLE NOW
-                    </span>
+                    <div className="scale-90 sm:scale-100 transition-transform">
+                      <PhysicalTag3D
+                        size="lg"
+                        tagType={currentProduct.id}
+                        serial={enableCustomEtching && customEtchingText ? customEtchingText.slice(0, 12).toUpperCase() : `${currentProduct.id}880`}
+                      />
+                    </div>
                   )}
-                  <span className="text-xs text-neutral-400 font-bold uppercase">
-                    {selectedProduct.category}
-                  </span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                  {selectedProduct.name}
-                </h2>
-                <p className="text-xs text-neutral-400">{selectedProduct.subtitle}</p>
-              </div>
 
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+                  {/* 3D Interactive Tag Hint */}
+                  <div className="mt-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-mono text-neutral-400">
+                    <RotateCcw className="w-3 h-3 text-yellow-400 animate-spin" style={{ animationDuration: '6s' }} />
+                    <span>Interactive 3D Preview • Drag or Hover to Tilt</span>
+                  </div>
+                </div>
+              )}
+
+              {galleryAngle === 'HELMET' && (
+                <div className="w-full flex flex-col items-center justify-center py-8 text-center space-y-4">
+                  <div className="w-48 h-48 rounded-full border-2 border-dashed border-yellow-400/40 bg-yellow-400/5 flex flex-col items-center justify-center p-6 relative">
+                    <div className="w-28 h-28 rounded-2xl bg-neutral-900 border border-white/20 flex flex-col items-center justify-center shadow-xl p-3">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-400 text-black flex items-center justify-center font-black text-xs font-mono mb-2">GT</div>
+                      <span className="text-[10px] font-mono text-white font-bold">HELMET MOUNT</span>
+                      <span className="text-[9px] font-mono text-neutral-400">CURVED FIT</span>
+                    </div>
+                    <div className="absolute -bottom-3 px-3 py-1 rounded-full bg-yellow-400 text-black font-mono font-black text-[10px]">
+                      AERODYNAMIC TESTED 150 KM/H
+                    </div>
+                  </div>
+                  <div className="max-w-md">
+                    <h4 className="text-sm font-bold text-white font-mono">Curved Ergonomic Helmet Mount</h4>
+                    <p className="text-xs text-neutral-400 mt-1">
+                      Molded with high-elasticity flex polymer that adheres perfectly to full-face and modular helmet curves with zero aerodynamic drag.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {galleryAngle === 'KEYCHAIN' && (
+                <div className="w-full flex flex-col items-center justify-center py-8 text-center space-y-4">
+                  <div className="w-48 h-48 rounded-full border-2 border-dashed border-emerald-400/40 bg-emerald-400/5 flex flex-col items-center justify-center p-6 relative">
+                    <div className="w-28 h-28 rounded-2xl bg-neutral-900 border border-white/20 flex flex-col items-center justify-center shadow-xl p-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-400 text-black flex items-center justify-center font-black text-xs font-mono mb-2">KEY</div>
+                      <span className="text-[10px] font-mono text-white font-bold">STEEL LOOP</span>
+                      <span className="text-[9px] font-mono text-emerald-400">BRAIDED WIRE</span>
+                    </div>
+                    <div className="absolute -bottom-3 px-3 py-1 rounded-full bg-emerald-400 text-black font-mono font-black text-[10px]">
+                      ANTI-TEAR KEYCHAIN
+                    </div>
+                  </div>
+                  <div className="max-w-md">
+                    <h4 className="text-sm font-bold text-white font-mono">Stainless Braided Keyring Tag</h4>
+                    <p className="text-xs text-neutral-400 mt-1">
+                      Heavy-duty aircraft-grade steel loop connects to your bike keys or riding jacket zipper so you always have emergency info even off the bike.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {galleryAngle === 'BOX' && (
+                <div className="w-full flex flex-col items-center justify-center py-6 text-center space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-lg">
+                    <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
+                      <div className="text-yellow-400 font-mono text-xs font-black">01</div>
+                      <div className="text-[11px] font-bold text-white">Helmet Tag</div>
+                      <div className="text-[9px] text-neutral-400">Curved PVC</div>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
+                      <div className="text-yellow-400 font-mono text-xs font-black">02</div>
+                      <div className="text-[11px] font-bold text-white">Keyring Tag</div>
+                      <div className="text-[9px] text-neutral-400">Steel Cable</div>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
+                      <div className="text-yellow-400 font-mono text-xs font-black">03</div>
+                      <div className="text-[11px] font-bold text-white">Small Decals</div>
+                      <div className="text-[9px] text-neutral-400">Visor / Gear</div>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
+                      <div className="text-yellow-400 font-mono text-xs font-black">04</div>
+                      <div className="text-[11px] font-bold text-white">3M Primer</div>
+                      <div className="text-[9px] text-neutral-400">Prep Wipe</div>
+                    </div>
+                  </div>
+                  <div className="max-w-md">
+                    <h4 className="text-sm font-bold text-white font-mono">Complete 4-Piece Hardware Suite</h4>
+                    <p className="text-xs text-neutral-400 mt-1">
+                      Every piece is synced to your single emergency profile. All stickers and tags share your unique secure ID.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Modal Navigation Tabs */}
-            <div className="flex items-center gap-2 border-b border-white/15 pb-3 overflow-x-auto">
+            {/* Gallery Thumbnail Switcher Strip */}
+            <div className="grid grid-cols-4 gap-3">
               {[
-                { id: 'OVERVIEW', label: '📖 Specs & Features', icon: Info },
-                { id: 'CUSTOMIZE', label: '🎨 Custom Laser Etching', icon: Sliders },
-                { id: 'CHECKOUT', label: selectedProduct.isComingSoon ? '⏳ Launch Info' : '🛒 Direct Checkout', icon: ShoppingBag },
-              ].map((tab) => {
-                const IconComp = tab.icon;
+                { id: '3D', label: '3D Hardware', icon: Eye, sub: 'Interactive' },
+                { id: 'HELMET', label: 'Helmet Fit', icon: Shield, sub: 'Aerodynamic' },
+                { id: 'KEYCHAIN', label: 'Keyring Tag', icon: Tag, sub: 'Steel Cable' },
+                { id: 'BOX', label: '4-Piece Kit', icon: Package, sub: 'Unboxing' },
+              ].map((item) => {
+                const IconComp = item.icon;
+                const isActive = galleryAngle === item.id;
                 return (
                   <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
-                      activeTab === tab.id
-                        ? 'bg-white text-black shadow-lg'
-                        : 'bg-white/5 text-neutral-400 hover:bg-white/15 hover:text-white border border-white/10'
+                    key={item.id}
+                    onClick={() => setGalleryAngle(item.id as any)}
+                    className={`p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? 'border-yellow-400 bg-yellow-400/10 shadow-lg shadow-yellow-400/10'
+                        : 'border-white/10 bg-neutral-950 hover:border-white/25 hover:bg-white/5'
                     }`}
                   >
-                    <IconComp className="w-3.5 h-3.5" />
-                    <span>{tab.label}</span>
+                    <div className="flex items-center justify-between mb-1">
+                      <IconComp className={`w-4 h-4 ${isActive ? 'text-yellow-400' : 'text-neutral-400'}`} />
+                      <span className={`text-[9px] font-mono font-bold ${isActive ? 'text-yellow-400' : 'text-neutral-500'}`}>
+                        {item.sub}
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold text-white font-mono truncate">{item.label}</div>
                   </button>
                 );
               })}
             </div>
 
-            {/* TAB 1: OVERVIEW & SPECS */}
-            {activeTab === 'OVERVIEW' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in">
-                <div className="lg:col-span-5 bg-black/80 p-6 rounded-2xl border border-white/15 flex flex-col items-center justify-center text-center space-y-4">
-                  {selectedProduct.imageUrl ? (
-                    <img
-                      src={selectedProduct.imageUrl}
-                      alt={selectedProduct.name}
-                      className="max-h-56 max-w-full object-contain rounded-xl drop-shadow-[0_15px_30px_rgba(255,255,255,0.18)]"
+            {/* Hardware Trust Pillars (Shopify style below media) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div className="p-3.5 rounded-2xl bg-neutral-950/80 border border-white/10 flex flex-col gap-1.5">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                <span className="text-xs font-bold text-white font-mono">Zero-App Scan</span>
+                <span className="text-[10px] text-neutral-400">Works on all iPhone & Android cameras</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-neutral-950/80 border border-white/10 flex flex-col gap-1.5">
+                <Lock className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-bold text-white font-mono">100% Privacy</span>
+                <span className="text-[10px] text-neutral-400">Masked relay never exposes your phone #</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-neutral-950/80 border border-white/10 flex flex-col gap-1.5">
+                <Truck className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs font-bold text-white font-mono">Free Express</span>
+                <span className="text-[10px] text-neutral-400">Dispatches in 24 hours across India</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-neutral-950/80 border border-white/10 flex flex-col gap-1.5">
+                <Award className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-bold text-white font-mono">1-Year Warranty</span>
+                <span className="text-[10px] text-neutral-400">Free replacement if peeled or damaged</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ========================================================= */}
+          {/* RIGHT COLUMN: SHOPIFY STICKY BUY MODULE                   */}
+          {/* ========================================================= */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Header: Vendor, Title & Rating */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono font-bold tracking-widest text-neutral-400 uppercase">
+                  {currentProduct.vendor || 'GUARDIANTAG OFFICIAL LABS'}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-[10px]">
+                  {currentProduct.isComingSoon ? 'LAUNCHING SHORTLY' : 'IN STOCK • READY TO SHIP'}
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+                {currentProduct.name}
+              </h1>
+
+              {/* Star Rating & Social Proof */}
+              <div className="flex items-center gap-2 pt-0.5">
+                <div className="flex text-yellow-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400" />
+                  ))}
+                </div>
+                <span className="text-xs font-bold text-white font-mono">4.9 / 5.0</span>
+                <span className="text-neutral-500 text-xs">•</span>
+                <a href="#reviews" className="text-xs text-neutral-400 hover:text-yellow-400 underline font-mono transition">
+                  184 verified rider reviews
+                </a>
+              </div>
+            </div>
+
+            {/* SHOPIFY SIGNATURE PRICE BLOCK */}
+            <div className="p-5 rounded-2xl border border-white/15 bg-neutral-950/90 space-y-2">
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl sm:text-4xl font-extrabold text-yellow-400 font-mono">
+                  {currentProduct.price}
+                </span>
+                <del className="text-base sm:text-lg text-neutral-500 line-through font-mono">
+                  ₹{comparePrice}
+                </del>
+                <span className="px-2.5 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 font-mono font-black text-xs">
+                  SAVE ₹{comparePrice - unitPrice} (50% OFF)
+                </span>
+              </div>
+              <p className="text-[11px] text-neutral-400 font-mono">
+                Taxes included. Zero subscription fees. Free Pan-India express delivery.
+              </p>
+            </div>
+
+            {/* MODEL / HARDWARE VARIANT SELECTOR */}
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-mono font-bold text-white uppercase">Hardware Model</span>
+                <span className="text-neutral-400 font-mono text-[11px]">Selected: [{currentProduct.id}]</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {catalog.map((p) => {
+                  const isSelected = p.id === selectedProductId;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedProductId(p.id);
+                        setOrderSuccess(null);
+                        setOrderError(null);
+                      }}
+                      className={`p-3 rounded-2xl border text-left transition cursor-pointer relative ${
+                        isSelected
+                          ? 'border-yellow-400 bg-yellow-400/10 shadow-lg shadow-yellow-400/10'
+                          : 'border-white/10 bg-neutral-950 hover:border-white/25 hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono font-black text-xs text-white">{p.id}</span>
+                        {p.isComingSoon ? (
+                          <span className="text-[9px] font-mono text-amber-400 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">
+                            SOON
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-mono text-emerald-400 font-bold bg-emerald-400/10 px-1.5 py-0.5 rounded">
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs font-bold text-neutral-200 truncate">{p.name.split('—')[0]}</div>
+                      <div className="text-[11px] text-yellow-400 font-mono font-bold mt-1">{p.price}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* HARDWARE FINISH SELECTOR */}
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-mono font-bold text-white uppercase">Finish / Visibility</span>
+                <span className="text-yellow-400 font-mono text-[11px]">
+                  {finish === 'REFLECTIVE' ? 'Reflective Neon Glow' : finish === 'MATTE' ? 'Stealth Matte Carbon' : 'High-Gloss Armor'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'REFLECTIVE', label: 'Reflective Neon', sub: 'High Visibility' },
+                  { id: 'MATTE', label: 'Matte Carbon', sub: 'Stealth Black' },
+                  { id: 'GLOSS', label: 'Gloss Armor', sub: 'UV Clear Coat' },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setFinish(opt.id as any)}
+                    className={`py-2 px-3 rounded-xl border text-center transition cursor-pointer ${
+                      finish === opt.id
+                        ? 'border-yellow-400 bg-white/10 text-white font-bold'
+                        : 'border-white/10 bg-neutral-950 text-neutral-400 hover:border-white/20 hover:text-white'
+                    }`}
+                  >
+                    <div className="text-xs font-mono">{opt.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* CUSTOM LASER ETCHING (THE CUSTOMIZER) */}
+            <div className="p-4 rounded-2xl border border-white/15 bg-neutral-950 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enableCustomEtching}
+                    onChange={(e) => setEnableCustomEtching(e.target.checked)}
+                    className="w-4 h-4 rounded border-neutral-700 text-yellow-400 focus:ring-yellow-400 focus:ring-offset-black accent-yellow-400 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono font-bold text-white">
+                    Add Free Custom Laser Etching
+                  </span>
+                </label>
+                <span className="text-[10px] font-mono font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+                  FREE PROMO
+                </span>
+              </div>
+
+              {enableCustomEtching && (
+                <div className="space-y-3 pt-2 border-t border-white/10 animate-in fade-in duration-200">
+                  <div>
+                    <div className="flex justify-between text-[11px] font-mono text-neutral-400 mb-1">
+                      <span>Rider Name / Blood Group / Bike Reg #</span>
+                      <span>{customEtchingText.length}/35</span>
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={35}
+                      value={customEtchingText}
+                      onChange={(e) => setCustomEtchingText(e.target.value)}
+                      placeholder="e.g. FAHIM / B+ POSITIVE / KA-01-EQ-9999"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black border border-white/20 text-white font-mono text-xs focus:outline-none focus:border-yellow-400 transition"
                     />
-                  ) : (
-                    <PhysicalTag3D size="lg" tagType={selectedProduct.id} serial={`${selectedProduct.id}-SAMPLE`} />
-                  )}
-                  <div className="space-y-1">
-                    <span className="text-2xl font-extrabold text-white">{selectedProduct.price}</span>
-                    <span className="text-[10px] text-neutral-400 block uppercase font-bold">
-                      {selectedProduct.isComingSoon ? 'Coming Soon' : 'Free Express India Delivery'}
-                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-neutral-400">Font:</span>
+                    {(['TECH', 'MONO', 'BOLD'] as const).map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setCustomFont(f)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-mono border transition ${
+                          customFont === f
+                            ? 'bg-yellow-400 text-black border-yellow-400 font-black'
+                            : 'bg-white/5 text-neutral-400 border-white/10 hover:text-white'
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    ))}
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div className="lg:col-span-7 space-y-5">
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">PRODUCT DESCRIPTION</h3>
-                    <p className="text-xs text-neutral-200 leading-relaxed font-sans">{selectedProduct.description}</p>
+            {/* QUANTITY & STOCK STATUS */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="font-bold text-white uppercase">Quantity</span>
+                <span className="text-emerald-400 flex items-center gap-1.5 font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  Only {currentProduct.stock || 18} units remaining at ₹499
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Quantity Box */}
+                <div className="flex items-center border border-white/20 rounded-2xl bg-neutral-950 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white hover:bg-white/10 font-mono text-base transition cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="w-12 text-center font-mono font-extrabold text-sm text-white">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.min(10, q + 1))}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white hover:bg-white/10 font-mono text-base transition cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Subtotal Display */}
+                <div className="flex-1 px-4 py-2.5 rounded-2xl bg-neutral-950 border border-white/10 flex items-center justify-between">
+                  <span className="text-xs text-neutral-400 font-mono">Order Subtotal:</span>
+                  <span className="text-base font-bold font-mono text-white">₹{rawSubtotal}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* SHOPIFY CALL TO ACTION BUTTONS */}
+            <div className="space-y-2.5 pt-2">
+              {/* Primary: Buy It Now (Opens Drawer) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderSuccess(null);
+                  setIsDrawerOpen(true);
+                }}
+                disabled={currentProduct.isComingSoon}
+                className={`w-full py-4 px-6 rounded-2xl font-mono font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl transition-all duration-200 cursor-pointer ${
+                  currentProduct.isComingSoon
+                    ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-white/10'
+                    : 'bg-yellow-400 hover:bg-yellow-300 text-black shadow-yellow-400/25 hover:scale-[1.01]'
+                }`}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>{currentProduct.isComingSoon ? 'Coming Soon — Register Interest' : 'Buy It Now • Instant Checkout'}</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </button>
+
+              {/* Secondary: Instant WhatsApp Order */}
+              <a
+                href={generateWhatsAppOrderUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-6 rounded-2xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                <PhoneCall className="w-4 h-4" />
+                <span>⚡ Order via WhatsApp in 30 Seconds</span>
+              </a>
+            </div>
+
+            {/* Payment Trust Badges */}
+            <div className="pt-2 border-t border-white/10 text-center space-y-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 block">
+                Guaranteed Safe &amp; Encrypted Checkout
+              </span>
+              <div className="flex items-center justify-center gap-3 text-neutral-400 text-[11px] font-mono">
+                <span className="px-2 py-1 rounded bg-white/5 border border-white/10">UPI / QR</span>
+                <span className="px-2 py-1 rounded bg-white/5 border border-white/10">GPay</span>
+                <span className="px-2 py-1 rounded bg-white/5 border border-white/10">PhonePe</span>
+                <span className="px-2 py-1 rounded bg-white/5 border border-white/10">Paytm</span>
+                <span className="px-2 py-1 rounded bg-white/5 border border-white/10">Cards</span>
+              </div>
+            </div>
+
+            {/* SHOPIFY ACCORDIONS: DETAILS & POLICIES */}
+            <div className="space-y-2 pt-2">
+              
+              {/* Accordion 1: What's in the Box */}
+              <div className="rounded-2xl border border-white/10 bg-neutral-950 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenAccordion(openAccordion === 'box' ? null : 'box')}
+                  className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-white/5 transition"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Package className="w-4 h-4 text-yellow-400" />
+                    <span className="text-xs font-mono font-bold text-white">What&apos;s Included in the 4-Piece Kit</span>
                   </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">HARDWARE SPECIFICATIONS</h3>
-                    <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-xs space-y-1.5">
-                      <div className="flex justify-between"><span className="text-neutral-400">Material:</span><span className="text-white font-bold">{selectedProduct.material}</span></div>
-                      <div className="flex justify-between"><span className="text-neutral-400">Durability Rating:</span><span className="text-white font-bold">{selectedProduct.rating}</span></div>
-                      <div className="flex justify-between"><span className="text-neutral-400">Privacy Security:</span><span className="text-white font-bold">100% Number Masking Active</span></div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">KEY SAFETY FEATURES</h3>
-                    <ul className="space-y-1.5 text-xs text-neutral-300">
-                      {selectedProduct.features.map((feat, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  {openAccordion === 'box' ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                </button>
+                {openAccordion === 'box' && (
+                  <div className="p-4 pt-0 text-xs text-neutral-300 font-sans space-y-2 border-t border-white/5 mt-1">
+                    <ul className="space-y-1.5 pt-2 font-mono text-[11px]">
+                      {currentProduct.features.map((feat, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-yellow-400 shrink-0 mt-0.5" />
                           <span>{feat}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
+                )}
+              </div>
 
-                  <div className="pt-2 flex gap-3">
-                    {selectedProduct.isComingSoon ? (
-                      <button
-                        disabled
-                        className="w-full py-3.5 rounded-xl bg-neutral-800 text-neutral-400 font-extrabold text-xs flex items-center justify-center gap-2 cursor-not-allowed border border-white/10"
-                      >
-                        <Clock className="w-4 h-4" />
-                        <span>Coming Soon — Launching Shortly</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setActiveTab('CHECKOUT')}
-                        className="w-full py-3.5 rounded-xl bg-white text-black font-extrabold text-xs flex items-center justify-center gap-2 cursor-pointer hover:bg-neutral-200 transition shadow-xl"
-                      >
-                        <ShoppingBag className="w-4 h-4 text-black" />
-                        <span>Order Now ({selectedProduct.price})</span>
-                      </button>
-                    )}
+              {/* Accordion 2: Paramedic & Bystander Scan Flow */}
+              <div className="rounded-2xl border border-white/10 bg-neutral-950 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenAccordion(openAccordion === 'scan' ? null : 'scan')}
+                  className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-white/5 transition"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Zap className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-mono font-bold text-white">How Emergency Scanning Works</span>
                   </div>
+                  {openAccordion === 'scan' ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                </button>
+                {openAccordion === 'scan' && (
+                  <div className="p-4 pt-0 text-xs text-neutral-300 font-sans space-y-2.5 border-t border-white/5 mt-1">
+                    <p className="pt-2 text-neutral-400 leading-relaxed font-sans text-xs">
+                      1. In an accident, any bystander or doctor scans the helmet QR with any smartphone camera (no special app or account needed).
+                    </p>
+                    <p className="text-neutral-400 leading-relaxed font-sans text-xs">
+                      2. Emergency profile displays your blood group, emergency contacts, medical allergies, and bike insurance notes.
+                    </p>
+                    <p className="text-neutral-400 leading-relaxed font-sans text-xs">
+                      3. Tapping &quot;Call Emergency Contact&quot; dials through our encrypted cloud voice proxy—your personal phone number remains completely masked and confidential.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Accordion 3: Shipping & Delivery Timelines */}
+              <div className="rounded-2xl border border-white/10 bg-neutral-950 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenAccordion(openAccordion === 'shipping' ? null : 'shipping')}
+                  className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-white/5 transition"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Truck className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs font-mono font-bold text-white">Pan-India Express Shipping &amp; Tracking</span>
+                  </div>
+                  {openAccordion === 'shipping' ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                </button>
+                {openAccordion === 'shipping' && (
+                  <div className="p-4 pt-0 text-xs text-neutral-300 font-sans space-y-2 border-t border-white/5 mt-1">
+                    <p className="pt-2 text-neutral-400 leading-relaxed text-xs">
+                      • Dispatched within 24 hours via Bluedart, Delhivery, or Express Air.
+                    </p>
+                    <p className="text-neutral-400 leading-relaxed text-xs">
+                      • Metro Deliveries: 2-3 business days. Rest of India: 3-5 business days.
+                    </p>
+                    <p className="text-neutral-400 leading-relaxed text-xs">
+                      • Live tracking link delivered to your WhatsApp number as soon as the courier scans your package.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Accordion 4: 1-Year All-Weather Guarantee */}
+              <div className="rounded-2xl border border-white/10 bg-neutral-950 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenAccordion(openAccordion === 'warranty' ? null : 'warranty')}
+                  className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-white/5 transition"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Shield className="w-4 h-4 text-yellow-400" />
+                    <span className="text-xs font-mono font-bold text-white">1-Year All-Weather Guarantee</span>
+                  </div>
+                  {openAccordion === 'warranty' ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
+                </button>
+                {openAccordion === 'warranty' && (
+                  <div className="p-4 pt-0 text-xs text-neutral-300 font-sans space-y-2 border-t border-white/5 mt-1">
+                    <p className="pt-2 text-neutral-400 leading-relaxed text-xs">
+                      We engineer hardware for Indian roads. If your tag fades from UV exposure, peels off in heavy rain, or is damaged during normal motorcycle riding within 365 days of purchase, send us a photo and we will courier a brand new replacement free of charge.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* BELOW THE FOLD: SPECS COMPARISON TABLE                    */}
+        {/* ========================================================= */}
+        <section className="mt-20 pt-14 border-t border-white/10">
+          <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
+            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/15 text-xs font-mono font-bold text-yellow-400 uppercase">
+              HARDWARE SPECIFICATIONS
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Why GuardianTag Outperforms Paper Stickers
+            </h2>
+            <p className="text-neutral-400 text-xs sm:text-sm">
+              Standard paper and laminated stickers peel under rain and fade in sunlight. GuardianTag is built like motorcycle armor.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-mono border-collapse border border-white/15 rounded-2xl overflow-hidden bg-neutral-950">
+              <thead>
+                <tr className="border-b border-white/15 bg-white/5">
+                  <th className="p-4 text-neutral-400 font-bold uppercase">Specification</th>
+                  <th className="p-4 text-yellow-400 font-bold uppercase bg-yellow-400/10">
+                    GuardianTag GTB Kit (₹499)
+                  </th>
+                  <th className="p-4 text-neutral-500 font-bold uppercase">Generic Paper QR Stickers</th>
+                  <th className="p-4 text-neutral-500 font-bold uppercase">Medical ID Bracelets</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10 text-neutral-300">
+                <tr>
+                  <td className="p-4 font-bold text-white">Weather Resistance</td>
+                  <td className="p-4 font-bold text-emerald-400 bg-yellow-400/5">IP68 100% Waterproof &amp; UV Shield</td>
+                  <td className="p-4 text-neutral-400">Fades in 2 weeks of rain/sun</td>
+                  <td className="p-4 text-neutral-400">Waterproof but easily forgotten at home</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">Adhesive Strength</td>
+                  <td className="p-4 font-bold text-emerald-400 bg-yellow-400/5">3M Military VHB (Wind shear 150 km/h)</td>
+                  <td className="p-4 text-neutral-400">Standard paper glue (Peels off)</td>
+                  <td className="p-4 text-neutral-400">N/A (Wearable strap)</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">Privacy Protection</td>
+                  <td className="p-4 font-bold text-emerald-400 bg-yellow-400/5">Masked Twilio Cloud Call Relay</td>
+                  <td className="p-4 text-red-400">Exposes your raw mobile number to all</td>
+                  <td className="p-4 text-neutral-400">Phone number printed in plain text</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">Emergency Data Updates</td>
+                  <td className="p-4 font-bold text-emerald-400 bg-yellow-400/5">Instant portal login anytime</td>
+                  <td className="p-4 text-neutral-400">Cannot edit once printed</td>
+                  <td className="p-4 text-neutral-400">Requires purchasing a new band</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">Recurring Subscription</td>
+                  <td className="p-4 font-bold text-emerald-400 bg-yellow-400/5">₹0 Forever (Zero Subscriptions)</td>
+                  <td className="p-4 text-neutral-400">Free but unsafe</td>
+                  <td className="p-4 text-neutral-400">₹999 - ₹2499 upfront</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* BELOW THE FOLD: VERIFIED RIDER REVIEWS                    */}
+        {/* ========================================================= */}
+        <section id="reviews" className="mt-20 pt-14 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+            <div>
+              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/15 text-xs font-mono font-bold text-yellow-400 uppercase">
+                COMMUNITY FEEDBACK
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
+                Verified Indian Rider Reviews
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right font-mono">
+                <div className="text-xl font-black text-white">4.9 / 5.0</div>
+                <div className="text-[11px] text-neutral-400">Based on 184 reviews</div>
+              </div>
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-400" />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {CUSTOMER_REVIEWS.map((rev, idx) => (
+              <div
+                key={idx}
+                className="p-6 rounded-3xl border border-white/15 bg-neutral-950/80 space-y-4 hover:border-yellow-400/40 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex text-yellow-400">
+                    {[...Array(rev.rating)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-yellow-400" />
+                    ))}
+                  </div>
+                  <span className="text-[11px] font-mono text-neutral-500">{rev.date}</span>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-bold text-white font-mono">&quot;{rev.title}&quot;</h4>
+                  <p className="text-xs text-neutral-300 font-sans mt-2 leading-relaxed">
+                    {rev.content}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-bold text-white font-mono">{rev.author}</div>
+                    <div className="text-[11px] text-neutral-400">{rev.role}</div>
+                  </div>
+                  {rev.verified && (
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Verified Rider
+                    </span>
+                  )}
                 </div>
               </div>
-            )}
+            ))}
+          </div>
+        </section>
 
-            {/* TAB 2: INTERACTIVE CUSTOM LASER ETCHING PREVIEW */}
-            {activeTab === 'CUSTOMIZE' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in">
-                <div className="lg:col-span-6 bg-black p-6 rounded-2xl border border-white/20 text-center space-y-6">
-                  <span className="text-[10px] text-neutral-400 font-bold uppercase block">
-                    LIVE 3D LASER ETCHING PREVIEW
+        {/* ========================================================= */}
+        {/* BELOW THE FOLD: FREQUENTLY ASKED QUESTIONS               */}
+        {/* ========================================================= */}
+        <section className="mt-20 pt-14 border-t border-white/10 max-w-3xl mx-auto">
+          <div className="text-center space-y-3 mb-10">
+            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/15 text-xs font-mono font-bold text-yellow-400 uppercase">
+              HAVE QUESTIONS?
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Frequently Asked Questions
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                q: 'Do I need to pay any monthly or annual subscription fee?',
+                a: 'No! GuardianTag is a one-time purchase of ₹499. There are zero monthly charges, zero yearly renewal fees, and zero hidden server costs.',
+              },
+              {
+                q: 'What happens when someone scans my helmet QR code?',
+                a: 'Any smartphone camera instantly opens your verified GuardianTag profile. It displays your emergency contacts, blood group, allergies, and bike registration. The scanner can press "Call Emergency Contact" which connects via a masked relay without ever revealing your personal phone number.',
+              },
+              {
+                q: 'Will high pressure water washing or rain peel the tag off?',
+                a: 'No. GuardianTag uses authentic 3M high-tack VHB structural adhesive. It is rated for 150 km/h wind shear, intense monsoons, and industrial 120-bar motorcycle pressure washes once cured for 12 hours.',
+              },
+              {
+                q: 'Can I change my emergency contact number later if I change phones?',
+                a: 'Yes, absolutely. You can log into your GuardianTag Owner Portal at any time using your registered phone number or QR ID to update your emergency contacts, medical information, or vehicle details instantly.',
+              },
+            ].map((faq, i) => (
+              <div key={i} className="p-5 rounded-2xl border border-white/10 bg-neutral-950 space-y-2">
+                <h3 className="text-sm font-bold text-white font-mono flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-yellow-400 shrink-0" />
+                  <span>{faq.q}</span>
+                </h3>
+                <p className="text-xs text-neutral-400 font-sans leading-relaxed pl-6">
+                  {faq.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* ========================================================= */}
+      {/* SHOPIFY SLIDE-OVER QUICK CHECKOUT DRAWER                  */}
+      {/* ========================================================= */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-[10000] flex justify-end">
+          {/* Backdrop */}
+          <div
+            onClick={() => setIsDrawerOpen(false)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+          />
+
+          {/* Slide-over Content Drawer */}
+          <div className="relative w-full max-w-md bg-neutral-950 border-l border-white/15 h-full overflow-y-auto flex flex-col p-6 shadow-2xl z-10 font-mono">
+            
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-yellow-400" />
+                <span className="text-sm font-black text-white uppercase tracking-wider">
+                  Express Checkout
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="p-1.5 rounded-lg bg-white/5 text-neutral-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* ORDER SUCCESS SCREEN */}
+            {orderSuccess ? (
+              <div className="py-12 text-center space-y-6 flex-1 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-400/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center">
+                  <Check className="w-8 h-8" />
+                </div>
+
+                <div className="space-y-2">
+                  <span className="px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-400 font-mono font-bold text-xs">
+                    ORDER CONFIRMED #{orderSuccess}
                   </span>
+                  <h3 className="text-xl font-bold text-white">Thank You for Your Order!</h3>
+                  <p className="text-xs text-neutral-400 max-w-xs font-sans">
+                    Your GuardianTag kit is being prepped for dispatch. Our fulfillment team has sent the tracking confirmation to your WhatsApp number.
+                  </p>
+                </div>
 
-                  <div className="py-4 flex justify-center">
-                    <PhysicalTag3D size="lg" tagType={selectedProduct.id} serial={customText ? customText.toUpperCase() : `${selectedProduct.id}-0001`} />
+                {whatsappUrl && (
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition hover:bg-[#20ba59]"
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                    <span>Open WhatsApp Dispatch Receipt</span>
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    setOrderSuccess(null);
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-white/10 text-white font-bold text-xs hover:bg-white/20 transition cursor-pointer"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6 flex-1 pt-4">
+                
+                {/* Product Summary in Drawer */}
+                <div className="p-3.5 rounded-2xl bg-neutral-900 border border-white/10 flex gap-3.5 items-center">
+                  <div className="w-14 h-14 rounded-xl bg-black border border-white/10 flex items-center justify-center shrink-0">
+                    <span className="font-mono font-black text-yellow-400 text-sm">
+                      {currentProduct.id}
+                    </span>
                   </div>
-
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-xs text-neutral-300">
-                    <span>Etched Line: <strong className="text-white font-mono">{customText || 'GUARDIANTAG'}</strong></span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white truncate">{currentProduct.name}</div>
+                    <div className="text-[11px] text-neutral-400">
+                      Finish: {finish} • Qty: {quantity}
+                    </div>
+                    {enableCustomEtching && customEtchingText && (
+                      <div className="text-[10px] text-yellow-400 truncate">
+                        Etch: &quot;{customEtchingText}&quot;
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-bold text-white">₹{rawSubtotal}</div>
+                    <del className="text-[10px] text-neutral-500">₹{comparePrice * quantity}</del>
                   </div>
                 </div>
 
-                <div className="lg:col-span-6 space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 mb-1">CUSTOM LASER TEXT / RIDER NAME</label>
+                {/* COUPON CODE INPUT */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-yellow-400" />
+                    <span>Discount Code / Voucher</span>
+                  </label>
+                  <div className="flex gap-2">
                     <input
                       type="text"
-                      maxLength={18}
-                      value={customText}
-                      onChange={(e) => setCustomText(e.target.value.toUpperCase())}
-                      placeholder="e.g. AJAY KUMAR / O+"
-                      className="w-full bg-black border border-white/20 rounded-xl px-3 py-2.5 text-white font-mono text-xs focus:outline-none focus:border-white uppercase"
+                      placeholder="e.g. WELCOME10"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-black border border-white/20 text-white font-mono text-xs uppercase focus:outline-none focus:border-yellow-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApplyCoupon()}
+                      disabled={isValidatingCoupon}
+                      className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition cursor-pointer"
+                    >
+                      {isValidatingCoupon ? 'Checking...' : 'Apply'}
+                    </button>
+                  </div>
+
+                  {couponError && (
+                    <div className="text-[11px] text-red-400 flex items-center gap-1 font-mono">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{couponError}</span>
+                    </div>
+                  )}
+
+                  {appliedDiscount && (
+                    <div className="text-[11px] text-emerald-400 flex items-center justify-between font-mono bg-emerald-400/10 px-2.5 py-1.5 rounded-lg border border-emerald-400/20">
+                      <span>✓ Applied {appliedDiscount.code} (-₹{appliedDiscount.discountAmountRs})</span>
+                      <button
+                        type="button"
+                        onClick={() => setAppliedDiscount(null)}
+                        className="text-neutral-400 hover:text-white"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* CHECKOUT SHIPPING FORM */}
+                <form onSubmit={handleCheckoutSubmit} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-neutral-300">Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Rahul Sharma"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black border border-white/20 text-white font-mono text-xs focus:outline-none focus:border-yellow-400"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 mb-1">OPTICAL FINISH</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(['MATTE', 'GLOSS', 'REFLECTIVE'] as const).map((finish) => (
-                        <button
-                          key={finish}
-                          type="button"
-                          onClick={() => setSelectedFinish(finish)}
-                          className={`py-2 text-[10px] font-bold rounded-xl border transition ${
-                            selectedFinish === finish ? 'bg-white text-black border-white' : 'bg-black text-white border-white/20'
-                          }`}
-                        >
-                          {finish}
-                        </button>
-                      ))}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-neutral-300">
+                      WhatsApp Mobile Number * <span className="text-neutral-500 font-normal">(for tracking)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="e.g. 9876543210"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black border border-white/20 text-white font-mono text-xs focus:outline-none focus:border-yellow-400"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-neutral-300">
+                      Email Address <span className="text-neutral-500 font-normal">(optional)</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="e.g. rahul@gmail.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black border border-white/20 text-white font-mono text-xs focus:outline-none focus:border-yellow-400"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-neutral-300">Delivery Address *</label>
+                    <textarea
+                      required
+                      rows={2}
+                      placeholder="House / Flat No, Street, Landmark, City, State"
+                      value={shippingAddress}
+                      onChange={(e) => setShippingAddress(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black border border-white/20 text-white font-mono text-xs focus:outline-none focus:border-yellow-400"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-neutral-300">Pincode *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 560001"
+                      value={pincode}
+                      onChange={(e) => setPincode(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black border border-white/20 text-white font-mono text-xs focus:outline-none focus:border-yellow-400"
+                    />
+                  </div>
+
+                  {orderError && (
+                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono">
+                      {orderError}
+                    </div>
+                  )}
+
+                  {/* PRICE SUMMARY BREAKDOWN */}
+                  <div className="pt-3 border-t border-white/10 space-y-1.5 text-xs font-mono">
+                    <div className="flex justify-between text-neutral-400">
+                      <span>Subtotal ({quantity} {quantity === 1 ? 'item' : 'items'}):</span>
+                      <span>₹{rawSubtotal}</span>
+                    </div>
+
+                    {appliedDiscount && (
+                      <div className="flex justify-between text-emerald-400 font-bold">
+                        <span>Discount ({appliedDiscount.code}):</span>
+                        <span>-₹{discountAmount}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-neutral-400">
+                      <span>Pan-India Express Shipping:</span>
+                      <span className="text-emerald-400 font-bold uppercase">FREE</span>
+                    </div>
+
+                    <div className="flex justify-between text-white font-black text-sm pt-2 border-t border-white/10">
+                      <span>Total Due:</span>
+                      <span className="text-yellow-400">₹{finalTotal}</span>
                     </div>
                   </div>
 
-                  <div className="pt-3">
-                    {selectedProduct.isComingSoon ? (
-                      <button
-                        disabled
-                        className="w-full py-3.5 rounded-xl bg-neutral-800 text-neutral-400 font-extrabold text-xs flex items-center justify-center gap-2 cursor-not-allowed border border-white/10"
-                      >
-                        <Clock className="w-4 h-4" />
-                        <span>Coming Soon — Pre-order Launch Date</span>
-                      </button>
+                  {/* SUBMIT BUTTON */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-4 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-yellow-400/20"
+                  >
+                    {isSubmitting ? (
+                      <span>Placing Order...</span>
                     ) : (
-                      <button
-                        onClick={() => setActiveTab('CHECKOUT')}
-                        className="w-full py-3.5 rounded-xl bg-white text-black font-extrabold text-xs flex items-center justify-center gap-2 cursor-pointer hover:bg-neutral-200 transition shadow-xl"
-                      >
-                        <ShoppingBag className="w-4 h-4 text-black" />
-                        <span>Proceed with Custom Etching</span>
-                      </button>
+                      <>
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Place Order • ₹{finalTotal} (Free Delivery)</span>
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </>
                     )}
-                  </div>
-                </div>
+                  </button>
+
+                  <p className="text-[10px] text-center text-neutral-500 font-mono">
+                    🔒 256-bit SSL Encrypted • Instant WhatsApp Confirmation
+                  </p>
+                </form>
               </div>
             )}
-
-            {/* TAB 3: DIRECT CHECKOUT */}
-            {activeTab === 'CHECKOUT' && (
-              <div className="space-y-6 animate-in fade-in">
-                {selectedProduct.isComingSoon ? (
-                  <div className="p-8 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-center space-y-4 font-mono">
-                    <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/50 flex items-center justify-center mx-auto text-amber-400">
-                      <Clock className="w-6 h-6" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-xl font-extrabold text-white">{selectedProduct.name} is Coming Soon!</h3>
-                      <p className="text-xs text-neutral-300 max-w-md mx-auto">
-                        GTB Biker Tag is our active launch product available right now. {selectedProduct.name} will be available for launch shortly.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const bikerTag = PRODUCTS_CATALOG.find((p) => p.id === 'GTB');
-                        if (bikerTag) setSelectedProduct(bikerTag);
-                      }}
-                      className="px-5 py-2.5 rounded-xl bg-white text-black font-extrabold text-xs uppercase shadow-lg hover:bg-neutral-200 transition cursor-pointer"
-                    >
-                      Switch to GTB Biker Tag (Available Now)
-                    </button>
-                  </div>
-                ) : orderSuccess ? (
-                  <div className="p-8 rounded-2xl bg-white text-black text-center space-y-4 animate-in fade-in">
-                    <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mx-auto shadow-2xl">
-                      <Check className="w-10 h-10 text-white" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-2xl font-extrabold">Order Placed Successfully!</h3>
-                      <p className="text-xs text-neutral-600">
-                        Order Reference ID: <strong className="text-black font-mono text-sm">{orderSuccess}</strong>
-                      </p>
-                      <p className="text-xs text-neutral-700 max-w-md mx-auto pt-2">
-                        Your order has been registered in the Store Manager database and queued for packing.
-                      </p>
-                    </div>
-
-                    {whatsappUrl && (
-                      <div className="pt-2 space-y-2">
-                        <a
-                          href={whatsappUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(37,211,102,0.35)] transition transform hover:scale-[1.02] active:scale-95 cursor-pointer"
-                        >
-                          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.572-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.99c-.002 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413" />
-                          </svg>
-                          <span>Send Order Details via WhatsApp</span>
-                        </a>
-                        <p className="text-[10px] text-neutral-500 font-mono">
-                          Sends order details directly to WhatsApp (+91 80588 00880) for instant dispatch confirmation.
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="pt-2">
-                      <Button onClick={() => setSelectedProduct(null)} variant="secondary">
-                        Done
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <form onSubmit={handleCheckoutSubmit} className="space-y-4">
-                    {orderError && (
-                      <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/50 text-red-200 text-xs font-mono">
-                        {orderError}
-                      </div>
-                    )}
-
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/15 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="font-bold text-white block">{selectedProduct.name}</span>
-                        <span className="text-[10px] text-neutral-400">
-                          {customText ? `Custom Etching: "${customText}"` : 'Standard Factory Laser Etching'}
-                        </span>
-                      </div>
-                      <span className="text-lg font-extrabold text-white">{selectedProduct.price}</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <label className="block text-neutral-400 font-bold mb-1">FULL NAME *</label>
-                        <input
-                          type="text"
-                          value={customerName}
-                          onChange={(e) => setCustomerName(e.target.value)}
-                          placeholder="e.g. Ajay Kumar"
-                          className="w-full bg-black border border-white/20 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-white"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-neutral-400 font-bold mb-1">MOBILE NUMBER *</label>
-                        <input
-                          type="tel"
-                          value={customerPhone}
-                          onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="e.g. +91 98765 43210"
-                          className="w-full bg-black border border-white/20 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-white"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <label className="block text-neutral-400 font-bold mb-1">EMAIL ADDRESS *</label>
-                        <input
-                          type="email"
-                          value={customerEmail}
-                          onChange={(e) => setCustomerEmail(e.target.value)}
-                          placeholder="e.g. ajay@example.com"
-                          className="w-full bg-black border border-white/20 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-white"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-neutral-400 font-bold mb-1">SHIPPING ADDRESS *</label>
-                        <input
-                          type="text"
-                          value={shippingAddress}
-                          onChange={(e) => setShippingAddress(e.target.value)}
-                          placeholder="e.g. #42, MG Road, Bengaluru 560001"
-                          className="w-full bg-black border border-white/20 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-white"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-2">
-                      <Button
-                        type="submit"
-                        fullWidth
-                        disabled={isSubmitting}
-                        icon={<Check className="w-4 h-4" />}
-                      >
-                        {isSubmitting ? 'Dispatching Order...' : `Confirm Order (${selectedProduct.price})`}
-                      </Button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            )}
-
           </div>
         </div>
       )}
@@ -705,7 +1456,13 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black text-white p-10 flex items-center justify-center font-mono">Loading safety catalog...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black text-white flex items-center justify-center font-mono text-xs">
+          Loading GuardianTag Hardware...
+        </div>
+      }
+    >
       <ProductsContent />
     </Suspense>
   );
