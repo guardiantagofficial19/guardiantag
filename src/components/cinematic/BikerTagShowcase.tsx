@@ -259,7 +259,7 @@ export default function BikerTagShowcase() {
                   className="w-full h-full object-contain filter invert brightness-200 drop-shadow-[0_0_12px_rgba(250,204,21,0.8)]"
                 />
               </div>
-              <span className="text-[10px] font-mono font-extrabold text-yellow-400 tracking-widest uppercase mt-1">
+              <span className="text-[11px] font-mono font-extrabold text-yellow-400 tracking-widest uppercase mt-1">
                 GUARDIANTAG
               </span>
             </motion.div>
@@ -308,7 +308,7 @@ export default function BikerTagShowcase() {
                     />
                   </div>
                   <div className="text-center pt-1 border-t border-white/10">
-                    <span className={`text-[10px] font-mono font-bold block truncate max-w-[100px] sm:max-w-[120px] ${
+                    <span className={`text-[11px] font-mono font-bold block truncate max-w-[100px] sm:max-w-[120px] ${
                       isSelected ? 'text-yellow-400' : 'text-neutral-400'
                     }`}>
                       {tag.shortName}
@@ -378,19 +378,19 @@ export default function BikerTagShowcase() {
                 {/* Specifications Grid */}
                 <div className="grid grid-cols-2 gap-3 pt-2 font-mono text-xs">
                   <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[10px] uppercase">Dimensions</span>
+                    <span className="text-neutral-500 block text-[11px] uppercase">Dimensions</span>
                     <span className="text-neutral-200 font-semibold leading-tight block">{activeTag.specs.dimensions}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[10px] uppercase">Mounting System</span>
+                    <span className="text-neutral-500 block text-[11px] uppercase">Mounting System</span>
                     <span className="text-neutral-200 font-semibold leading-tight block">{activeTag.specs.mount}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[10px] uppercase">Material Core</span>
+                    <span className="text-neutral-500 block text-[11px] uppercase">Material Core</span>
                     <span className="text-neutral-200 font-semibold leading-tight block">{activeTag.specs.material}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[10px] uppercase">Weather Rating</span>
+                    <span className="text-neutral-500 block text-[11px] uppercase">Weather Rating</span>
                     <span className="text-yellow-400 font-semibold leading-tight block">{activeTag.specs.durability}</span>
                   </div>
                 </div>

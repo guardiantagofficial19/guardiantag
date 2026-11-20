@@ -180,7 +180,7 @@ export default function HowItWorks() {
                         <CheckCircle2 className="w-5 h-5 text-white" />
                         <span className="text-xs font-mono font-bold text-white">EMERGENCY CALL DISPATCH READY</span>
                       </div>
-                      <span className="text-[9px] font-mono text-neutral-400">READY</span>
+                      <span className="text-[11px] font-mono text-neutral-400">READY</span>
                     </div>
 
                     <div className="space-y-2 text-xs font-mono">

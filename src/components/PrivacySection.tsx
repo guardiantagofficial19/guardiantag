@@ -1,24 +1,11 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { Lock, EyeOff, ShieldCheck, FileCheck } from 'lucide-react';
-import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
+import PrivacyDisintegration from '@/components/cinematic/PrivacyDisintegration';
 
 export default function PrivacySection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'end start'],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 20 });
-
-  // Camera rotation around edge of tag transition into Product Showcase
-  const tagRotateY = useTransform(smoothProgress, [0.5, 0.95], ['-35deg', '35deg']);
-  const tagScale = useTransform(smoothProgress, [0.5, 0.9], [0.9, 1.15]);
-
   const points = [
     {
       icon: EyeOff,
@@ -43,7 +30,7 @@ export default function PrivacySection() {
   ];
 
   return (
-    <section ref={containerRef} className="py-24 bg-black text-white border-b border-white/15 relative overflow-hidden">
+    <section id="privacy" className="py-24 bg-black text-white border-b border-white/15 relative overflow-hidden">
       
       {/* Soft Calm Ambient Background */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[450px] bg-white/5 rounded-full blur-[180px] pointer-events-none -z-0" />
@@ -96,15 +83,8 @@ export default function PrivacySection() {
           })}
         </div>
 
-        {/* PRIVACY -> SHOWCASE TRANSITION: Edge Light & Slow Camera Rotation */}
-        <div className="flex flex-col items-center justify-center pt-8">
-          <motion.div style={{ rotateY: tagRotateY, scale: tagScale }}>
-            <PhysicalTag3D size="lg" serial="GTB0001" />
-          </motion.div>
-          <span className="text-[10px] font-mono font-bold text-neutral-400 tracking-widest pt-4 uppercase">
-            360° PHYSICAL HARDWARE PERSPECTIVE
-          </span>
-        </div>
+        {/* Interactive demo: what stays hidden vs. what a bystander can do */}
+        <PrivacyDisintegration embedded />
 
       </div>
     </section>

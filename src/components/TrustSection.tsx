@@ -1,24 +1,10 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { BatteryCharging, Smartphone, Lock, ShieldCheck } from 'lucide-react';
-import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 
 export default function TrustSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'end start'],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 20 });
-
-  // Product receding into background while 4 pillars orbit
-  const tagScale = useTransform(smoothProgress, [0.1, 0.5], [0.85, 0.65]);
-  const tagOpacity = useTransform(smoothProgress, [0.1, 0.5, 0.9], [0.7, 1, 0.4]);
-
   const trustPoints = [
     {
       title: 'Battery-Free',
@@ -43,7 +29,7 @@ export default function TrustSection() {
   ];
 
   return (
-    <section ref={containerRef} className="py-20 bg-black text-white border-b border-white/15 relative overflow-hidden">
+    <section className="py-20 bg-black text-white border-b border-white/15 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         
         {/* Section Header */}
@@ -56,12 +42,7 @@ export default function TrustSection() {
           </h2>
         </div>
 
-        {/* Central Receding Hardware Anchor */}
-        <motion.div style={{ scale: tagScale, opacity: tagOpacity }} className="flex justify-center mb-8">
-          <PhysicalTag3D size="sm" serial="GTB0001" interactive={false} />
-        </motion.div>
-
-        {/* 4 Clean Pillars Orbiting Around Product */}
+        {/* 4 Product Promise Pillars */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {trustPoints.map((item, idx) => {
             const Icon = item.icon;

@@ -17,7 +17,14 @@ export default function CinematicIntro({ onComplete }: { onComplete?: () => void
     // Stage 0: Initial text glow & laser scan line across screen center
     // Stage 1: Screen splits into Top and Bottom halves sliding apart (1.2s)
     // Stage 2: Fade out overlay & reveal main website (2.5s)
-    
+
+    // Play once per browser session; layout.tsx hides it before paint on later visits.
+    try {
+      sessionStorage.setItem('gt_intro_seen', '1');
+    } catch {
+      // Storage unavailable (private mode): the intro simply plays again next time.
+    }
+
     const timer1 = setTimeout(() => setStage(1), 600);
     const timer2 = setTimeout(() => setStage(2), 1400);
     const timer3 = setTimeout(() => {
@@ -59,7 +66,8 @@ export default function CinematicIntro({ onComplete }: { onComplete?: () => void
 
   return (
     <AnimatePresence>
-      <motion.div 
+      <motion.div
+        data-cinematic-intro
         initial={{ opacity: 1 }}
         animate={{ opacity: stage === 2 ? 0 : 1 }}
         transition={{ duration: 0.4 }}
@@ -92,7 +100,7 @@ export default function CinematicIntro({ onComplete }: { onComplete?: () => void
             transition={{ duration: 0.5 }}
             className="translate-y-[50%] flex flex-col items-center"
           >
-            <span className="text-[10px] font-mono font-bold text-neutral-400 tracking-[0.3em] uppercase mb-4 block">
+            <span className="text-[11px] font-mono font-bold text-neutral-400 tracking-[0.3em] uppercase mb-4 block">
               PERSONAL SAFETY HARDWARE
             </span>
             <div className="font-bebas text-6xl sm:text-9xl md:text-[140px] tracking-[0.1em] sm:tracking-[0.14em] text-white uppercase leading-none select-none">
@@ -124,7 +132,7 @@ export default function CinematicIntro({ onComplete }: { onComplete?: () => void
             <div className="font-bebas text-6xl sm:text-9xl md:text-[140px] tracking-[0.1em] sm:tracking-[0.14em] text-white uppercase leading-none select-none">
               GUARDIANTAG
             </div>
-            <span className="text-[10px] font-mono text-neutral-400 tracking-widest uppercase mt-4 block">
+            <span className="text-[11px] font-mono text-neutral-400 tracking-widest uppercase mt-4 block">
               EMERGENCY QR TECH
             </span>
           </motion.div>

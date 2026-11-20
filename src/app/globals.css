@@ -12,7 +12,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-heading: var(--font-space-grotesk), var(--font-plus-jakarta), sans-serif;
+  --font-heading: var(--font-space-grotesk), sans-serif;
   --font-sans: var(--font-inter), sans-serif;
   --font-display: var(--font-bebas), sans-serif;
   --font-mono: var(--font-jetbrains), monospace;
@@ -63,4 +63,9 @@ h1, h2, h3, h4, h5, h6 {
 /* Ambient Soft White Radial Background Lighting Glow */
 .bg-radial-glow {
   background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+/* Cinematic intro: hidden before first paint on repeat visits / reduced motion (see layout.tsx). */
+html[data-intro-skip] [data-cinematic-intro] {
+  display: none !important;
 }

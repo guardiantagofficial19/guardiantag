@@ -120,7 +120,7 @@ export default function GuardianSafetyFeatures() {
                     <div className="p-3 rounded-2xl bg-white/10 text-yellow-400 border border-white/15 group-hover:bg-yellow-400 group-hover:text-black transition-colors duration-300">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
+                    <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
                       {feat.badge}
                     </span>
                   </div>

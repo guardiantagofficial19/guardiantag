@@ -148,7 +148,7 @@ export default function Navbar() {
             {/* Viewfinder Mockup */}
             <div className="relative w-full aspect-square bg-black rounded-2xl border-2 border-white/20 overflow-hidden flex flex-col items-center justify-center p-4 gap-3">
               <div className="w-44 h-44 border-2 border-white/40 rounded-xl relative flex flex-col items-center justify-center p-2 text-center">
-                <span className="text-[10px] font-mono text-neutral-400 font-bold mb-2">
+                <span className="text-[11px] font-mono text-neutral-400 font-bold mb-2">
                   ALIGN GUARDIANTAG QR INSIDE FRAME
                 </span>
                 <Link
@@ -166,7 +166,7 @@ export default function Navbar() {
 
             {/* Quick Test Serial Shortcuts */}
             <div className="space-y-2 text-left">
-              <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
+              <span className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
                 OR QUICK-TEST SAMPLE TAG SERIAL:
               </span>
               <div className="grid grid-cols-4 gap-2 font-mono text-xs">

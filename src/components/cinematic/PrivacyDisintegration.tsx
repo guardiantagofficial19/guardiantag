@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Sparkles, CheckCircle2, Trash2 } from 'lucide-react';
 
-export default function PrivacyDisintegration() {
+/** `embedded`: render only the interactive demo card (no heading/section padding), for use inside PrivacySection. */
+export default function PrivacyDisintegration({ embedded = false }: { embedded?: boolean }) {
   const [disintegrated, setDisintegrated] = useState(false);
 
   const privateDataNodes = [
@@ -14,10 +15,11 @@ export default function PrivacyDisintegration() {
   ];
 
   return (
-    <div className="w-full py-20 bg-black text-white relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 text-center">
-        
-        {/* Section Header */}
+    <div className={embedded ? 'w-full text-white relative' : 'w-full py-20 bg-black text-white relative overflow-hidden'}>
+      <div className={embedded ? 'space-y-10 text-center' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 text-center'}>
+
+        {/* Section Header (omitted when embedded in PrivacySection, which has its own) */}
+        {!embedded && (
         <div className="max-w-3xl mx-auto space-y-3">
           <span className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase tracking-wider">
             PRIVACY & DATA PROTECTION
@@ -29,6 +31,7 @@ export default function PrivacyDisintegration() {
             See how GuardianTag ensures your private details stay hidden while giving bystanders an instant way to call your emergency contact.
           </p>
         </div>
+        )}
 
         {/* INTERACTIVE DATA DISINTEGRATION STAGE */}
         <div className="hardware-card p-8 rounded-3xl border-2 border-white/20 shadow-2xl max-w-3xl mx-auto space-y-8 relative overflow-hidden text-left">
@@ -52,7 +55,7 @@ export default function PrivacyDisintegration() {
 
           {/* Data Nodes Container */}
           <div className="space-y-3">
-            <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
+            <span className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
               SENSITIVE DATA DEMO:
             </span>
 
@@ -72,7 +75,7 @@ export default function PrivacyDisintegration() {
                   }`}
                 >
                   <span className="font-bold">{node.label}</span>
-                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-neutral-300">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-neutral-300">
                     {disintegrated ? 'PROTECTED' : node.type}
                   </span>
                 </motion.div>
@@ -82,7 +85,7 @@ export default function PrivacyDisintegration() {
 
           {/* Filtered Safe Public Output */}
           <div className="pt-4 border-t border-white/15 space-y-3">
-            <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[11px] font-mono font-bold text-white uppercase tracking-widest flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-white" />
               <span>GUARDIANTAG SECURE EMERGENCY VIEW:</span>
             </span>

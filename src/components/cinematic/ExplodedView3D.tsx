@@ -85,7 +85,7 @@ export default function ExplodedView3D() {
                     className="absolute w-56 h-56 sm:w-72 sm:h-72 rounded-3xl border-2 border-white/30 bg-black/90 p-4 shadow-2xl flex flex-col justify-between hardware-card"
                     style={{ transformStyle: 'preserve-3d' }}
                   >
-                    <div className="flex justify-between items-center text-[9px] font-mono font-bold text-neutral-400">
+                    <div className="flex justify-between items-center text-[11px] font-mono font-bold text-neutral-400">
                       <span className="text-white">{layer.badge}</span>
                       <span>LAYER {index + 1}/4</span>
                     </div>
@@ -96,7 +96,7 @@ export default function ExplodedView3D() {
                       </span>
                     </div>
 
-                    <div className="text-[9px] font-mono text-neutral-500 text-right">
+                    <div className="text-[11px] font-mono text-neutral-500 text-right">
                       {isExploded ? 'LAYER EXPANDED' : 'ASSEMBLED'}
                     </div>
                   </motion.div>
@@ -118,7 +118,7 @@ export default function ExplodedView3D() {
               >
                 <div className="flex items-center justify-between text-xs font-mono font-bold">
                   <span className="text-white">{l.title}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-white/10 text-neutral-300 text-[9px]">
+                  <span className="px-2 py-0.5 rounded-full bg-white/10 text-neutral-300 text-[11px]">
                     {l.badge}
                   </span>
                 </div>

@@ -93,7 +93,7 @@ export default function EmergencyDemo() {
               <div className="hardware-card p-6 sm:p-8 rounded-[40px] border-4 border-white/30 shadow-2xl bg-black relative space-y-6">
                 
                 {/* Phone Notch / Status Header */}
-                <div className="flex justify-between items-center text-[10px] font-mono text-neutral-400 border-b border-white/15 pb-4">
+                <div className="flex justify-between items-center text-[11px] font-mono text-neutral-400 border-b border-white/15 pb-4">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-white font-extrabold">EMERGENCY PROTOCOL ACTIVE</span>
@@ -103,7 +103,7 @@ export default function EmergencyDemo() {
 
                 {/* Mobile UI Screen Header */}
                 <div className="text-center space-y-1 py-2">
-                  <span className="text-[10px] font-mono font-bold bg-white/10 text-white px-3 py-1 rounded-full border border-white/20">
+                  <span className="text-[11px] font-mono font-bold bg-white/10 text-white px-3 py-1 rounded-full border border-white/20">
                     EMERGENCY CONTACT PORTAL
                   </span>
                   <h4 className="text-2xl font-extrabold text-white tracking-tight pt-2">
@@ -129,7 +129,7 @@ export default function EmergencyDemo() {
 
                 {/* Verified Helpline Quick Grid */}
                 <div className="pt-2 border-t border-white/15 text-left space-y-2">
-                  <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">
+                  <span className="text-[11px] font-mono font-bold text-neutral-400 uppercase">
                     National Emergency Helplines (India)
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
@@ -153,7 +153,7 @@ export default function EmergencyDemo() {
                 </div>
 
                 {/* Privacy Guarantee Footnote */}
-                <div className="pt-2 text-center text-[10px] text-neutral-400 font-mono flex items-center justify-center gap-1">
+                <div className="pt-2 text-center text-[11px] text-neutral-400 font-mono flex items-center justify-center gap-1">
                   <Lock className="w-3 h-3 text-white" />
                   <span>Personal numbers remain 100% hidden.</span>
                 </div>

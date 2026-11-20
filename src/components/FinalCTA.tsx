@@ -1,27 +1,12 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { ArrowRight, QrCode, ShieldCheck } from 'lucide-react';
-import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 
 export default function FinalCTA() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'end start'],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 20 });
-
-  // Full-circle camera push-in towards GuardianTag hero hardware visual
-  const tagScale = useTransform(smoothProgress, [0.1, 0.7], [0.8, 1.1]);
-  const tagZ = useTransform(smoothProgress, [0.1, 0.7], [-100, 50]);
-
   return (
-    <section ref={containerRef} className="py-24 bg-black text-white border-b border-white/15 relative overflow-hidden text-center">
+    <section className="py-24 bg-black text-white border-b border-white/15 relative overflow-hidden text-center">
       
       {/* Radial Background Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-white/10 rounded-full blur-[160px] pointer-events-none -z-0" />
@@ -42,14 +27,6 @@ export default function FinalCTA() {
         <p className="text-neutral-300 text-base sm:text-lg max-w-2xl mx-auto font-normal leading-relaxed">
           Zero batteries to charge. Zero app downloads for scanners. Instant emergency reach when every second counts.
         </p>
-
-        {/* FULL-CIRCLE CAMERA PUSH-IN: Returning 3D GuardianTag Visual */}
-        <motion.div
-          style={{ scale: tagScale, z: tagZ }}
-          className="py-4 flex justify-center items-center"
-        >
-          <PhysicalTag3D size="xl" serial="GTB0001" tagType="GTB" />
-        </motion.div>
 
         {/* Buttons */}
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
