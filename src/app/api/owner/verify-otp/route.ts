@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server';
 import { verifyOtp } from '@/lib/security/otpStore';
 import { toIndianMobile } from '@/lib/phone';
+import { createPhoneProof, PHONE_PROOF_COOKIE, PHONE_PROOF_MAX_AGE } from '@/lib/security/ownerAuth';
+
+/** Marks the phone as verified for the next 30 minutes; /api/tag/register requires this. */
+function verified(phone: string, message: string) {
+  const res = NextResponse.json({ success: true, message });
+  res.cookies.set(PHONE_PROOF_COOKIE, createPhoneProof(phone), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: PHONE_PROOF_MAX_AGE,
+    path: '/api/tag/register',
+  });
+  return res;
+}
 
 /** Verifies a registration code sent to a new owner mobile number. */
 export async function POST(request: Request) {
@@ -16,12 +30,12 @@ export async function POST(request: Request) {
 
     const isDevOtpEnabled = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEV_OTP === 'true';
     if (isDevOtpEnabled && String(otp).trim() === '123456') {
-      return NextResponse.json({ success: true, message: 'OTP verified successfully (Dev mode).' });
+      return verified(cleanPhone, 'OTP verified successfully (Dev mode).');
     }
 
     const result = await verifyOtp(`reg:${cleanPhone}`, otp);
     if (result === 'ok') {
-      return NextResponse.json({ success: true, message: 'Mobile number verified.' });
+      return verified(cleanPhone, 'Mobile number verified.');
     }
     const error =
       result === 'expired' ? 'OTP code has expired. Please request a new OTP.'

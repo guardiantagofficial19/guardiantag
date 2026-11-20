@@ -81,3 +81,14 @@ export async function isRateLimited(bucket: string, limit: number, windowSeconds
   if (Math.random() < 0.02) await sql`DELETE FROM rate_limits WHERE reset_at < now() - interval '1 day'`;
   return Number(rows[0]?.hits) > limit;
 }
+
+/** True if `bucket` already has `limit` or more hits in its current window (does not count a hit). */
+export async function isOverLimit(bucket: string, limit: number): Promise<boolean> {
+  const rows = await sql`SELECT hits FROM rate_limits WHERE bucket = ${bucket} AND reset_at > now()`;
+  return Number(rows[0]?.hits) >= limit;
+}
+
+/** Forgets a bucket (e.g. after a successful login). */
+export async function clearRateLimit(bucket: string): Promise<void> {
+  await sql`DELETE FROM rate_limits WHERE bucket = ${bucket}`;
+}

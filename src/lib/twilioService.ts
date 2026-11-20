@@ -1,36 +1,31 @@
 import { errorMessage } from '@/lib/errors';
 import { getTagByQrIdAsync, normalizeTagId } from './tagService';
 import { toE164, toIndianMobile } from './phone';
+import { isOverLimit, isRateLimited } from './security/rateLimit';
 
 const XML_ESCAPES: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' };
 const xml = (v: string) => v.replace(/[<>&"']/g, (c) => XML_ESCAPES[c]);
 
-// Public Action Rate Limiter (Max 3 calls/SMS per IP per 10 mins)
-const actionRateLimitStore = new Map<string, { count: number; expiresAt: number }>();
+// Public action limits, stored in the database (rate_limits) so they hold across instances:
+//  - per tag + target + IP: 3 per 10 minutes
+//  - per tag + target, all IPs together: 10 per hour (stops many IPs flooding one owner)
+const IP_LIMIT = 3;
+const IP_WINDOW_S = 10 * 60;
+const TAG_LIMIT = 10;
+const TAG_WINDOW_S = 60 * 60;
 
-function isRateLimited(key: string): boolean {
-  const now = Date.now();
-  const record = actionRateLimitStore.get(key);
-
-  if (!record) return false;
-
-  if (now > record.expiresAt) {
-    actionRateLimitStore.delete(key);
-    return false;
-  }
-
-  return record.count >= 3;
+function actionBuckets(kind: 'call' | 'sms', cleanId: string, target: string, clientIp: string) {
+  const ip = (clientIp.split(',')[0]?.trim() || 'unknown').slice(0, 100);
+  return { ip: `${kind}:${cleanId}:${target}:${ip}`, tag: `${kind}-tag:${cleanId}:${target}` };
 }
 
-function recordPublicAction(key: string) {
-  const now = Date.now();
-  const record = actionRateLimitStore.get(key);
+async function isActionLimited(b: { ip: string; tag: string }): Promise<boolean> {
+  return (await isOverLimit(b.ip, IP_LIMIT)) || (await isOverLimit(b.tag, TAG_LIMIT));
+}
 
-  if (!record || now > record.expiresAt) {
-    actionRateLimitStore.set(key, { count: 1, expiresAt: now + 10 * 60 * 1000 });
-  } else {
-    record.count += 1;
-  }
+async function recordPublicAction(b: { ip: string; tag: string }): Promise<void> {
+  await isRateLimited(b.ip, IP_LIMIT, IP_WINDOW_S);
+  await isRateLimited(b.tag, TAG_LIMIT, TAG_WINDOW_S);
 }
 
 /**
@@ -60,9 +55,9 @@ export async function triggerMaskedCallServer(
 }> {
   const cleanId = normalizeTagId(qrId);
   if (!cleanId) return { success: false, error: 'Invalid QR Tag ID.' };
-  const rateLimitKey = `call:${cleanId}:${target}:${clientIp}`;
+  const rateLimitKey = actionBuckets('call', cleanId, target, clientIp);
 
-  if (isRateLimited(rateLimitKey)) {
+  if (await isActionLimited(rateLimitKey)) {
     return {
       success: false,
       error: 'Rate limit exceeded. Please wait a few minutes before initiating another emergency call.',
@@ -102,7 +97,7 @@ export async function triggerMaskedCallServer(
   // If bystander phone entered, call bystander first and bridge to database owner number
   const toPhone = bystanderPhone || destPhone;
 
-  recordPublicAction(rateLimitKey);
+  await recordPublicAction(rateLimitKey);
 
   // Check if Twilio Production Credentials exist in environment
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -182,9 +177,9 @@ export async function triggerEmergencySmsServer(
 }> {
   const cleanId = normalizeTagId(qrId);
   if (!cleanId) return { success: false, error: 'Invalid QR Tag ID.' };
-  const rateLimitKey = `sms:${cleanId}:${clientIp}`;
+  const rateLimitKey = actionBuckets('sms', cleanId, 'emergency', clientIp);
 
-  if (isRateLimited(rateLimitKey)) {
+  if (await isActionLimited(rateLimitKey)) {
     return {
       success: false,
       error: 'Rate limit exceeded. Please wait a few minutes before sending another emergency SMS.',
@@ -206,7 +201,7 @@ export async function triggerEmergencySmsServer(
     return { success: false, error: 'The emergency contact number on file is not a valid phone number.' };
   }
 
-  recordPublicAction(rateLimitKey);
+  await recordPublicAction(rateLimitKey);
 
   const timestamp = new Date().toISOString();
   let mapsUrl = '';

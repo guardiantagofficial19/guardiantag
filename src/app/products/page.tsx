@@ -341,14 +341,14 @@ function ProductsContent() {
       productModel: currentProduct.id,
       productName: currentProduct.name,
       quantity,
-      totalAmount: finalTotal,
+      // The server prices the order from the database; only the coupon code is sent.
+      discountCode: appliedDiscount?.code,
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
       customerEmail: customerEmail.trim() || `${customerPhone.trim()}@guest.guardiantag.in`,
       address: shippingAddress.trim(),
       pincode: pincode.trim(),
       laserEtchingText: laserEtching,
-      notes: appliedDiscount ? `Coupon Applied: ${appliedDiscount.code}` : undefined,
     };
 
     try {

@@ -23,7 +23,7 @@ export default async function ShopifyLoginPage({
         {error && (
           <div className="shopify-login-error">
             <AlertCircle size={16} />
-            <span>{error === "config" ? "Admin login is not configured. Set ADMIN_PASSWORD and ADMIN_SESSION_SECRET on the server." : "Incorrect password. Please try again."}</span>
+            <span>{error === "config" ? "Admin login is not configured. Set ADMIN_PASSWORD and ADMIN_SESSION_SECRET on the server." : error === "locked" ? "Too many failed attempts. Please wait 15 minutes and try again." : "Incorrect password. Please try again."}</span>
           </div>
         )}
 

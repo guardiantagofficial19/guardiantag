@@ -71,3 +71,28 @@ export function verifyOwnerToken(token?: string, expectedQrId?: string): OwnerSe
     return null;
   }
 }
+
+/* ---------- Verified-phone proof (registration) ---------- */
+
+export const PHONE_PROOF_COOKIE = 'gt_phone_verified';
+export const PHONE_PROOF_MAX_AGE = 30 * 60; // seconds
+
+/** Signed proof that `phone` (E.164) passed OTP verification. Domain-separated from session tokens. */
+export function createPhoneProof(phone: string): string {
+  const exp = Date.now() + PHONE_PROOF_MAX_AGE * 1000;
+  const payload = `${phone}|${exp}`;
+  return `${Buffer.from(payload).toString('base64url')}.${hmacSignature(`phone-proof:${payload}`)}`;
+}
+
+/** True if `token` is an unexpired proof for exactly this phone number. */
+export function verifyPhoneProof(token: string | undefined, phone: string): boolean {
+  if (!token || (process.env.OWNER_SESSION_SECRET || '').length < 32) return false;
+  const [b64, sig] = token.split('.');
+  if (!b64 || !sig) return false;
+  const payload = Buffer.from(b64, 'base64url').toString('utf-8');
+  const expected = Buffer.from(hmacSignature(`phone-proof:${payload}`), 'hex');
+  const given = Buffer.from(sig, 'hex');
+  if (given.length !== expected.length || !crypto.timingSafeEqual(given, expected)) return false;
+  const [p, exp] = payload.split('|');
+  return p === phone && Number(exp) > Date.now();
+}

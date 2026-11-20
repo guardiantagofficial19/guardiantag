@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { COOKIE, verifyToken } from '@/lib/admin-auth';
+import { isRateLimited } from '@/lib/security/rateLimit';
 
 const GUARDIANTAG_WHATSAPP_NUMBER = '918058800880';
 
@@ -15,21 +16,6 @@ const SKU_MAP: Record<string, string> = {
   GTU: 'GTU-KIT',
 };
 
-// Rate limiting store for order placement: max 6 orders per IP per 10 minutes
-const orderRateLimit = new Map<string, { count: number; expiresAt: number }>();
-
-function isOrderRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const record = orderRateLimit.get(ip);
-  if (!record || now > record.expiresAt) {
-    orderRateLimit.set(ip, { count: 1, expiresAt: now + 10 * 60 * 1000 });
-    return false;
-  }
-  if (record.count >= 6) return true;
-  record.count += 1;
-  return false;
-}
-
 // Protected: Only authorized Store Manager administrators can fetch full order records
 export async function GET() {
   try {
@@ -40,7 +26,7 @@ export async function GET() {
     }
 
     const orders = await sql`
-      SELECT 
+      SELECT
         o.id,
         o.order_no,
         o.customer_name,
@@ -56,7 +42,7 @@ export async function GET() {
         o.notes,
         o.created_at,
         (SELECT COALESCE(sum(qty), 0)::int FROM store_order_items i WHERE i.order_id = o.id) AS units,
-        (SELECT json_agg(json_build_object('sku', i.sku, 'name', i.name, 'qty', i.qty, 'unit_paise', i.unit_paise)) 
+        (SELECT json_agg(json_build_object('sku', i.sku, 'name', i.name, 'qty', i.qty, 'unit_paise', i.unit_paise))
          FROM store_order_items i WHERE i.order_id = o.id) AS items
       FROM store_orders o
       ORDER BY o.created_at DESC
@@ -71,10 +57,36 @@ export async function GET() {
   }
 }
 
+type Discount = { id: string; code: string; discount_type: string; value: number; min_spend_paise: number };
+
+/** Server-side coupon check against the database. Returns the coupon or a customer-facing error. */
+async function loadDiscount(code: string, subtotalPaise: number): Promise<{ discount: Discount } | { error: string }> {
+  const rows = await sql`
+    SELECT id, code, discount_type, value, min_spend_paise, usage_count, max_uses, active, starts_at, expires_at
+    FROM store_discounts WHERE UPPER(code) = ${code} LIMIT 1`;
+  const d = rows[0];
+  if (!d) return { error: 'Invalid discount code.' };
+  if (!d.active || (d.starts_at && new Date(d.starts_at).getTime() > Date.now())) return { error: 'This discount code is not active.' };
+  if (d.expires_at && new Date(d.expires_at).getTime() < Date.now()) return { error: 'This coupon code has expired.' };
+  if (d.max_uses !== null && Number(d.usage_count) >= Number(d.max_uses)) return { error: 'This coupon has reached its maximum usage limit.' };
+  if (Number(d.min_spend_paise) > 0 && subtotalPaise < Number(d.min_spend_paise)) {
+    return { error: `Minimum order amount of ₹${Math.round(Number(d.min_spend_paise) / 100)} required for this coupon.` };
+  }
+  return { discount: { id: String(d.id), code: String(d.code), discount_type: String(d.discount_type), value: Number(d.value), min_spend_paise: Number(d.min_spend_paise) } };
+}
+
+function discountAmount(d: Discount | null, subtotalPaise: number): number {
+  if (!d) return 0;
+  if (d.discount_type === 'percentage') return Math.min(subtotalPaise, Math.round((subtotalPaise * d.value) / 100));
+  if (d.discount_type === 'fixed_amount') return Math.min(subtotalPaise, d.value);
+  return 0; // free_shipping: delivery is already free
+}
+
 export async function POST(request: Request) {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
-    if (isOrderRateLimited(ip)) {
+    const ip = (request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1').slice(0, 100);
+    // Max 6 orders per IP per 10 minutes (stored in the database, so it holds across instances).
+    if (await isRateLimited(`order-ip:${ip}`, 6, 10 * 60)) {
       return NextResponse.json(
         { success: false, error: 'Too many order requests. Please wait a few minutes before trying again.' },
         { status: 429 }
@@ -84,9 +96,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       productModel,
-      productName,
       quantity = 1,
-      totalAmount,
       customerName,
       customerPhone,
       customerEmail,
@@ -96,6 +106,7 @@ export async function POST(request: Request) {
       pincode = '',
       laserEtchingText,
       notes,
+      discountCode,
     } = body;
 
     const cleanName = String(customerName || '').trim().slice(0, 100);
@@ -107,6 +118,7 @@ export async function POST(request: Request) {
     const cleanPincode = String(pincode || '').trim().slice(0, 15);
     const cleanEtching = String(laserEtchingText || '').trim().slice(0, 60);
     const cleanNotes = String(notes || '').trim().slice(0, 300);
+    const cleanCode = String(discountCode || '').trim().toUpperCase().slice(0, 40);
 
     if (!cleanName || !cleanPhone || !cleanAddress) {
       return NextResponse.json(
@@ -115,86 +127,85 @@ export async function POST(request: Request) {
       );
     }
 
+    const sku = SKU_MAP[String(productModel || '').toUpperCase()];
+    if (!sku) {
+      return NextResponse.json({ success: false, error: 'Unknown product.' }, { status: 400 });
+    }
     const parsedQty = Math.max(1, Math.min(25, Math.trunc(Number(quantity) || 1)));
-    const sku = SKU_MAP[productModel] || 'GTB-KIT';
-    const amountInPaise = totalAmount ? Math.min(10000000, Math.round(Number(totalAmount) * 100)) : 49900;
+
+    // 1. Price comes from the database, never from the client.
+    const productRows = await sql`SELECT name, price_paise, stock, active FROM store_products WHERE sku = ${sku} LIMIT 1`;
+    const product = productRows[0];
+    if (!product || !product.active) {
+      return NextResponse.json({ success: false, error: 'This product is not available to order yet.' }, { status: 400 });
+    }
+    if (Number(product.stock) < parsedQty) {
+      const left = Number(product.stock);
+      return NextResponse.json(
+        { success: false, error: left > 0 ? `Only ${left} left in stock. Please lower the quantity.` : 'This product is out of stock.' },
+        { status: 409 }
+      );
+    }
+
+    const unitPaise = Number(product.price_paise);
+    const subtotalPaise = unitPaise * parsedQty;
+
+    // 2. Coupon is re-validated and priced on the server.
+    let discount: Discount | null = null;
+    if (cleanCode) {
+      const res = await loadDiscount(cleanCode, subtotalPaise);
+      if ('error' in res) {
+        return NextResponse.json({ success: false, error: res.error }, { status: 400 });
+      }
+      discount = res.discount;
+    }
+    const discountPaise = discountAmount(discount, subtotalPaise);
+    const totalPaise = Math.max(0, subtotalPaise - discountPaise);
+    const productName = String(product.name);
     const orderId = crypto.randomUUID();
 
     const orderNotes = [
       cleanEtching ? `Etching: ${cleanEtching}` : '',
-      cleanNotes ? cleanNotes : '',
+      discount ? `Coupon: ${discount.code} (-₹${Math.round(discountPaise / 100)})` : '',
+      cleanNotes,
     ].filter(Boolean).join(' | ');
 
-    // 1. Insert order into store_orders and store_order_items
-    // 2. Decrement stock from store_products and log movement
+    // 3. One transaction. CHECK constraints (stock >= 0, usage_count <= max_uses) abort it
+    //    if a concurrent order took the last unit or the last coupon use.
     const stmts = [
+      sql`UPDATE store_products SET stock = stock - ${parsedQty} WHERE sku = ${sku}`,
+      ...(discount ? [sql`UPDATE store_discounts SET usage_count = usage_count + 1 WHERE id = ${discount.id}::uuid`] : []),
       sql`
         INSERT INTO store_orders (
-          id,
-          customer_name,
-          phone,
-          email,
-          address,
-          city,
-          state,
-          pincode,
-          status,
-          payment_status,
-          shipping_paise,
-          total_paise,
-          notes
+          id, customer_name, phone, email, address, city, state, pincode,
+          status, payment_status, shipping_paise, total_paise, notes
         ) VALUES (
-          ${orderId},
-          ${cleanName},
-          ${cleanPhone},
-          ${cleanEmail},
-          ${cleanAddress},
-          ${cleanCity},
-          ${cleanState},
-          ${cleanPincode},
-          'new',
-          'unpaid',
-          0,
-          ${amountInPaise},
-          ${orderNotes}
+          ${orderId}, ${cleanName}, ${cleanPhone}, ${cleanEmail}, ${cleanAddress}, ${cleanCity}, ${cleanState}, ${cleanPincode},
+          'new', 'unpaid', 0, ${totalPaise}, ${orderNotes}
         )
       `,
       sql`
-        INSERT INTO store_order_items (
-          order_id,
-          sku,
-          name,
-          qty,
-          unit_paise
-        ) VALUES (
-          ${orderId},
-          ${sku},
-          ${productName || 'GTB Biker Tag Kit (4-piece)'},
-          ${parsedQty},
-          ${Math.round(amountInPaise / parsedQty)}
-        )
+        INSERT INTO store_order_items (order_id, sku, name, qty, unit_paise)
+        VALUES (${orderId}, ${sku}, ${productName}, ${parsedQty}, ${unitPaise})
       `,
       sql`
-        UPDATE store_products 
-        SET stock = GREATEST(0, stock - ${parsedQty}) 
-        WHERE sku = ${sku}
-      `,
-      sql`
-        INSERT INTO stock_movements (
-          sku,
-          delta,
-          reason,
-          order_id
-        ) VALUES (
-          ${sku},
-          ${-parsedQty},
-          'website_order',
-          ${orderId}
-        )
+        INSERT INTO stock_movements (sku, delta, reason, order_id)
+        VALUES (${sku}, ${-parsedQty}, 'website_order', ${orderId})
       `,
     ];
 
-    await sql.transaction(stmts);
+    try {
+      await sql.transaction(stmts);
+    } catch (e) {
+      const msg = errorMessage(e);
+      if (/store_products_stock_check/.test(msg)) {
+        return NextResponse.json({ success: false, error: 'Sorry, this item just sold out. Please lower the quantity or try later.' }, { status: 409 });
+      }
+      if (/store_discounts_usage_within_max/.test(msg)) {
+        return NextResponse.json({ success: false, error: 'This coupon has just reached its usage limit.' }, { status: 409 });
+      }
+      throw e;
+    }
 
     // Fetch the auto-generated order_no (e.g. GT-1002)
     const result = await sql`
@@ -207,18 +218,20 @@ export async function POST(request: Request) {
       revalidatePath('/admin');
       revalidatePath('/admin/orders');
       revalidatePath('/admin/inventory');
+      if (discount) revalidatePath('/admin/discounts');
     } catch {
       // Revalidation is non-blocking
     }
 
-    // 3. Format WhatsApp Details message for customer & merchant
-    const totalRupees = Math.round(amountInPaise / 100);
+    // 4. WhatsApp message for customer & merchant (server-computed figures only)
+    const totalRupees = Math.round(totalPaise / 100);
     const whatsappMessage = [
       `🚨 *NEW GUARDIANTAG ORDER: ${orderNo}*`,
       `━━━━━━━━━━━━━━━━━━`,
-      `📦 *Item:* ${productName || 'GTB Biker Tag Kit'} (Qty: ${parsedQty})`,
+      `📦 *Item:* ${productName} (Qty: ${parsedQty})`,
+      discount ? `🏷️ *Coupon:* ${discount.code} (-₹${Math.round(discountPaise / 100)})` : '',
       `💰 *Total Amount:* ₹${totalRupees} (Free Delivery Across India)`,
-      orderNotes ? `🏷️ *Custom Details:* ${orderNotes}` : '',
+      cleanEtching ? `✏️ *Custom Etching:* ${cleanEtching}` : '',
       ``,
       `👤 *Customer Info:*`,
       `• Name: ${cleanName}`,
@@ -236,6 +249,8 @@ export async function POST(request: Request) {
       success: true,
       orderId,
       orderNo,
+      subtotalRupees: Math.round(subtotalPaise / 100),
+      discountRupees: Math.round(discountPaise / 100),
       totalRupees,
       whatsappUrl,
       whatsappMessage,
@@ -244,7 +259,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Order creation error:', error);
     return NextResponse.json(
-      { success: false, error: errorMessage(error) || 'Failed to place order in Store Manager database' },
+      { success: false, error: 'Failed to place your order. Please try again or order on WhatsApp.' },
       { status: 500 }
     );
   }

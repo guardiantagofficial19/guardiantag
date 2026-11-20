@@ -2,7 +2,8 @@
 import { errorMessage } from '@/lib/errors';
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { clearRateLimit, isOverLimit, isRateLimited } from "@/lib/security/rateLimit";
 import { sql } from "@/lib/db";
 import { COOKIE, createToken, safeEqual } from "@/lib/admin-auth";
 import { requireAdmin } from "@/lib/admin-guard";
@@ -23,10 +24,18 @@ export async function loginAction(fd: FormData) {
   if (!expected || (process.env.ADMIN_SESSION_SECRET || "").length < 32) {
     redirect("/admin/login?error=config");
   }
+  // 5 failed attempts per IP per 15 minutes (stored in the database, so it holds across instances).
+  const ip = ((await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown").slice(0, 100);
+  const bucket = `admin-login:${ip}`;
+  if (await isOverLimit(bucket, 5)) {
+    redirect("/admin/login?error=locked");
+  }
   if (!pw || !safeEqual(pw, expected)) {
+    await isRateLimited(bucket, 5, 15 * 60);
     await new Promise((r) => setTimeout(r, 600));
     redirect("/admin/login?error=1");
   }
+  await clearRateLimit(bucket);
   (await cookies()).set(COOKIE, await createToken(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
