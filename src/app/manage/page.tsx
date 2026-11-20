@@ -81,7 +81,7 @@ function ManageFlow() {
       const res = await fetch('/api/owner/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanId }), // API accepts phone or lookup
+        body: JSON.stringify({ qrId: cleanId }),
       });
 
       const data = await res.json();

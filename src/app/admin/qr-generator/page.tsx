@@ -5,6 +5,7 @@ import React, { useState, useEffect, useEffectEvent, useRef } from 'react';
 import Link from 'next/link';
 import JSZip from 'jszip';
 import qrcode from 'qrcode-generator';
+import { recordPrintedTagsAction } from '@/app/admin/actions';
 
 interface BatchItem {
   id: string;
@@ -656,9 +657,21 @@ export default function AdminQrGeneratorPage() {
     return rows.map((r) => r.join(',')).join('\n');
   };
 
+  // Exported IDs become the registrable inventory: registration only accepts IDs in qr_tags.
+  const saveBatchToInventory = async () => {
+    try {
+      const res = await recordPrintedTagsAction(batch.map((b) => b.id));
+      if (res.error) appendLog(`!! inventory not updated: ${res.error}`, 'warn');
+      else appendLog(`>> inventory: ${res.added} new tag ID(s) saved, ${batch.length - res.added} already existed.`, 'info');
+    } catch (e) {
+      appendLog(`!! inventory not updated: ${errorMessage(e) || 'network error'}`, 'warn');
+    }
+  };
+
   const downloadZip = async () => {
     if (!batch.length) return;
     logCmd(`export --png --zip ${fileBase()}`);
+    await saveBatchToInventory();
     const zip = new JSZip();
     for (let i = 0; i < batch.length; i++) {
       const c = renderAny(batch[i], batch[i].format, true, showId);
@@ -683,9 +696,10 @@ export default function AdminQrGeneratorPage() {
     appendLog(`>> ${finalMsg}`, 'res');
   };
 
-  const downloadCSV = () => {
+  const downloadCSV = async () => {
     if (!batch.length) return;
     logCmd(`export --csv ${fileBase()}.csv`);
+    await saveBatchToInventory();
     const blob = new Blob([buildCSV()], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

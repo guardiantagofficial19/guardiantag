@@ -18,11 +18,12 @@ const paise = (fd: FormData, k: string) => Math.round(Number(fd.get(k) || 0) * 1
 /* ---------- auth ---------- */
 export async function loginAction(fd: FormData) {
   const pw = str(fd, "password");
-  if (process.env.NODE_ENV === "production" && !process.env.ADMIN_PASSWORD) {
-    console.warn("⚠️ [SECURITY WARNING] ADMIN_PASSWORD environment variable is not defined. Using default.");
+  // No built-in fallback password: admin login is disabled until ADMIN_PASSWORD and ADMIN_SESSION_SECRET are set.
+  const expected = (process.env.ADMIN_PASSWORD || "").trim();
+  if (!expected || (process.env.ADMIN_SESSION_SECRET || "").length < 32) {
+    redirect("/admin/login?error=config");
   }
-  const expected = (process.env.ADMIN_PASSWORD || "guardiantag_admin_2026!").trim();
-  if (!safeEqual(pw, expected) && pw !== expected) {
+  if (!pw || !safeEqual(pw, expected)) {
     await new Promise((r) => setTimeout(r, 600));
     redirect("/admin/login?error=1");
   }
@@ -309,6 +310,31 @@ export async function generateTagsAction(fd: FormData) {
   }
   revalidatePath("/admin/tags");
   redirect(`/admin/tags?made=${encodeURIComponent(made)}`);
+}
+
+// Records tag IDs exported from the QR generator as issued ("printed") so they can be registered.
+// Existing IDs are left untouched, so re-exporting a batch never resets an owned tag.
+export async function recordPrintedTagsAction(ids: string[]): Promise<{ added: number; error?: string }> {
+  await requireAdmin();
+  const clean = Array.from(
+    new Set(
+      (Array.isArray(ids) ? ids : [])
+        .map((i) => String(i).trim().toUpperCase())
+        .filter((i) => /^(GTB|GTK|GTT|GTU)[0-9]{4,8}$/.test(i))
+    )
+  ).slice(0, 5000);
+  if (!clean.length) return { added: 0 };
+  try {
+    const rows = await sql`
+      INSERT INTO qr_tags (qr_id, tag_type, status)
+      SELECT id, left(id, 3), 'printed' FROM unnest(${clean}::text[]) AS t(id)
+      ON CONFLICT (qr_id) DO NOTHING
+      RETURNING qr_id`;
+    revalidatePath("/admin/tags");
+    return { added: rows.length };
+  } catch (e) {
+    return { added: 0, error: errorMessage(e) || "Database error" };
+  }
 }
 
 // Owner details for registered tags live in these tables (what the scan page reads).

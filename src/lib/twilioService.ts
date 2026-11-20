@@ -1,5 +1,9 @@
 import { errorMessage } from '@/lib/errors';
-import { getTagByQrIdAsync } from './tagService';
+import { getTagByQrIdAsync, normalizeTagId } from './tagService';
+import { toE164, toIndianMobile } from './phone';
+
+const XML_ESCAPES: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' };
+const xml = (v: string) => v.replace(/[<>&"']/g, (c) => XML_ESCAPES[c]);
 
 // Public Action Rate Limiter (Max 3 calls/SMS per IP per 10 mins)
 const actionRateLimitStore = new Map<string, { count: number; expiresAt: number }>();
@@ -54,7 +58,8 @@ export async function triggerMaskedCallServer(
   message?: string;
   error?: string;
 }> {
-  const cleanId = qrId?.trim()?.toUpperCase();
+  const cleanId = normalizeTagId(qrId);
+  if (!cleanId) return { success: false, error: 'Invalid QR Tag ID.' };
   const rateLimitKey = `call:${cleanId}:${target}:${clientIp}`;
 
   if (isRateLimited(rateLimitKey)) {
@@ -79,16 +84,20 @@ export async function triggerMaskedCallServer(
   }
 
   // 2. Format Destination Phone (from Database) into E.164
-  let destPhone = destinationPhone.replace(/\s+/g, '');
-  if (/^\d{10}$/.test(destPhone)) destPhone = `+91${destPhone}`;
-  else if (/^0\d{10}$/.test(destPhone)) destPhone = `+91${destPhone.slice(1)}`;
-  else if (!destPhone.startsWith('+')) destPhone = `+${destPhone}`;
+  const destPhone = toE164(destinationPhone);
+  if (!destPhone) {
+    return { success: false, error: `The ${targetRole} number on file is not a valid phone number.` };
+  }
 
-  // 3. Format Bystander Caller Phone into E.164
-  let bystanderPhone = callerPhone?.replace(/\s+/g, '') || '';
-  if (/^\d{10}$/.test(bystanderPhone)) bystanderPhone = `+91${bystanderPhone}`;
-  else if (/^0\d{10}$/.test(bystanderPhone)) bystanderPhone = `+91${bystanderPhone.slice(1)}`;
-  else if (bystanderPhone && !bystanderPhone.startsWith('+')) bystanderPhone = `+${bystanderPhone}`;
+  // 3. The bystander number is caller-supplied, so only Indian mobiles are dialled (blocks premium-rate abuse).
+  let bystanderPhone = '';
+  if (callerPhone && callerPhone.trim()) {
+    const valid = toIndianMobile(callerPhone);
+    if (!valid) {
+      return { success: false, error: 'Enter a valid 10-digit Indian mobile number to be connected.' };
+    }
+    bystanderPhone = valid;
+  }
 
   // If bystander phone entered, call bystander first and bridge to database owner number
   const toPhone = bystanderPhone || destPhone;
@@ -110,8 +119,8 @@ export async function triggerMaskedCallServer(
 
       // Construct TwiML to bridge call securely between bystander and database owner number
       const twiml = bystanderPhone 
-        ? `<Response><Say>Connecting your GuardianTag emergency call now. Please hold.</Say><Dial callerId="${twilioPhone}">${destPhone}</Dial></Response>`
-        : `<Response><Say>GuardianTag Emergency Dispatch. An emergency scan was triggered for tag ${cleanId}.</Say></Response>`;
+        ? `<Response><Say>Connecting your GuardianTag emergency call now. Please hold.</Say><Dial callerId="${xml(twilioPhone)}"><Number>${xml(destPhone)}</Number></Dial></Response>`
+        : `<Response><Say>GuardianTag Emergency Dispatch. An emergency scan was triggered for tag ${xml(cleanId)}.</Say></Response>`;
 
       params.append('Twiml', twiml);
 
@@ -171,7 +180,8 @@ export async function triggerEmergencySmsServer(
   message?: string;
   error?: string;
 }> {
-  const cleanId = qrId?.trim()?.toUpperCase();
+  const cleanId = normalizeTagId(qrId);
+  if (!cleanId) return { success: false, error: 'Invalid QR Tag ID.' };
   const rateLimitKey = `sms:${cleanId}:${clientIp}`;
 
   if (isRateLimited(rateLimitKey)) {
@@ -191,21 +201,19 @@ export async function triggerEmergencySmsServer(
     return { success: false, error: 'No emergency contact registered for this tag in database.' };
   }
 
-  let formattedPhone = tag.emergencyPhone.replace(/\s+/g, '');
-  if (/^\d{10}$/.test(formattedPhone)) {
-    formattedPhone = `+91${formattedPhone}`;
-  } else if (/^0\d{10}$/.test(formattedPhone)) {
-    formattedPhone = `+91${formattedPhone.slice(1)}`;
-  } else if (!formattedPhone.startsWith('+')) {
-    formattedPhone = `+${formattedPhone}`;
+  const formattedPhone = toE164(tag.emergencyPhone);
+  if (!formattedPhone) {
+    return { success: false, error: 'The emergency contact number on file is not a valid phone number.' };
   }
 
   recordPublicAction(rateLimitKey);
 
   const timestamp = new Date().toISOString();
   let mapsUrl = '';
-  if (location?.latitude && location?.longitude) {
-    mapsUrl = ` https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+  const lat = Number(location?.latitude);
+  const lng = Number(location?.longitude);
+  if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && (lat !== 0 || lng !== 0)) {
+    mapsUrl = ` https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
   }
 
   const smsText = `EMERGENCY ALERT: GuardianTag ${cleanId} was scanned at ${timestamp}.${mapsUrl}`;

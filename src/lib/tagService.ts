@@ -1,18 +1,13 @@
-import { hashPin, verifyPin } from './security/pinHash';
-import { TagOwner, TagType, TagStatus } from './types';
-import { getSupabaseServerClient } from '@/lib/supabaseClient';
-import { getNeonSql } from '@/lib/neonClient';
+import { hashPin } from './security/pinHash';
+import { TagType, TagStatus } from './types';
+import { sql } from '@/lib/db';
 
-async function queryNeonSingle(query: string, params: unknown[]) {
-  const sql = getNeonSql();
-  if (!sql) return null;
-  try {
-    const rows = await sql.query(query, params);
-    return rows && rows.length > 0 ? rows[0] : null;
-  } catch {
-    return null;
-  }
-}
+/*
+ * Tag + owner data lives in Neon:
+ *  - qr_tags: the inventory of issued tag IDs and the owner's login data (PIN hash, phones).
+ *  - bikers / kids / travellers / universals: what the public scan page and Twilio read.
+ * Every function here fails closed: a database error is thrown, never treated as "not found".
+ */
 
 export interface TagScanEvent {
   timestamp: string;
@@ -43,96 +38,70 @@ export interface QrTagRecord {
   updatedAt?: string;
 }
 
-// In-Memory Tag Vault Store for Local Fallback & Fast Caching
-const localTagDatabase: Map<string, QrTagRecord> = new Map([
-  [
-    'GTB0001',
-    {
-      id: 'uuid-gtb-0001',
-      qrId: 'GTB0001',
-      tagType: 'GTB',
-      status: 'printed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-  [
-    'GTK0001',
-    {
-      id: 'uuid-gtk-0001',
-      qrId: 'GTK0001',
-      tagType: 'GTK',
-      status: 'printed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-  [
-    'GTT0001',
-    {
-      id: 'uuid-gtt-0001',
-      qrId: 'GTT0001',
-      tagType: 'GTT',
-      status: 'printed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-  [
-    'GTU0001',
-    {
-      id: 'uuid-gtu-0001',
-      qrId: 'GTU0001',
-      tagType: 'GTU',
-      status: 'printed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-  [
-    'GTB0002',
-    {
-      id: 'uuid-gtb-0002',
-      qrId: 'GTB0002',
-      tagType: 'GTB',
-      status: 'activated',
-      ownerName: 'Ajay Kumar',
-      ownerPhone: '+91 98765 43210',
-      emergencyName: 'Priya K. (Spouse)',
-      emergencyPhone: '+91 91234 56789',
-      vehicleNo: 'KA-01-EQ-4892',
-      bloodGroup: 'O+',
-      medicalNotes: 'Diabetic, allergic to penicillin',
-      activatedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-]);
+/** Owner-detail table per tag prefix. Table/column names are fixed here, never taken from input. */
+const OWNER_TABLES: Record<TagType, { table: string; phoneCol: string; extraCol?: string }> = {
+  GTB: { table: 'bikers', phoneCol: 'phone', extraCol: 'bike_model' },
+  GTK: { table: 'kids', phoneCol: 'guardian_phone' },
+  GTT: { table: 'travellers', phoneCol: 'phone', extraCol: 'passport_country' },
+  GTU: { table: 'universals', phoneCol: 'phone', extraCol: 'asset_name' },
+};
 
-/**
- * Helper to map Tag Serial Prefixes to Supabase PostgreSQL Table & Column Schema
- * GTB -> bikers (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, bike_model, blood_group, medical_notes)
- * GTK -> kids (tag_id, owner_name, guardian_phone, emergency_contact_name, emergency_contact_phone, medical_notes)
- * GTT -> travellers (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, passport_country, medical_notes)
- * GTU -> universals (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, asset_name, medical_notes)
- */
-function getTableNameForTag(qrId: string): { tableName: string; phoneCol: string; extraCol?: string } {
-  const prefix = qrId.substring(0, 3).toUpperCase();
-  if (prefix === 'GTK') {
-    return { tableName: 'kids', phoneCol: 'guardian_phone' };
-  }
-  if (prefix === 'GTT') {
-    return { tableName: 'travellers', phoneCol: 'phone', extraCol: 'passport_country' };
-  }
-  if (prefix === 'GTU') {
-    return { tableName: 'universals', phoneCol: 'phone', extraCol: 'asset_name' };
-  }
-  return { tableName: 'bikers', phoneCol: 'phone', extraCol: 'bike_model' };
+const TAG_ID_RE = /^(GTB|GTK|GTT|GTU)[0-9]{4,8}$/;
+
+/** Returns the upper-cased tag ID if it is well-formed, else null. */
+export function normalizeTagId(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const id = raw.trim().toUpperCase();
+  return TAG_ID_RE.test(id) ? id : null;
+}
+
+function ownerTableFor(qrId: string) {
+  return OWNER_TABLES[qrId.slice(0, 3) as TagType];
+}
+
+/** Statuses in which an owner has claimed the tag (and may log in to manage it). */
+const OWNED_STATUSES = ['activated', 'active', 'deactivated', 'stolen'];
+
+type Row = Record<string, unknown>;
+const s = (v: unknown) => (v === null || v === undefined ? undefined : String(v));
+
+function rowToRecord(r: Row): QrTagRecord {
+  return {
+    id: String(r.id),
+    qrId: String(r.qr_id),
+    tagType: String(r.tag_type) as TagType,
+    status: String(r.status) as TagStatus,
+    pinHash: s(r.pin_hash),
+    pinSalt: s(r.pin_salt),
+    ownerName: s(r.owner_name),
+    ownerPhone: s(r.owner_phone),
+    emergencyName: s(r.emergency_name),
+    emergencyPhone: s(r.emergency_phone),
+    vehicleNo: s(r.vehicle_no),
+    bloodGroup: s(r.blood_group),
+    medicalNotes: s(r.medical_notes),
+    activatedAt: s(r.activated_at),
+    createdAt: s(r.created_at),
+    updatedAt: s(r.updated_at),
+  };
+}
+
+/** Reads a tag (with owner login data) from qr_tags. Server-only: includes the PIN hash. */
+export async function getTagRecord(rawQrId: string): Promise<QrTagRecord | null> {
+  const qrId = normalizeTagId(rawQrId);
+  if (!qrId) return null;
+  const rows = await sql`SELECT * FROM qr_tags WHERE qr_id = ${qrId} LIMIT 1`;
+  return rows[0] ? rowToRecord(rows[0]) : null;
+}
+
+/** True if this tag has an owner, by qr_tags status or by a legacy owner-table row. */
+export function isOwnedStatus(status?: string): boolean {
+  return !!status && OWNED_STATUSES.includes(status);
 }
 
 /**
- * SERVER-SIDE: Validate QR ID Existence & Activation Status across Supabase DB Tables.
+ * SERVER-SIDE: may this QR ID be registered? Only IDs issued into qr_tags (status 'printed')
+ * and not already claimed in the owner tables qualify.
  */
 export async function validateQrIdServer(rawQrId: string): Promise<{
   success: boolean;
@@ -140,194 +109,26 @@ export async function validateQrIdServer(rawQrId: string): Promise<{
   error?: string;
   isAlreadyRegistered?: boolean;
 }> {
-  if (!rawQrId || typeof rawQrId !== 'string') {
-    return { success: false, error: 'QR Tag ID is required.' };
+  const qrId = normalizeTagId(rawQrId);
+  if (!qrId) {
+    return { success: false, error: 'Invalid QR Tag ID. It must look like GTB0001 (GTB, GTK, GTT or GTU followed by digits).' };
   }
 
-  const cleanId = rawQrId.trim().toUpperCase();
-  const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
-
-  // 1. Check Neon PostgreSQL DB Table
-  try {
-    const neonData = await queryNeonSingle(
-      `SELECT * FROM ${tableName} WHERE tag_id = $1 LIMIT 1`,
-      [cleanId]
-    );
-
-    if (neonData) {
-      const phoneVal = neonData[phoneCol] || neonData.phone || neonData.guardian_phone;
-      const isAlready = Boolean(
-        neonData.tag_active === true ||
-        neonData.owner_name ||
-        phoneVal ||
-        neonData.registered_at ||
-        neonData.status === 'activated' ||
-        neonData.status === 'active' ||
-        neonData.status === 'trial' ||
-        neonData.status === 'paid'
-      );
-
-      if (isAlready) {
-        return {
-          success: false,
-          isAlreadyRegistered: true,
-          error: `Tag ID ${cleanId} is ALREADY REGISTERED in the ${tableName} database.`,
-        };
-      }
-
-      return {
-        success: true,
-        tag: {
-          id: neonData.id,
-          qrId: neonData.tag_id,
-          tagType: cleanId.substring(0, 3) as TagType,
-          status: neonData.status || 'printed',
-          ownerName: neonData.owner_name,
-          ownerPhone: phoneVal,
-          emergencyName: neonData.emergency_contact_name,
-          emergencyPhone: neonData.emergency_contact_phone,
-          vehicleNo: extraCol ? neonData[extraCol] : undefined,
-          bloodGroup: neonData.blood_group,
-          medicalNotes: neonData.medical_notes,
-          activatedAt: neonData.activated_at,
-          createdAt: neonData.created_at,
-        },
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  // 2. Check Supabase DB Table (bikers, kids, travellers, universals)
-  try {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .eq('tag_id', cleanId)
-      .maybeSingle();
-
-    if (!error && data) {
-      const phoneVal = data[phoneCol] || data.phone || data.guardian_phone;
-      const isAlready = Boolean(
-        data.tag_active === true ||
-        data.owner_name ||
-        phoneVal ||
-        data.registered_at ||
-        data.status === 'activated' ||
-        data.status === 'active' ||
-        data.status === 'trial' ||
-        data.status === 'paid'
-      );
-
-      if (isAlready) {
-        return {
-          success: false,
-          isAlreadyRegistered: true,
-          error: `Tag ID ${cleanId} is ALREADY REGISTERED in the Supabase ${tableName} database.`,
-        };
-      }
-
-      return {
-        success: true,
-        tag: {
-          id: data.id,
-          qrId: data.tag_id,
-          tagType: cleanId.substring(0, 3) as TagType,
-          status: data.status || 'printed',
-          ownerName: data.owner_name,
-          ownerPhone: phoneVal,
-          emergencyName: data.emergency_contact_name,
-          emergencyPhone: data.emergency_contact_phone,
-          vehicleNo: extraCol ? data[extraCol] : undefined,
-          bloodGroup: data.blood_group,
-          medicalNotes: data.medical_notes,
-          activatedAt: data.activated_at,
-          createdAt: data.created_at,
-        },
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  // 2. Check Supabase 'qr_tags' table
-  try {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from('qr_tags')
-      .select('*')
-      .eq('qr_id', cleanId)
-      .maybeSingle();
-
-    if (!error && data) {
-      if (data.status === 'activated' || data.status === 'active') {
-        return {
-          success: false,
-          isAlreadyRegistered: true,
-          error: `Tag ID ${cleanId} is ALREADY REGISTERED to an active owner in Supabase DB.`,
-        };
-      }
-      return {
-        success: true,
-        tag: {
-          id: data.id || `uuid-${cleanId.toLowerCase()}`,
-          qrId: data.qr_id,
-          tagType: data.tag_type || cleanId.substring(0, 3),
-          status: data.status,
-          ownerName: data.owner_name,
-          ownerPhone: data.owner_phone,
-          emergencyName: data.emergency_name,
-          emergencyPhone: data.emergency_phone,
-          vehicleNo: data.vehicle_no,
-          bloodGroup: data.blood_group,
-          medicalNotes: data.medical_notes,
-          activatedAt: data.activated_at,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        },
-      };
-    }
-  } catch {
-    // Fallback to local memory vault
-  }
-
-  // 3. Check Local Vault Fallback
-  let tag = localTagDatabase.get(cleanId);
-
+  const tag = await getTagRecord(qrId);
   if (!tag) {
-    const prefix = cleanId.substring(0, 3);
-    if (['GTB', 'GTK', 'GTT', 'GTU'].includes(prefix) && cleanId.length >= 5) {
-      tag = {
-        id: `uuid-${cleanId.toLowerCase()}`,
-        qrId: cleanId,
-        tagType: prefix as TagType,
-        status: 'printed',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      localTagDatabase.set(cleanId, tag);
-    } else {
-      return {
-        success: false,
-        error: `Invalid QR Tag ID "${cleanId}". Must start with GTB, GTK, GTT, or GTU (e.g. GTB0001).`,
-      };
-    }
+    return { success: false, error: `Tag ID ${qrId} was not found. Check the ID printed on your tag.` };
   }
-
-  if (tag.status === 'activated' || tag.status === 'active') {
-    return {
-      success: false,
-      isAlreadyRegistered: true,
-      error: `Tag ID ${cleanId} is ALREADY REGISTERED to an active owner.`,
-    };
-  }
-
   if (tag.status === 'disabled') {
-    return {
-      success: false,
-      error: `Tag ${cleanId} has been disabled. Please contact GuardianTag support.`,
-    };
+    return { success: false, error: `Tag ${qrId} has been disabled. Please contact GuardianTag support.` };
+  }
+
+  const { table } = ownerTableFor(qrId);
+  const legacy = await sql.query(
+    `SELECT 1 FROM ${table} WHERE tag_id = $1 AND (tag_active IS TRUE OR owner_name IS NOT NULL) LIMIT 1`,
+    [qrId]
+  );
+  if (tag.status !== 'printed' || legacy.length > 0) {
+    return { success: false, isAlreadyRegistered: true, error: `Tag ID ${qrId} is already registered to an owner.` };
   }
 
   return { success: true, tag };
@@ -345,212 +146,154 @@ export interface RegisterPayload {
   medicalNotes?: string;
 }
 
+const clip = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
 /**
- * SERVER-SIDE: Register and Activate a GuardianTag in Supabase DB (bikers, kids, travellers, universals).
+ * SERVER-SIDE: claims an issued tag for an owner. The claim is a single transaction whose
+ * UPDATE only matches a still-unclaimed tag, so two registrations can never both win and an
+ * owned tag can never be overwritten.
  */
 export async function registerTagServer(payload: RegisterPayload): Promise<{
   success: boolean;
   activatedAt?: string;
   error?: string;
 }> {
-  const cleanId = payload.qrId?.trim().toUpperCase();
-  if (!cleanId) return { success: false, error: 'QR ID is required.' };
+  const qrId = normalizeTagId(payload.qrId);
+  if (!qrId) return { success: false, error: 'A valid QR Tag ID is required.' };
 
-  if (!payload.pin || !/^\d{4}$/.test(payload.pin)) {
+  if (typeof payload.pin !== 'string' || !/^\d{4}$/.test(payload.pin)) {
     return { success: false, error: 'PIN must be exactly 4 numeric digits.' };
   }
 
-  if (!payload.ownerName?.trim() || !payload.ownerPhone?.trim()) {
-    return { success: false, error: 'Owner Name and Mobile Number are required.' };
-  }
+  const ownerName = clip(payload.ownerName, 100);
+  const ownerPhone = clip(payload.ownerPhone, 20);
+  const emergencyName = clip(payload.emergencyName, 100);
+  const emergencyPhone = clip(payload.emergencyPhone, 20);
+  if (!ownerName || !ownerPhone) return { success: false, error: 'Owner Name and Mobile Number are required.' };
+  if (!emergencyName || !emergencyPhone) return { success: false, error: 'Emergency Contact Name and Mobile Number are required.' };
 
-  if (!payload.emergencyName?.trim() || !payload.emergencyPhone?.trim()) {
-    return { success: false, error: 'Emergency Contact Name and Mobile Number are required.' };
-  }
+  const vehicleNo = clip(payload.vehicleNo, 60) || null;
+  const bloodGroup = clip(payload.bloodGroup, 10) || null;
+  const medicalNotes = clip(payload.medicalNotes, 500) || null;
 
-  // Check if tag is already registered in Supabase
-  const valRes = await validateQrIdServer(cleanId);
-  if (!valRes.success && valRes.isAlreadyRegistered) {
-    return { success: false, error: `Tag ${cleanId} has already been registered.` };
-  }
-
-  const tag = valRes.tag || localTagDatabase.get(cleanId);
-  const tagType = tag?.tagType || (cleanId.substring(0, 3) as TagType);
-
+  const { table, phoneCol, extraCol } = ownerTableFor(qrId);
   const { hash, salt } = hashPin(payload.pin);
   const activatedAt = new Date().toISOString();
 
-  const updatedTag: QrTagRecord = {
-    id: tag?.id || `uuid-${cleanId.toLowerCase()}`,
-    qrId: cleanId,
-    tagType,
-    status: 'activated',
-    pinHash: hash,
-    pinSalt: salt,
-    ownerName: payload.ownerName.trim(),
-    ownerPhone: payload.ownerPhone.trim(),
-    emergencyName: payload.emergencyName.trim(),
-    emergencyPhone: payload.emergencyPhone.trim(),
-    vehicleNo: payload.vehicleNo?.trim() || undefined,
-    bloodGroup: payload.bloodGroup?.trim() || undefined,
-    medicalNotes: payload.medicalNotes?.trim() || undefined,
-    activatedAt,
-    updatedAt: activatedAt,
-  };
+  // Owner-table row, inserted only if the qr_tags claim in the same transaction succeeded.
+  // Explicit casts: Postgres cannot infer parameter types inside INSERT ... SELECT.
+  const cols = ['tag_id', 'owner_name', phoneCol, 'emergency_contact_name', 'emergency_contact_phone', 'medical_notes', 'status', 'tag_active', 'activated_at', 'registered_at'];
+  const casts = ['text', 'text', 'text', 'text', 'text', 'text', 'text', 'boolean', 'timestamptz', 'timestamptz'];
+  const vals: unknown[] = [qrId, ownerName, ownerPhone, emergencyName, emergencyPhone, medicalNotes, 'trial', true, activatedAt, activatedAt];
+  if (extraCol) { cols.push(extraCol); casts.push('text'); vals.push(vehicleNo); }
+  if (table === 'bikers') { cols.push('blood_group'); casts.push('text'); vals.push(bloodGroup); }
+  const hashParam = vals.length + 1;
+  const placeholders = vals.map((_, i) => `$${i + 1}::${casts[i]}`).join(', ');
+  const updates = cols.filter((c) => c !== 'tag_id').map((c) => `${c} = EXCLUDED.${c}`).join(', ');
 
-  // 1. Update local cache
-  localTagDatabase.set(cleanId, updatedTag);
+  const [claimed] = await sql.transaction([
+    sql.query(
+      `UPDATE qr_tags SET status = 'activated', pin_hash = $2::text, pin_salt = $3::text, owner_name = $4::text, owner_phone = $5::text,
+         emergency_name = $6::text, emergency_phone = $7::text, vehicle_no = $8::text, blood_group = $9::text, medical_notes = $10::text,
+         activated_at = $11::timestamptz, updated_at = now()
+       WHERE qr_id = $1::text AND status = 'printed'
+         AND NOT EXISTS (SELECT 1 FROM ${table} WHERE tag_id = $1::text AND (tag_active IS TRUE OR owner_name IS NOT NULL))
+       RETURNING qr_id`,
+      [qrId, hash, salt, ownerName, ownerPhone, emergencyName, emergencyPhone, vehicleNo, bloodGroup, medicalNotes, activatedAt]
+    ),
+    sql.query(
+      `INSERT INTO ${table} (${cols.join(', ')})
+       SELECT ${placeholders}
+       WHERE EXISTS (SELECT 1 FROM qr_tags WHERE qr_id = $1::text AND pin_hash = $${hashParam}::text)
+       ON CONFLICT (tag_id) DO UPDATE SET ${updates}`,
+      [...vals, hash]
+    ),
+  ]);
 
-  // 2. Persist to appropriate Supabase Table (bikers, kids, travellers, universals)
-  try {
-    const supabase = getSupabaseServerClient();
-    const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
-
-    const recordPayload: Record<string, string | boolean | null> = {
-      tag_id: cleanId,
-      owner_name: payload.ownerName.trim(),
-      [phoneCol]: payload.ownerPhone.trim(),
-      emergency_contact_name: payload.emergencyName.trim(),
-      emergency_contact_phone: payload.emergencyPhone.trim(),
-      medical_notes: payload.medicalNotes?.trim() || null,
-      status: 'trial',
-      tag_active: true,
-      activated_at: activatedAt,
-      registered_at: activatedAt,
-    };
-
-    if (extraCol && payload.vehicleNo) {
-      recordPayload[extraCol] = payload.vehicleNo.trim();
-    }
-    if (payload.bloodGroup && tableName === 'bikers') {
-      recordPayload.blood_group = payload.bloodGroup.trim();
-    }
-
-    await supabase.from(tableName).upsert([recordPayload], { onConflict: 'tag_id' });
-
-    // Also sync to master qr_tags table
-    await supabase.from('qr_tags').upsert(
-      [
-        {
-          qr_id: cleanId,
-          tag_type: tagType,
-          status: 'activated',
-          pin_hash: hash,
-          pin_salt: salt,
-          owner_name: payload.ownerName.trim(),
-          owner_phone: payload.ownerPhone.trim(),
-          emergency_name: payload.emergencyName.trim(),
-          emergency_phone: payload.emergencyPhone.trim(),
-          vehicle_no: payload.vehicleNo?.trim() || null,
-          blood_group: payload.bloodGroup?.trim() || null,
-          medical_notes: payload.medicalNotes?.trim() || null,
-          activated_at: activatedAt,
-          updated_at: activatedAt,
-        },
-      ],
-      { onConflict: 'qr_id' }
-    );
-  } catch {
-    // Supabase table fallback
+  if (!Array.isArray(claimed) || claimed.length === 0) {
+    const check = await validateQrIdServer(qrId);
+    return { success: false, error: check.error || `Tag ${qrId} could not be registered.` };
   }
 
-  // 3. Persist to Neon PostgreSQL if configured
-  try {
-    const sql = getNeonSql();
-    if (sql) {
-      const { tableName } = getTableNameForTag(cleanId);
-      const vehicleVal = payload.vehicleNo?.trim() || null;
-      const bloodVal = payload.bloodGroup?.trim() || null;
-
-      if (tableName === 'bikers') {
-        await sql`
-          INSERT INTO bikers (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at, bike_model, blood_group)
-          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt}, ${vehicleVal}, ${bloodVal})
-          ON CONFLICT (tag_id) DO UPDATE SET
-            owner_name = EXCLUDED.owner_name,
-            phone = EXCLUDED.phone,
-            emergency_contact_name = EXCLUDED.emergency_contact_name,
-            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
-            medical_notes = EXCLUDED.medical_notes,
-            status = EXCLUDED.status,
-            tag_active = EXCLUDED.tag_active,
-            activated_at = EXCLUDED.activated_at,
-            registered_at = EXCLUDED.registered_at,
-            bike_model = EXCLUDED.bike_model,
-            blood_group = EXCLUDED.blood_group;
-        `;
-      } else if (tableName === 'kids') {
-        await sql`
-          INSERT INTO kids (tag_id, owner_name, guardian_phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at)
-          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt})
-          ON CONFLICT (tag_id) DO UPDATE SET
-            owner_name = EXCLUDED.owner_name,
-            guardian_phone = EXCLUDED.guardian_phone,
-            emergency_contact_name = EXCLUDED.emergency_contact_name,
-            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
-            medical_notes = EXCLUDED.medical_notes,
-            status = EXCLUDED.status,
-            tag_active = EXCLUDED.tag_active,
-            activated_at = EXCLUDED.activated_at,
-            registered_at = EXCLUDED.registered_at;
-        `;
-      } else if (tableName === 'travellers') {
-        await sql`
-          INSERT INTO travellers (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at, passport_country)
-          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt}, ${vehicleVal})
-          ON CONFLICT (tag_id) DO UPDATE SET
-            owner_name = EXCLUDED.owner_name,
-            phone = EXCLUDED.phone,
-            emergency_contact_name = EXCLUDED.emergency_contact_name,
-            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
-            medical_notes = EXCLUDED.medical_notes,
-            status = EXCLUDED.status,
-            tag_active = EXCLUDED.tag_active,
-            activated_at = EXCLUDED.activated_at,
-            registered_at = EXCLUDED.registered_at,
-            passport_country = EXCLUDED.passport_country;
-        `;
-      } else {
-        await sql`
-          INSERT INTO universals (tag_id, owner_name, phone, emergency_contact_name, emergency_contact_phone, medical_notes, status, tag_active, activated_at, registered_at, asset_name)
-          VALUES (${cleanId}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${payload.medicalNotes?.trim() || null}, 'trial', true, ${activatedAt}, ${activatedAt}, ${vehicleVal})
-          ON CONFLICT (tag_id) DO UPDATE SET
-            owner_name = EXCLUDED.owner_name,
-            phone = EXCLUDED.phone,
-            emergency_contact_name = EXCLUDED.emergency_contact_name,
-            emergency_contact_phone = EXCLUDED.emergency_contact_phone,
-            medical_notes = EXCLUDED.medical_notes,
-            status = EXCLUDED.status,
-            tag_active = EXCLUDED.tag_active,
-            activated_at = EXCLUDED.activated_at,
-            registered_at = EXCLUDED.registered_at,
-            asset_name = EXCLUDED.asset_name;
-        `;
-      }
-
-      await sql`
-        INSERT INTO qr_tags (qr_id, tag_type, status, pin_hash, pin_salt, owner_name, owner_phone, emergency_name, emergency_phone, vehicle_no, blood_group, medical_notes, activated_at, updated_at)
-        VALUES (${cleanId}, ${tagType}, 'activated', ${hash}, ${salt}, ${payload.ownerName.trim()}, ${payload.ownerPhone.trim()}, ${payload.emergencyName.trim()}, ${payload.emergencyPhone.trim()}, ${vehicleVal}, ${bloodVal}, ${payload.medicalNotes?.trim() || null}, ${activatedAt}, ${activatedAt})
-        ON CONFLICT (qr_id) DO UPDATE SET
-          tag_type = EXCLUDED.tag_type,
-          status = EXCLUDED.status,
-          pin_hash = EXCLUDED.pin_hash,
-          pin_salt = EXCLUDED.pin_salt,
-          owner_name = EXCLUDED.owner_name,
-          owner_phone = EXCLUDED.owner_phone,
-          emergency_name = EXCLUDED.emergency_name,
-          emergency_phone = EXCLUDED.emergency_phone,
-          vehicle_no = EXCLUDED.vehicle_no,
-          blood_group = EXCLUDED.blood_group,
-          medical_notes = EXCLUDED.medical_notes,
-          activated_at = EXCLUDED.activated_at,
-          updated_at = EXCLUDED.updated_at;
-      `;
-    }
-  } catch {}
-
-
   return { success: true, activatedAt };
+}
+
+export interface OwnerUpdate {
+  ownerName: string;
+  ownerPhone: string;
+  emergencyName: string;
+  emergencyPhone: string;
+  vehicleNo?: string;
+  bloodGroup?: string;
+  medicalNotes?: string;
+  /** 'deactivated' pauses the tag (scans show nothing); 'activated' turns it back on. */
+  status?: 'activated' | 'deactivated';
+}
+
+/** SERVER-SIDE: updates an owned tag in qr_tags and its owner-table row in one transaction. */
+export async function updateOwnerDetails(
+  rawQrId: string,
+  details: OwnerUpdate,
+  newPin?: string
+): Promise<{ success: boolean; error?: string; tag?: QrTagRecord }> {
+  const qrId = normalizeTagId(rawQrId);
+  if (!qrId) return { success: false, error: 'Invalid QR Tag ID.' };
+
+  let hash: string | null = null;
+  let salt: string | null = null;
+  if (newPin) {
+    if (!/^\d{4}$/.test(newPin)) return { success: false, error: 'New PIN must be exactly 4 numeric digits.' };
+    ({ hash, salt } = hashPin(newPin));
+  }
+
+  const ownerName = clip(details.ownerName, 100);
+  const ownerPhone = clip(details.ownerPhone, 20);
+  const emergencyName = clip(details.emergencyName, 100);
+  const emergencyPhone = clip(details.emergencyPhone, 20);
+  const vehicleNo = clip(details.vehicleNo, 60) || null;
+  const bloodGroup = clip(details.bloodGroup, 10) || null;
+  const medicalNotes = clip(details.medicalNotes, 500) || null;
+  const status = details.status === 'activated' || details.status === 'deactivated' ? details.status : null;
+
+  const { table, phoneCol, extraCol } = ownerTableFor(qrId);
+  const ownerSets = [
+    'owner_name = $2::text', `${phoneCol} = $3::text`, 'emergency_contact_name = $4::text', 'emergency_contact_phone = $5::text', 'medical_notes = $6::text',
+    "tag_active = CASE WHEN $7::text = 'deactivated' THEN false WHEN $7::text = 'activated' THEN true ELSE tag_active END",
+  ];
+  const ownerVals: unknown[] = [qrId, ownerName, ownerPhone, emergencyName, emergencyPhone, medicalNotes, status];
+  if (extraCol) { ownerVals.push(vehicleNo); ownerSets.push(`${extraCol} = $${ownerVals.length}::text`); }
+  if (table === 'bikers') { ownerVals.push(bloodGroup); ownerSets.push(`blood_group = $${ownerVals.length}::text`); }
+
+  // Admin-disabled tags stay disabled: neither statement matches them.
+  const [updated] = await sql.transaction([
+    sql`UPDATE qr_tags SET owner_name = ${ownerName}, owner_phone = ${ownerPhone}, emergency_name = ${emergencyName},
+          emergency_phone = ${emergencyPhone}, vehicle_no = ${vehicleNo}, blood_group = ${bloodGroup}, medical_notes = ${medicalNotes},
+          pin_hash = COALESCE(${hash}::text, pin_hash), pin_salt = COALESCE(${salt}::text, pin_salt),
+          status = COALESCE(${status}::text, status), updated_at = now()
+        WHERE qr_id = ${qrId} AND status = ANY(${OWNED_STATUSES}::text[])
+        RETURNING *`,
+    sql.query(
+      `UPDATE ${table} SET ${ownerSets.join(', ')}
+       WHERE tag_id = $1::text AND status IS DISTINCT FROM 'disabled'
+         AND EXISTS (SELECT 1 FROM qr_tags WHERE qr_id = $1::text AND status = ANY($${ownerVals.length + 1}::text[]))`,
+      [...ownerVals, OWNED_STATUSES]
+    ),
+  ]);
+
+  if (!Array.isArray(updated) || updated.length === 0) {
+    return { success: false, error: 'This tag is not registered or has been disabled.' };
+  }
+  return { success: true, tag: rowToRecord(updated[0] as Row) };
+}
+
+/** Owner-table row for scans: only tags that are switched on and not disabled. */
+async function getActiveOwnerRow(qrId: string): Promise<Row | null> {
+  const { table } = ownerTableFor(qrId);
+  const rows = await sql.query(
+    `SELECT * FROM ${table} WHERE tag_id = $1 AND tag_active IS TRUE AND status IS DISTINCT FROM 'disabled' LIMIT 1`,
+    [qrId]
+  );
+  return (rows[0] as Row) ?? null;
 }
 
 /**
@@ -567,311 +310,66 @@ export async function getPublicTagInfo(rawQrId: string): Promise<{
     medicalNotes?: string;
   };
 }> {
-  const cleanId = rawQrId?.trim().toUpperCase();
-  const { tableName, extraCol } = getTableNameForTag(cleanId);
-
-  // Try Neon PostgreSQL First
-  try {
-    const neonData = await queryNeonSingle(
-      `SELECT * FROM ${tableName} WHERE tag_id = $1 LIMIT 1`,
-      [cleanId]
-    );
-
-    // Disabled from the store manager: the tag must stop working on scan.
-    if (neonData && neonData.status === 'disabled') {
-      return { found: false };
-    }
-
-    if (neonData && (neonData.tag_active || neonData.owner_name)) {
-      return {
-        found: true,
-        tag: {
-          qrId: neonData.tag_id,
-          tagType: cleanId.substring(0, 3),
-          status: 'activated',
-          vehicleNo: extraCol ? neonData[extraCol] : undefined,
-          bloodGroup: neonData.blood_group,
-          medicalNotes: neonData.medical_notes,
-        },
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  // Try Supabase Model Table Second (bikers, kids, travellers, universals)
-  try {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .eq('tag_id', cleanId)
-      .maybeSingle();
-
-    if (!error && data && (data.tag_active || data.owner_name)) {
-      return {
-        found: true,
-        tag: {
-          qrId: data.tag_id,
-          tagType: cleanId.substring(0, 3),
-          status: 'activated',
-          vehicleNo: extraCol ? data[extraCol] : undefined,
-          bloodGroup: data.blood_group,
-          medicalNotes: data.medical_notes,
-        },
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  // Try Supabase 'qr_tags' table
-  try {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from('qr_tags')
-      .select('qr_id, tag_type, status, vehicle_no, blood_group, medical_notes')
-      .eq('qr_id', cleanId)
-      .maybeSingle();
-
-    if (!error && data && (data.status === 'activated' || data.status === 'active' || data.status === 'stolen')) {
-      return {
-        found: true,
-        tag: {
-          qrId: data.qr_id,
-          tagType: data.tag_type,
-          status: data.status,
-          vehicleNo: data.vehicle_no,
-          bloodGroup: data.blood_group,
-          medicalNotes: data.medical_notes,
-        },
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  const tag = localTagDatabase.get(cleanId);
-
-  if (!tag || (tag.status !== 'activated' && tag.status !== 'active' && tag.status !== 'stolen')) {
-    return { found: false };
-  }
-
+  const qrId = normalizeTagId(rawQrId);
+  if (!qrId) return { found: false };
+  const row = await getActiveOwnerRow(qrId);
+  if (!row) return { found: false };
+  const { extraCol } = ownerTableFor(qrId);
   return {
     found: true,
     tag: {
-      qrId: tag.qrId,
-      tagType: tag.tagType,
-      status: tag.status,
-      vehicleNo: tag.vehicleNo,
-      bloodGroup: tag.bloodGroup,
-      medicalNotes: tag.medicalNotes,
+      qrId,
+      tagType: qrId.slice(0, 3),
+      status: 'activated',
+      vehicleNo: extraCol ? s(row[extraCol]) : undefined,
+      bloodGroup: s(row.blood_group),
+      medicalNotes: s(row.medical_notes),
     },
   };
 }
 
+/** SERVER-SIDE: contact details for masked calls / SMS. Only active, non-disabled tags. */
 export async function getTagByQrIdAsync(rawQrId: string): Promise<QrTagRecord | undefined> {
-  const cleanId = rawQrId?.trim().toUpperCase();
-  if (!cleanId) return undefined;
-
-  const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
-
-  // 1. Query Neon PostgreSQL model table
-  try {
-    const neonData = await queryNeonSingle(
-      `SELECT * FROM ${tableName} WHERE tag_id = $1 LIMIT 1`,
-      [cleanId]
-    );
-
-    // Disabled from the store manager: no masked calls or SMS for this tag.
-    if (neonData && neonData.status === 'disabled') {
-      return undefined;
-    }
-
-    if (neonData && (neonData.tag_active || neonData.owner_name)) {
-      return {
-        id: neonData.id || `uuid-${cleanId.toLowerCase()}`,
-        qrId: neonData.tag_id,
-        tagType: (cleanId.substring(0, 3) as TagType),
-        status: neonData.status || 'activated',
-        ownerName: neonData.owner_name,
-        ownerPhone: neonData[phoneCol],
-        emergencyName: neonData.emergency_contact_name,
-        emergencyPhone: neonData.emergency_contact_phone,
-        vehicleNo: extraCol ? neonData[extraCol] : undefined,
-        bloodGroup: neonData.blood_group,
-        medicalNotes: neonData.medical_notes,
-        activatedAt: neonData.activated_at,
-        createdAt: neonData.created_at,
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  // 2. Query Supabase model table (bikers, kids, travellers, universals)
-  try {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .eq('tag_id', cleanId)
-      .maybeSingle();
-
-    if (!error && data && (data.tag_active || data.owner_name)) {
-      return {
-        id: data.id || `uuid-${cleanId.toLowerCase()}`,
-        qrId: data.tag_id,
-        tagType: (cleanId.substring(0, 3) as TagType),
-        status: data.status || 'activated',
-        ownerName: data.owner_name,
-        ownerPhone: data[phoneCol],
-        emergencyName: data.emergency_contact_name,
-        emergencyPhone: data.emergency_contact_phone,
-        vehicleNo: extraCol ? data[extraCol] : undefined,
-        bloodGroup: data.blood_group,
-        medicalNotes: data.medical_notes,
-        activatedAt: data.activated_at,
-        createdAt: data.created_at,
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  // 2. Query generic qr_tags table
-  try {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from('qr_tags')
-      .select('*')
-      .eq('qr_id', cleanId)
-      .maybeSingle();
-
-    if (!error && data) {
-      return {
-        id: data.id,
-        qrId: data.qr_id,
-        tagType: data.tag_type,
-        status: data.status,
-        ownerName: data.owner_name,
-        ownerPhone: data.owner_phone,
-        emergencyName: data.emergency_name,
-        emergencyPhone: data.emergency_phone,
-        vehicleNo: data.vehicle_no,
-        bloodGroup: data.blood_group,
-        medicalNotes: data.medical_notes,
-        activatedAt: data.activated_at,
-        createdAt: data.created_at,
-      };
-    }
-  } catch {
-    // Fallback
-  }
-
-  return localTagDatabase.get(cleanId);
-}
-
-export function getTagByQrId(rawQrId: string): QrTagRecord | undefined {
-  return localTagDatabase.get(rawQrId?.trim().toUpperCase());
-}
-
-export function getOwnerByQrId(rawQrId: string): TagOwner | undefined {
-  const tag = localTagDatabase.get(rawQrId?.trim().toUpperCase());
-  if (!tag || (tag.status !== 'activated' && tag.status !== 'active')) return undefined;
-
+  const qrId = normalizeTagId(rawQrId);
+  if (!qrId) return undefined;
+  const row = await getActiveOwnerRow(qrId);
+  if (!row) return undefined;
+  const { phoneCol, extraCol } = ownerTableFor(qrId);
   return {
-    id: tag.id,
-    tagId: tag.id,
-    qrId: tag.qrId,
-    tagType: tag.tagType,
-    ownerName: tag.ownerName || '',
-    ownerPhone: tag.ownerPhone || '',
-    emergencyName: tag.emergencyName || '',
-    emergencyPhone: tag.emergencyPhone || '',
-    pin: '****',
-    vehicleNo: tag.vehicleNo,
-    bloodGroup: tag.bloodGroup,
-    medicalNotes: tag.medicalNotes,
-    activatedAt: tag.activatedAt || new Date().toISOString(),
-    status: 'active',
+    id: String(row.id),
+    qrId,
+    tagType: qrId.slice(0, 3) as TagType,
+    status: 'activated',
+    ownerName: s(row.owner_name),
+    ownerPhone: s(row[phoneCol]),
+    emergencyName: s(row.emergency_contact_name),
+    emergencyPhone: s(row.emergency_contact_phone),
+    vehicleNo: extraCol ? s(row[extraCol]) : undefined,
+    bloodGroup: s(row.blood_group),
+    medicalNotes: s(row.medical_notes),
+    activatedAt: s(row.activated_at),
+    createdAt: s(row.created_at),
   };
 }
 
-export function verifyTagPin(rawQrId: string, pinInput: string): { success: boolean; error?: string } {
-  const tag = localTagDatabase.get(rawQrId?.trim().toUpperCase());
-  if (!tag || (tag.status !== 'activated' && tag.status !== 'active')) {
-    return { success: false, error: 'Tag is not active or registered.' };
-  }
+/* ---------- Demo-only in-memory provisioning (used by the unused AdminQRGenerator widget) ---------- */
 
-  if (tag.pinHash && tag.pinSalt) {
-    const isValid = verifyPin(pinInput, tag.pinHash, tag.pinSalt);
-    return isValid ? { success: true } : { success: false, error: 'Incorrect 4-digit PIN.' };
-  }
-
-  if (pinInput === '1234') {
-    return { success: true };
-  }
-
-  return { success: false, error: 'Incorrect 4-digit PIN.' };
-}
-
-export function updateOwnerDetails(rawQrId: string, details: Partial<TagOwner>, newPin?: string): { success: boolean; error?: string } {
-  const cleanId = rawQrId?.trim().toUpperCase();
-  const tag = localTagDatabase.get(cleanId);
-  if (!tag) return { success: false, error: 'Tag not found.' };
-
-  const pinToHash = newPin || details.pin;
-  if (pinToHash && /^\d{4}$/.test(pinToHash)) {
-    const { hash, salt } = hashPin(pinToHash);
-    tag.pinHash = hash;
-    tag.pinSalt = salt;
-  }
-
-  if (details.ownerName) tag.ownerName = details.ownerName;
-  if (details.ownerPhone) tag.ownerPhone = details.ownerPhone;
-  if (details.emergencyName) tag.emergencyName = details.emergencyName;
-  if (details.emergencyPhone) tag.emergencyPhone = details.emergencyPhone;
-  if (details.vehicleNo !== undefined) tag.vehicleNo = details.vehicleNo;
-  if (details.bloodGroup !== undefined) tag.bloodGroup = details.bloodGroup;
-  if (details.medicalNotes !== undefined) tag.medicalNotes = details.medicalNotes;
-  if (details.status) tag.status = details.status;
-
-  localTagDatabase.set(cleanId, tag);
-  return { success: true };
-}
-
-export function checkLockout(): { isLocked: boolean; remainingMinutes?: number } {
-  return { isLocked: false };
-}
+const demoTags = new Map<string, QrTagRecord>();
 
 export function getAllTags(): QrTagRecord[] {
-  return Array.from(localTagDatabase.values());
+  return Array.from(demoTags.values());
 }
 
 export function provisionNewTags(tagType: TagType, count: number): QrTagRecord[] {
   const newTags: QrTagRecord[] = [];
-  const existing = getAllTags().filter((t) => t.tagType === tagType);
-  const nextNumber = existing.length + 1;
-
+  const nextNumber = getAllTags().filter((t) => t.tagType === tagType).length + 1;
   for (let i = 0; i < count; i++) {
     const numStr = String(nextNumber + i).padStart(4, '0');
     const qrId = `${tagType}${numStr}`;
-    const newTag: QrTagRecord = {
-      id: `uuid-${tagType.toLowerCase()}-${numStr}`,
-      qrId,
-      tagType,
-      status: 'printed',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    localTagDatabase.set(qrId, newTag);
+    const now = new Date().toISOString();
+    const newTag: QrTagRecord = { id: `uuid-${tagType.toLowerCase()}-${numStr}`, qrId, tagType, status: 'printed', createdAt: now, updatedAt: now };
+    demoTags.set(qrId, newTag);
     newTags.push(newTag);
   }
-
   return newTags;
-}
-
-export function registerTag(payload: RegisterPayload): Promise<{ success: boolean; error?: string }> {
-  return registerTagServer(payload);
 }

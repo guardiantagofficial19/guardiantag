@@ -1,64 +1,34 @@
-import { errorMessage } from '@/lib/errors';
 import { NextResponse } from 'next/server';
-import { getOwnerOtpStore } from '../send-otp/route';
+import { verifyOtp } from '@/lib/security/otpStore';
+import { toIndianMobile } from '@/lib/phone';
 
+/** Verifies a registration code sent to a new owner mobile number. */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { phone, otp } = body;
-
-    if (!phone || !otp) {
+    const { phone, otp } = await request.json();
+    const cleanPhone = toIndianMobile(phone);
+    if (!cleanPhone || !otp) {
       return NextResponse.json(
         { success: false, error: 'Mobile number and 6-digit OTP code are required.' },
         { status: 400 }
       );
     }
 
-    const cleanPhone = phone.trim();
-    const cleanOtp = otp.trim();
-
-    // Universal test fallback OTP for local development only if explicitly enabled
     const isDevOtpEnabled = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEV_OTP === 'true';
-    if (isDevOtpEnabled && cleanOtp === '123456') {
+    if (isDevOtpEnabled && String(otp).trim() === '123456') {
       return NextResponse.json({ success: true, message: 'OTP verified successfully (Dev mode).' });
     }
 
-    const store = getOwnerOtpStore();
-    const record = store.get(cleanPhone);
-
-    if (!record) {
-      return NextResponse.json(
-        { success: false, error: 'No active OTP requested for this mobile number. Please click Resend OTP.' },
-        { status: 400 }
-      );
+    const result = await verifyOtp(`reg:${cleanPhone}`, otp);
+    if (result === 'ok') {
+      return NextResponse.json({ success: true, message: 'Mobile number verified.' });
     }
-
-    if (Date.now() > record.expiresAt) {
-      store.delete(cleanPhone);
-      return NextResponse.json(
-        { success: false, error: 'OTP code has expired. Please request a new OTP.' },
-        { status: 400 }
-      );
-    }
-
-    if (record.otp !== cleanOtp) {
-      return NextResponse.json(
-        { success: false, error: 'Incorrect OTP code. Please check your SMS and try again.' },
-        { status: 400 }
-      );
-    }
-
-    // OTP Verified — consume OTP
-    store.delete(cleanPhone);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Owner mobile number verified successfully via Twilio OTP.',
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: errorMessage(error) || 'Failed to verify Twilio OTP.' },
-      { status: 500 }
-    );
+    const error =
+      result === 'expired' ? 'OTP code has expired. Please request a new OTP.'
+      : result === 'missing' ? 'No active code for this number. Please request a new OTP.'
+      : 'Incorrect OTP code. Please check your SMS and try again.';
+    return NextResponse.json({ success: false, error }, { status: 400 });
+  } catch {
+    return NextResponse.json({ success: false, error: 'Failed to verify OTP.' }, { status: 500 });
   }
 }

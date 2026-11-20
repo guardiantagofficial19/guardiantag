@@ -23,7 +23,7 @@ export default async function ShopifyLoginPage({
         {error && (
           <div className="shopify-login-error">
             <AlertCircle size={16} />
-            <span>Incorrect password. Please try again.</span>
+            <span>{error === "config" ? "Admin login is not configured. Set ADMIN_PASSWORD and ADMIN_SESSION_SECRET on the server." : "Incorrect password. Please try again."}</span>
           </div>
         )}
 

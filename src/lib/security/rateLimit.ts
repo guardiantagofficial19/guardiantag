@@ -1,90 +1,83 @@
+import { sql } from '@/lib/db';
+
+// Login lockouts and rate limits live in Neon (tag_auth_locks / rate_limits, see
+// db/2026-11-20-auth-state.sql) so they hold across serverless instances and restarts.
+
 export interface LockoutStatus {
   isLocked: boolean;
   remainingMinutes?: number;
   attemptsCount: number;
 }
 
-interface AttemptRecord {
-  attempts: number;
-  lastAttempt: number;
-  lockedUntil?: number;
+/** Per (tag, IP): 3 failures within 15 min lock that IP out of that tag for 5 min. */
+const IP_MAX_FAILED = 3;
+const IP_WINDOW = '15 minutes';
+const IP_LOCK = '5 minutes';
+/** Per tag across all IPs: 20 failures within 1 hour lock the tag for 30 min (stops IP rotation). */
+const TAG_MAX_FAILED = 20;
+const TAG_WINDOW = '1 hour';
+const TAG_LOCK = '30 minutes';
+const ALL_IPS = '*';
+
+const cleanIp = (ip: string) => (ip || 'unknown').slice(0, 100);
+
+/** Is this tag locked for this IP (or for everyone)? */
+export async function checkLockoutStatus(qrId: string, ip: string): Promise<LockoutStatus> {
+  const rows = await sql`
+    SELECT failed_attempts,
+           CEIL(EXTRACT(EPOCH FROM (locked_until - now())) / 60)::int AS mins
+    FROM tag_auth_locks
+    WHERE qr_id = ${qrId} AND ip_address IN (${cleanIp(ip)}, ${ALL_IPS}) AND locked_until > now()
+    ORDER BY locked_until DESC LIMIT 1`;
+  if (rows.length === 0) return { isLocked: false, attemptsCount: 0 };
+  return { isLocked: true, remainingMinutes: Math.max(1, Number(rows[0].mins)), attemptsCount: Number(rows[0].failed_attempts) };
 }
 
-// In-Memory Rate Limiter Store for (QR ID + Client IP)
-const attemptStore = new Map<string, AttemptRecord>();
-
-const MAX_FAILED_ATTEMPTS = 3;
-const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
-
-function getKey(qrId: string, ip: string = '127.0.0.1'): string {
-  return `${qrId.trim().toUpperCase()}:${ip}`;
+function upsertFailure(qrId: string, ip: string, max: number, windowLen: string, lockLen: string) {
+  // The counter restarts when the window has passed or a previous lock has expired.
+  const fresh = `(l.last_failed_at < now() - interval '${windowLen}' OR (l.locked_until IS NOT NULL AND l.locked_until <= now()))`;
+  return sql.query(
+    `INSERT INTO tag_auth_locks AS l (qr_id, ip_address, failed_attempts, last_failed_at, locked_until)
+     VALUES ($1::text, $2::text, 1, now(), CASE WHEN 1 >= $3::int THEN now() + interval '${lockLen}' END)
+     ON CONFLICT (qr_id, ip_address) DO UPDATE SET
+       failed_attempts = CASE WHEN ${fresh} THEN 1 ELSE l.failed_attempts + 1 END,
+       locked_until = CASE WHEN (CASE WHEN ${fresh} THEN 1 ELSE l.failed_attempts + 1 END) >= $3::int
+                           THEN now() + interval '${lockLen}' ELSE NULL END,
+       last_failed_at = now()
+     RETURNING failed_attempts, locked_until > now() AS locked`,
+    [qrId, ip, max]
+  );
 }
 
-/**
- * Check if a QR ID + IP combination is currently locked out.
- */
-export function checkLockoutStatus(qrId: string, ip: string = '127.0.0.1'): LockoutStatus {
-  const key = getKey(qrId, ip);
-  const record = attemptStore.get(key);
-
-  if (!record) {
-    return { isLocked: false, attemptsCount: 0 };
-  }
-
-  const now = Date.now();
-
-  // If locked out, check if lock period has expired
-  if (record.lockedUntil && record.lockedUntil > now) {
-    const remainingMs = record.lockedUntil - now;
-    const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
-    return {
-      isLocked: true,
-      remainingMinutes,
-      attemptsCount: record.attempts,
-    };
-  }
-
-  // Lock expired
-  if (record.lockedUntil && record.lockedUntil <= now) {
-    attemptStore.delete(key);
-    return { isLocked: false, attemptsCount: 0 };
-  }
-
-  return { isLocked: false, attemptsCount: record.attempts };
+/** Records a failed PIN/OTP attempt and returns the lock state for this IP. */
+export async function recordFailedAttempt(qrId: string, ip: string): Promise<LockoutStatus> {
+  const [perIp, perTag] = await sql.transaction([
+    upsertFailure(qrId, cleanIp(ip), IP_MAX_FAILED, IP_WINDOW, IP_LOCK),
+    upsertFailure(qrId, ALL_IPS, TAG_MAX_FAILED, TAG_WINDOW, TAG_LOCK),
+  ]);
+  const ipRow = (perIp as Record<string, unknown>[])[0];
+  const tagRow = (perTag as Record<string, unknown>[])[0];
+  if (tagRow?.locked) return { isLocked: true, remainingMinutes: 30, attemptsCount: Number(tagRow.failed_attempts) };
+  if (ipRow?.locked) return { isLocked: true, remainingMinutes: 5, attemptsCount: Number(ipRow.failed_attempts) };
+  return { isLocked: false, attemptsCount: Number(ipRow?.failed_attempts) || 0 };
 }
 
-/**
- * Record a failed authentication attempt.
- */
-export function recordFailedAttempt(qrId: string, ip: string = '127.0.0.1'): LockoutStatus {
-  const key = getKey(qrId, ip);
-  const now = Date.now();
-  const record = attemptStore.get(key) || { attempts: 0, lastAttempt: now };
-
-  record.attempts += 1;
-  record.lastAttempt = now;
-
-  if (record.attempts >= MAX_FAILED_ATTEMPTS) {
-    record.lockedUntil = now + LOCKOUT_DURATION_MS;
-    attemptStore.set(key, record);
-    return {
-      isLocked: true,
-      remainingMinutes: 5,
-      attemptsCount: record.attempts,
-    };
-  }
-
-  attemptStore.set(key, record);
-  return {
-    isLocked: false,
-    attemptsCount: record.attempts,
-  };
+/** Clears this IP's failure count after a successful login (the all-IP counter just expires). */
+export async function resetAttempts(qrId: string, ip: string): Promise<void> {
+  await sql`DELETE FROM tag_auth_locks WHERE qr_id = ${qrId} AND ip_address = ${cleanIp(ip)}`;
 }
 
 /**
- * Reset failed attempts upon successful login.
+ * Fixed-window counter. Returns true when `bucket` has gone over `limit` hits in the current window.
  */
-export function resetAttempts(qrId: string, ip: string = '127.0.0.1'): void {
-  const key = getKey(qrId, ip);
-  attemptStore.delete(key);
+export async function isRateLimited(bucket: string, limit: number, windowSeconds: number): Promise<boolean> {
+  const rows = await sql`
+    INSERT INTO rate_limits AS r (bucket, hits, reset_at)
+    VALUES (${bucket}, 1, now() + make_interval(secs => ${windowSeconds}::int))
+    ON CONFLICT (bucket) DO UPDATE SET
+      hits = CASE WHEN r.reset_at <= now() THEN 1 ELSE r.hits + 1 END,
+      reset_at = CASE WHEN r.reset_at <= now() THEN EXCLUDED.reset_at ELSE r.reset_at END
+    RETURNING hits`;
+  if (Math.random() < 0.02) await sql`DELETE FROM rate_limits WHERE reset_at < now() - interval '1 day'`;
+  return Number(rows[0]?.hits) > limit;
 }

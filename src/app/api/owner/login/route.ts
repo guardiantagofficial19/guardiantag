@@ -1,27 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getTagByQrId } from '@/lib/tagService';
+import { getTagRecord, isOwnedStatus, normalizeTagId } from '@/lib/tagService';
 import { verifyPin } from '@/lib/security/pinHash';
 import { checkLockoutStatus, recordFailedAttempt, resetAttempts } from '@/lib/security/rateLimit';
-import { getOwnerOtpStore } from '../send-otp/route';
+import { verifyOtp } from '@/lib/security/otpStore';
 import { createOwnerToken, OWNER_COOKIE } from '@/lib/security/ownerAuth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { qrId, pin, loginType, otp } = body;
+    const { pin, loginType, otp } = body;
 
-    const cleanId = qrId?.trim()?.toUpperCase();
-    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const cleanId = normalizeTagId(body?.qrId);
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
 
     if (!cleanId) {
-      return NextResponse.json(
-        { success: false, error: 'QR Tag ID is required.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'A valid QR Tag ID is required.' }, { status: 400 });
     }
 
-    // 1. Check Lockout Status
-    const lockout = checkLockoutStatus(cleanId, ip);
+    // 1. Lockout check
+    const lockout = await checkLockoutStatus(cleanId, ip);
     if (lockout.isLocked) {
       return NextResponse.json(
         {
@@ -34,12 +31,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Lookup Tag in Server Database Registry
-    const tag = getTagByQrId(cleanId);
-
-    // Generic auth failure helper
-    const genericAuthError = (customMsg?: string) => {
-      const updatedLock = recordFailedAttempt(cleanId, ip);
+    const genericAuthError = async (customMsg?: string) => {
+      const updatedLock = await recordFailedAttempt(cleanId, ip);
       if (updatedLock.isLocked) {
         return NextResponse.json(
           {
@@ -51,69 +44,54 @@ export async function POST(request: Request) {
           { status: 429 }
         );
       }
-
       return NextResponse.json(
         { success: false, error: customMsg || 'Invalid QR ID, PIN, or OTP code.' },
         { status: 401 }
       );
     };
 
-    // Check if tag exists and is active
-    if (!tag || (tag.status !== 'activated' && tag.status !== 'active')) {
-      return genericAuthError('QR Tag ID is not registered or not activated.');
+    // 2. Look the tag up in the database (never an in-memory copy)
+    const tag = await getTagRecord(cleanId);
+    if (!tag || !isOwnedStatus(tag.status)) {
+      return await genericAuthError('QR Tag ID is not registered or not activated.');
     }
 
     // 3. Authenticate via OTP or PIN
     if (loginType === 'otp' || otp) {
-      const cleanOtp = otp?.trim();
+      const cleanOtp = typeof otp === 'string' ? otp.trim() : '';
       if (!cleanOtp) {
-        return NextResponse.json(
-          { success: false, error: '6-digit OTP code is required.' },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: '6-digit OTP code is required.' }, { status: 400 });
       }
-
       const isDevOtpEnabled = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEV_OTP === 'true';
-      const isTestCode = isDevOtpEnabled && cleanOtp === '123456';
-
-      if (!isTestCode) {
-        const store = getOwnerOtpStore();
-        const record = tag.ownerPhone ? store.get(tag.ownerPhone.trim()) : null;
-
-        if (!record || Date.now() > record.expiresAt || record.otp !== cleanOtp) {
-          return genericAuthError('Incorrect or expired OTP code. Please request a new OTP.');
-        }
-
-        // Consume OTP on success
-        if (tag.ownerPhone) store.delete(tag.ownerPhone.trim());
+      const ok = (isDevOtpEnabled && cleanOtp === '123456') || (await verifyOtp(`login:${cleanId}`, cleanOtp)) === 'ok';
+      if (!ok) {
+        return await genericAuthError('Incorrect or expired OTP code. Please request a new OTP.');
       }
     } else {
-      // Authenticate via PIN
-      if (!pin) {
-        return NextResponse.json(
-          { success: false, error: '4-digit Security PIN is required.' },
-          { status: 400 }
-        );
+      if (typeof pin !== 'string' || !pin) {
+        return NextResponse.json({ success: false, error: '4-digit Security PIN is required.' }, { status: 400 });
       }
-
       let pinValid = false;
       if (tag.pinHash && tag.pinSalt) {
         pinValid = verifyPin(pin, tag.pinHash, tag.pinSalt);
       } else {
-        // Only allow fallback in explicit non-production dev mode if salt/hash not yet created
+        // Tags registered before PINs were saved have no hash: they must log in with an OTP.
         const isDevFallback = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEV_OTP === 'true';
         pinValid = isDevFallback && pin === '1234';
+        if (!pinValid) {
+          return NextResponse.json(
+            { success: false, error: 'No PIN is set for this tag yet. Log in with an OTP to your registered mobile, then set a PIN.' },
+            { status: 401 }
+          );
+        }
       }
-
       if (!pinValid) {
-        return genericAuthError('Invalid Security PIN.');
+        return await genericAuthError('Invalid Security PIN.');
       }
     }
 
-    // 4. Reset Lockout Attempts on Success
-    resetAttempts(cleanId, ip);
-
-    // 5. Create Cryptographically Signed Owner Session Cookie
+    // 4. Success
+    await resetAttempts(cleanId, ip);
     const sessionToken = createOwnerToken(tag.qrId, tag.id);
 
     const response = NextResponse.json({
@@ -129,6 +107,7 @@ export async function POST(request: Request) {
         bloodGroup: tag.bloodGroup,
         medicalNotes: tag.medicalNotes,
         activatedAt: tag.activatedAt,
+        status: tag.status,
       },
     });
 
@@ -136,15 +115,12 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 86400, // 24 hours
+      maxAge: 86400,
       path: '/',
     });
 
     return response;
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Authentication processing failed.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Authentication processing failed.' }, { status: 500 });
   }
 }

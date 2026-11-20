@@ -2,10 +2,12 @@ import crypto from 'crypto';
 
 export const OWNER_COOKIE = 'gt_owner_session';
 
-const DEFAULT_SECRET =
-  process.env.OWNER_SESSION_SECRET ||
-  process.env.ADMIN_SESSION_SECRET ||
-  'gt_owner_secret_secure_key_fallback_2026_x89';
+// No built-in fallback: owner sessions need their own OWNER_SESSION_SECRET.
+function ownerSecret(): string {
+  const s = process.env.OWNER_SESSION_SECRET;
+  if (!s || s.length < 32) throw new Error('OWNER_SESSION_SECRET is not set (min 32 chars).');
+  return s;
+}
 
 export interface OwnerSessionPayload {
   qrId: string;
@@ -13,7 +15,7 @@ export interface OwnerSessionPayload {
   exp: number;
 }
 
-function hmacSignature(data: string, secret: string = DEFAULT_SECRET): string {
+function hmacSignature(data: string, secret: string = ownerSecret()): string {
   return crypto.createHmac('sha256', secret).update(data).digest('hex');
 }
 
@@ -38,7 +40,7 @@ export function createOwnerToken(qrId: string, ownerId?: string): string {
  * Optionally validates that the session belongs to a specific expected QR ID.
  */
 export function verifyOwnerToken(token?: string, expectedQrId?: string): OwnerSessionPayload | null {
-  if (!token || typeof token !== 'string') return null;
+  if (!token || typeof token !== 'string' || (process.env.OWNER_SESSION_SECRET || '').length < 32) return null;
   const parts = token.split('.');
   if (parts.length !== 2) return null;
 

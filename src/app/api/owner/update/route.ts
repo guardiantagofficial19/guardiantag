@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { updateOwnerDetails, getTagByQrId } from '@/lib/tagService';
+import { updateOwnerDetails } from '@/lib/tagService';
 import { OWNER_COOKIE, verifyOwnerToken } from '@/lib/security/ownerAuth';
 
 export async function POST(request: Request) {
@@ -60,19 +60,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const updateRes = updateOwnerDetails(
+    const updateRes = await updateOwnerDetails(
       cleanId,
       {
-        ownerName: ownerName.trim(),
-        ownerPhone: ownerPhone.trim(),
-        emergencyName: emergencyName.trim(),
-        emergencyPhone: emergencyPhone.trim(),
-        vehicleNo: vehicleNo?.trim() || undefined,
-        bloodGroup: bloodGroup?.trim() || undefined,
-        medicalNotes: medicalNotes?.trim() || undefined,
+        ownerName,
+        ownerPhone,
+        emergencyName,
+        emergencyPhone,
+        vehicleNo,
+        bloodGroup,
+        medicalNotes,
         status: status === 'deactivated' || status === 'activated' ? status : undefined,
       },
-      newPin
+      newPin || undefined
     );
 
     if (!updateRes.success) {
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const updatedTag = getTagByQrId(cleanId);
+    const updatedTag = updateRes.tag;
 
     return NextResponse.json({
       success: true,
