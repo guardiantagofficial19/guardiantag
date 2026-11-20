@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
@@ -62,9 +63,9 @@ export async function GET() {
       LIMIT 100
     `;
     return NextResponse.json({ success: true, orders });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error?.message || 'Failed to fetch store orders' },
+      { success: false, error: errorMessage(error) || 'Failed to fetch store orders' },
       { status: 500 }
     );
   }
@@ -240,10 +241,10 @@ export async function POST(request: Request) {
       whatsappMessage,
       message: 'Order placed successfully and synced with Store Manager.',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Order creation error:', error);
     return NextResponse.json(
-      { success: false, error: error?.message || 'Failed to place order in Store Manager database' },
+      { success: false, error: errorMessage(error) || 'Failed to place order in Store Manager database' },
       { status: 500 }
     );
   }

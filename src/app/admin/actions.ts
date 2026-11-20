@@ -1,4 +1,5 @@
 "use server";
+import { errorMessage } from '@/lib/errors';
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -183,8 +184,8 @@ export async function createFullProductAction(fd: FormData) {
       stmts.push(sql`INSERT INTO stock_movements (sku, delta, reason) VALUES (${sku}, ${initialStock}, 'initial_product_stock')`);
     }
     await sql.transaction(stmts);
-  } catch (e: any) {
-    err = e?.message || "SKU already exists";
+  } catch (e) {
+    err = errorMessage(e) || "SKU already exists";
   }
 
   revalidatePath("/admin/products");

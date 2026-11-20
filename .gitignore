@@ -39,9 +39,11 @@ yarn-error.log*
 
 # vercel
 .vercel
+guardiantag-codebase-bundle.txt
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 .vercel
+guardiantag-codebase-bundle.txt

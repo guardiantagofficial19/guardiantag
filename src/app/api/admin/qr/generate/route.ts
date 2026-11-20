@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       tags: generatedTags,
       totalTagsCount: allTags.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: 'Failed to provision new QR tag batch.' },
       { status: 500 }

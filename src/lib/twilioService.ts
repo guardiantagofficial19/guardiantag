@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { getTagByQrId, getTagByQrIdAsync } from './tagService';
 
 // Public Action Rate Limiter (Max 3 calls/SMS per IP per 10 mins)
@@ -142,10 +143,10 @@ export async function triggerMaskedCallServer(
         success: true,
         message: `Twilio Masked Call Proxy initiated securely connecting caller to ${targetRole}.`,
       };
-    } catch (err: any) {
+    } catch (err) {
       return {
         success: false,
-        error: err.message || 'Twilio connection failed.'
+        error: errorMessage(err) || 'Twilio connection failed.'
       };
     }
   }
@@ -249,10 +250,10 @@ export async function triggerEmergencySmsServer(
         success: true,
         message: `Emergency SMS alert dispatched to designated contact.`,
       };
-    } catch (err: any) {
+    } catch (err) {
       return {
         success: false,
-        error: err.message || 'Twilio SMS connection failed.'
+        error: errorMessage(err) || 'Twilio SMS connection failed.'
       };
     }
   }
@@ -263,10 +264,10 @@ export async function triggerEmergencySmsServer(
   };
 }
 
-export function triggerMaskedCall(qrId: string): Promise<any> {
+export function triggerMaskedCall(qrId: string) {
   return triggerMaskedCallServer(qrId);
 }
 
-export function triggerEmergencySms(qrId: string, location?: any): Promise<any> {
+export function triggerEmergencySms(qrId: string, location?: { latitude: number; longitude: number }) {
   return triggerEmergencySmsServer(qrId, location);
 }

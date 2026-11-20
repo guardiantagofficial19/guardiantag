@@ -3,11 +3,11 @@ import { TagOwner, TagType, TagStatus } from './types';
 import { getSupabaseServerClient } from '@/lib/supabaseClient';
 import { getNeonSql } from '@/lib/neonClient';
 
-async function queryNeonSingle(query: string, params: any[]): Promise<any | null> {
+async function queryNeonSingle(query: string, params: unknown[]) {
   const sql = getNeonSql();
   if (!sql) return null;
   try {
-    const rows = await (sql as any).query(query, params);
+    const rows = await sql.query(query, params);
     return rows && rows.length > 0 ? rows[0] : null;
   } catch {
     return null;
@@ -406,7 +406,7 @@ export async function registerTagServer(payload: RegisterPayload): Promise<{
     const supabase = getSupabaseServerClient();
     const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
 
-    const recordPayload: any = {
+    const recordPayload: Record<string, string | boolean | null> = {
       tag_id: cleanId,
       owner_name: payload.ownerName.trim(),
       [phoneCol]: payload.ownerPhone.trim(),
@@ -872,6 +872,6 @@ export function provisionNewTags(tagType: TagType, count: number): QrTagRecord[]
   return newTags;
 }
 
-export function registerTag(payload: any): Promise<{ success: boolean; error?: string }> {
+export function registerTag(payload: RegisterPayload): Promise<{ success: boolean; error?: string }> {
   return registerTagServer(payload);
 }

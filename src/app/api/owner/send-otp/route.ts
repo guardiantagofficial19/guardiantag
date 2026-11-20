@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { NextResponse } from 'next/server';
 
 // Server-Side OTP Vault for Owner Mobile Line Verification
@@ -57,9 +58,9 @@ export async function POST(request: Request) {
       success: true,
       message: `6-Digit OTP sent to ${cleanPhone} via SMS.`,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error?.message || 'Failed to send Twilio OTP.' },
+      { success: false, error: errorMessage(error) || 'Failed to send Twilio OTP.' },
       { status: 500 }
     );
   }

@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { NextResponse } from 'next/server';
 import { getOwnerOtpStore } from '../send-otp/route';
 
@@ -54,9 +55,9 @@ export async function POST(request: Request) {
       success: true,
       message: 'Owner mobile number verified successfully via Twilio OTP.',
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error?.message || 'Failed to verify Twilio OTP.' },
+      { success: false, error: errorMessage(error) || 'Failed to verify Twilio OTP.' },
       { status: 500 }
     );
   }

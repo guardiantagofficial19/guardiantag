@@ -129,7 +129,7 @@ export default async function ShopifySettingsPage({
                 style={{ fontWeight: 600 }}
               />
               <div className="polaris-help-text">
-                Include country code without '+' (e.g. 918058800880 for +91 80588 00880).
+                Include country code without &apos;+&apos; (e.g. 918058800880 for +91 80588 00880).
               </div>
             </div>
           </div>

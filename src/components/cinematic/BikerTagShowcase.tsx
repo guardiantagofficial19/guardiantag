@@ -18,6 +18,7 @@ import {
   ChevronRight,
   RotateCw
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface BikerTagItem {
   id: string;
@@ -33,7 +34,7 @@ interface BikerTagItem {
     mount: string;
   };
   features: {
-    icon: any;
+    icon: LucideIcon;
     title: string;
     desc: string;
   }[];

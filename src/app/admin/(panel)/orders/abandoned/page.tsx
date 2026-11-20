@@ -36,7 +36,7 @@ export default async function ShopifyAbandonedCheckoutsPage() {
         <div>
           <h1>Abandoned Checkouts</h1>
           <div className="page-subtitle">
-            Customers who initiated checkout but didn't finish. Re-engage them with exclusive WhatsApp recovery offers.
+            Customers who initiated checkout but didn&apos;t finish. Re-engage them with exclusive WhatsApp recovery offers.
           </div>
         </div>
       </div>

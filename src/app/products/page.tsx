@@ -262,8 +262,11 @@ function ProductsContent() {
       });
   }, []);
 
-  // Handle URL Query Params
-  useEffect(() => {
+  // Handle URL Query Params: applied during render whenever searchParams changes
+  // (React's recommended alternative to syncing state inside an effect).
+  const [appliedParams, setAppliedParams] = useState<typeof searchParams | null>(null);
+  if (appliedParams !== searchParams) {
+    setAppliedParams(searchParams);
     const modelParam = searchParams.get('model');
     const textParam = searchParams.get('text');
     const checkoutParam = searchParams.get('checkout');
@@ -283,7 +286,7 @@ function ProductsContent() {
     if (checkoutParam === '1' || checkoutParam === 'true') {
       setIsDrawerOpen(true);
     }
-  }, [searchParams]);
+  }
 
   // Selected Product Object
   const currentProduct = useMemo(() => {
@@ -453,7 +456,7 @@ function ProductsContent() {
               
               {/* Corner Watermark Section Code */}
               <span className="absolute top-4 right-6 font-mono text-xs font-bold text-neutral-500 uppercase tracking-widest pointer-events-none">
-                {currentProduct.sectionNo} // {currentProduct.id}
+                {currentProduct.sectionNo} {'//'} {currentProduct.id}
               </span>
 
               {/* Floating Badges */}
@@ -584,7 +587,7 @@ function ProductsContent() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setGalleryAngle(item.id as any)}
+                    onClick={() => setGalleryAngle(item.id as typeof galleryAngle)}
                     className={`p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
                       isActive
                         ? 'border-yellow-400 bg-yellow-400/10 shadow-lg shadow-yellow-400/10'
@@ -740,7 +743,7 @@ function ProductsContent() {
                 ].map((opt) => (
                   <button
                     key={opt.id}
-                    onClick={() => setFinish(opt.id as any)}
+                    onClick={() => setFinish(opt.id as typeof finish)}
                     className={`py-2 px-3 rounded-xl border text-center transition cursor-pointer ${
                       finish === opt.id
                         ? 'border-yellow-400 bg-white/10 text-white font-bold'

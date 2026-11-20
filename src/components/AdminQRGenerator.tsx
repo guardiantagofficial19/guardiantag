@@ -1,19 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { QrCode, Plus, CheckCircle2, Database } from 'lucide-react';
 import { QrTag, TagType } from '@/lib/types';
 import { getAllTags, provisionNewTags } from '@/lib/tagService';
 
 export default function AdminQRGenerator() {
-  const [tags, setTags] = useState<QrTag[]>([]);
+  const [tags, setTags] = useState<QrTag[]>(() => getAllTags());
   const [selectedType, setSelectedType] = useState<TagType>('GTB');
   const [quantity, setQuantity] = useState(5);
   const [provisionMessage, setProvisionMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    setTags(getAllTags());
-  }, []);
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +134,7 @@ export default function AdminQRGenerator() {
                       <td className="p-3 font-mono font-black text-[#FF5500]">{t.qrId}</td>
                       <td className="p-3 font-black text-black">{t.tagType}</td>
                       <td className="p-3">{getStatusBadge(t.status)}</td>
-                      <td className="p-3 text-neutral-700 font-mono font-bold">{new Date(t.createdAt || Date.now()).toLocaleDateString()}</td>
+                      <td className="p-3 text-neutral-700 font-mono font-bold">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '—'}</td>
                       <td className="p-3 text-right">
                         <a
                           href={`/tag/${t.qrId}`}

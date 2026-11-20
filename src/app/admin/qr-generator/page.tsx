@@ -1,4 +1,5 @@
 'use client';
+import { errorMessage } from '@/lib/errors';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -309,7 +310,7 @@ export default function AdminQrGeneratorPage() {
   const [batch, setBatch] = useState<BatchItem[]>([]);
 
   // Per-product template storage map
-  const [tpls, setTpls] = useState<Record<string, TemplateRecord>>({});
+  const tplsRef = useRef<Record<string, TemplateRecord>>({});
   
   // Terminal states
   const [clock, setClock] = useState<string>('--:--:--');
@@ -464,7 +465,7 @@ export default function AdminQrGeneratorPage() {
     return `${makeId(tagType, r.from)} → ${makeId(tagType, r.to)} · ${r.to - r.from + 1} ${niceName(f)}s`;
   };
 
-  const syncTemplateUI = (targetFormat: string = activeFormat, currentTpls: Record<string, TemplateRecord> = tpls) => {
+  const syncTemplateUI = (targetFormat: string = activeFormat, currentTpls: Record<string, TemplateRecord> = tplsRef.current) => {
     const t = currentTpls[targetFormat];
     const f = FORMATS[targetFormat];
     const lower = niceName(f);
@@ -486,12 +487,10 @@ export default function AdminQrGeneratorPage() {
 
   const setTemplate = (key: string, img: HTMLImageElement, src: string, box: { x: number; y: number; w: number; h: number }, on: boolean = true) => {
     const newRecord: TemplateRecord = { img, src, w: img.width, h: img.height, box, on };
-    setTpls((prev) => {
-      const updated = { ...prev, [key]: newRecord };
-      saveTemplateStorage(key, newRecord);
-      if (key === activeFormat) syncTemplateUI(key, updated);
-      return updated;
-    });
+    const updated = { ...tplsRef.current, [key]: newRecord };
+    tplsRef.current = updated;
+    saveTemplateStorage(key, newRecord);
+    if (key === activeFormat) syncTemplateUI(key, updated);
   };
 
   const loadTemplateFile = async (file: File) => {
@@ -537,9 +536,9 @@ export default function AdminQrGeneratorPage() {
         appendLog(`tpl: Loaded template for ${key} (${img.width}x${img.height}px)`, 'info');
       }
       generate();
-    } catch (e: any) {
-      setTplMsg("Couldn't read that file. " + (e.message || 'Try a PNG export of the design.'));
-      appendLog(`tpl error: ${e.message || 'File read error'}`, 'warn');
+    } catch (e) {
+      setTplMsg("Couldn't read that file. " + (errorMessage(e) || 'Try a PNG export of the design.'));
+      appendLog(`tpl error: ${errorMessage(e) || 'File read error'}`, 'warn');
     }
   };
 
@@ -564,7 +563,7 @@ export default function AdminQrGeneratorPage() {
   };
 
   const renderAny = (item: BatchItem, key: string, forExport: boolean, printId: boolean) => {
-    const t = tpls[key];
+    const t = tplsRef.current[key];
     if (t && t.on) {
       const previewScale = Math.min(1, 900 / t.w);
       return renderTemplate(item, t, forExport ? 1 : previewScale, printId);
@@ -589,7 +588,7 @@ export default function AdminQrGeneratorPage() {
 
     const key = activeFormat;
     const f = FORMATS[key];
-    const isUsingTpl = !!(tpls[key] && tpls[key].on);
+    const isUsingTpl = !!(tplsRef.current[key] && tplsRef.current[key].on);
 
     logCmd(`generate --type ${tagType} --product ${key} --from ${r.from} --to ${r.to}${isUsingTpl ? ' --template' : ''}`);
 
@@ -624,10 +623,6 @@ export default function AdminQrGeneratorPage() {
     setStatusText(msg);
     appendLog(`>> ${msg}`, 'res');
   };
-
-  useEffect(() => {
-    syncTemplateUI(activeFormat, tpls);
-  }, [tagType, format]);
 
   // Load saved templates from localStorage on mount
   useEffect(() => {
@@ -770,7 +765,11 @@ export default function AdminQrGeneratorPage() {
                     </label>
                     <select
                       value={tagType}
-                      onChange={(e) => setTagType(e.target.value)}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setTagType(next);
+                        syncTemplateUI(next === 'GTB' ? format : 'standard');
+                      }}
                       className="bg-black text-[#39ff7a] border border-[#17361f] rounded p-2 text-sm font-bold focus:outline-none focus:border-[#39ff7a] shadow-[0_0_10px_rgba(57,255,122,0.2)]"
                     >
                       <option value="GTB">GTB · Bikers</option>
@@ -795,6 +794,7 @@ export default function AdminQrGeneratorPage() {
                               type="button"
                               onClick={() => {
                                 setFormat(key);
+                                syncTemplateUI(key);
                               }}
                               className={`fmt text-left p-2 border rounded text-xs font-bold uppercase transition cursor-pointer ${
                                 format === key
@@ -819,7 +819,7 @@ export default function AdminQrGeneratorPage() {
                         type="checkbox"
                         checked={useTpl}
                         onChange={(e) => {
-                          const t = tpls[activeFormat];
+                          const t = tplsRef.current[activeFormat];
                           if (t) {
                             t.on = e.target.checked;
                             saveTemplateStorage(activeFormat, t);
@@ -857,7 +857,7 @@ export default function AdminQrGeneratorPage() {
                           onChange={(e) => {
                             const val = parseInt(e.target.value) || 0;
                             setBoxInputs((prev) => ({ ...prev, bx: val }));
-                            if (tpls[activeFormat]) tpls[activeFormat].box.x = val;
+                            if (tplsRef.current[activeFormat]) tplsRef.current[activeFormat].box.x = val;
                           }}
                           className="bg-black text-[#39ff7a] border border-[#17361f] rounded p-1 text-center font-bold text-xs"
                         />
@@ -870,7 +870,7 @@ export default function AdminQrGeneratorPage() {
                           onChange={(e) => {
                             const val = parseInt(e.target.value) || 0;
                             setBoxInputs((prev) => ({ ...prev, by: val }));
-                            if (tpls[activeFormat]) tpls[activeFormat].box.y = val;
+                            if (tplsRef.current[activeFormat]) tplsRef.current[activeFormat].box.y = val;
                           }}
                           className="bg-black text-[#39ff7a] border border-[#17361f] rounded p-1 text-center font-bold text-xs"
                         />
@@ -883,7 +883,7 @@ export default function AdminQrGeneratorPage() {
                           onChange={(e) => {
                             const val = parseInt(e.target.value) || 1;
                             setBoxInputs((prev) => ({ ...prev, bw: val }));
-                            if (tpls[activeFormat]) tpls[activeFormat].box.w = val;
+                            if (tplsRef.current[activeFormat]) tplsRef.current[activeFormat].box.w = val;
                           }}
                           className="bg-black text-[#39ff7a] border border-[#17361f] rounded p-1 text-center font-bold text-xs"
                         />
@@ -896,7 +896,7 @@ export default function AdminQrGeneratorPage() {
                           onChange={(e) => {
                             const val = parseInt(e.target.value) || 1;
                             setBoxInputs((prev) => ({ ...prev, bh: val }));
-                            if (tpls[activeFormat]) tpls[activeFormat].box.h = val;
+                            if (tplsRef.current[activeFormat]) tplsRef.current[activeFormat].box.h = val;
                           }}
                           className="bg-black text-[#39ff7a] border border-[#17361f] rounded p-1 text-center font-bold text-xs"
                         />

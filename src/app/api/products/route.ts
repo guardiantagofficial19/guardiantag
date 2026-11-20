@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
@@ -35,7 +36,7 @@ export async function GET() {
         created_at ASC
     `;
 
-    const products = rows.map((r: any, idx: number) => {
+    const products = rows.map((r, idx: number) => {
       // Split features by newline if text string
       let featuresList: string[] = [];
       if (Array.isArray(r.features)) {
@@ -69,10 +70,10 @@ export async function GET() {
     });
 
     return NextResponse.json({ success: true, products });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Failed to query store products:', error);
     return NextResponse.json(
-      { success: false, error: error?.message || 'Database query error' },
+      { success: false, error: errorMessage(error) || 'Database query error' },
       { status: 500 }
     );
   }

@@ -16,9 +16,10 @@ import {
   ZapOff,
   Crosshair
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface SafetyFeature {
-  icon: any;
+  icon: LucideIcon;
   title: string;
   badge: string;
   subtitle: string;

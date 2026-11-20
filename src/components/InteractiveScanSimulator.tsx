@@ -18,7 +18,7 @@ export default function InteractiveScanSimulator() {
     setStatusMessage(null);
     const res = await triggerMaskedCall(selectedTag);
     setIsLoading(false);
-    setStatusMessage(res.message);
+    setStatusMessage(res.message ?? res.error ?? null);
   };
 
   const handleSmsEmergency = async () => {
@@ -26,7 +26,7 @@ export default function InteractiveScanSimulator() {
     setStatusMessage(null);
     const res = await triggerEmergencySms(selectedTag, { latitude: 12.9716, longitude: 77.5946 });
     setIsLoading(false);
-    setStatusMessage(res.message);
+    setStatusMessage(res.message ?? res.error ?? null);
   };
 
   return (

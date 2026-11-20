@@ -285,7 +285,7 @@ export default async function ShopifyEditProductPage({
                     placeholder="e.g. 120.00"
                     className="polaris-input"
                   />
-                  <div className="polaris-help-text">Customers won't see this</div>
+                  <div className="polaris-help-text">Customers won&apos;t see this</div>
                 </div>
               </div>
             </div>

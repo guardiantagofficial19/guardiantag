@@ -1,6 +1,8 @@
 'use client';
+import { errorMessage } from '@/lib/errors';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 const TYPES: Record<string, { label: string; reasons: [string, string][] }> = {
@@ -254,7 +256,8 @@ function EmergencyContent() {
         scannedId = hash;
       }
     }
-    loadTagData(scannedId);
+    // Deferred to a microtask so state updates don't run synchronously inside the effect.
+    queueMicrotask(() => loadTagData(scannedId));
   }, [paramId]);
 
   // Handle Location Toggle
@@ -316,8 +319,8 @@ function EmergencyContent() {
         title: "Pick up your phone",
         text: `We're calling +91 ${d.slice(0, 5)} ${d.slice(5)} now. Stay on the line.`
       });
-    } catch (err: any) {
-      setCallMsg({ text: err.message || ERRORS.twilio, isErr: true });
+    } catch (err) {
+      setCallMsg({ text: errorMessage(err) || ERRORS.twilio, isErr: true });
     } finally {
       setIsCalling(false);
     }
@@ -335,7 +338,7 @@ function EmergencyContent() {
     setAlertMsg({ text: '', isErr: false });
 
     try {
-      const body: any = {
+      const body: Record<string, unknown> = {
         qrId: tag?.id,
         reason: selectedReason,
         note: alertNote.trim().slice(0, 140),
@@ -354,7 +357,7 @@ function EmergencyContent() {
         title: "Alert sent",
         text: "The owner and their emergency contact got your message. If someone is hurt, also call 108."
       });
-    } catch (err: any) {
+    } catch (err) {
       setSheetDone({
         title: "Alert sent",
         text: "The owner's side got your message. If someone is hurt, also call 108."
@@ -747,13 +750,13 @@ function EmergencyContent() {
       <div className="wrap">
         {/* Top Header with Language Toggle */}
         <header className="top flex items-center justify-between">
-          <a className="brand" href="/" aria-label="GuardianTag home">
+          <Link className="brand" href="/" aria-label="GuardianTag home">
             <svg viewBox="0 0 34 38" aria-hidden="true">
               <path d="M17 1 32 7v11c0 9.5-6.4 16.4-15 19C8.4 34.4 2 27.5 2 18V7z" fill="#fff"/>
               <text x="17" y="23" textAnchor="middle" fontFamily="system-ui,Arial" fontWeight="800" fontSize="12" fill="#000">GT</text>
             </svg>
             <span><b>GuardianTag</b><small>Scan. Connect. Return.</small></span>
-          </a>
+          </Link>
 
           {/* Hindi / English Language Toggle */}
           <div className="flex items-center gap-1 bg-[#1a1a1a] border border-[#2e2e2e] p-1 rounded-full text-xs font-mono font-bold">
@@ -976,8 +979,8 @@ function EmergencyContent() {
 
         {/* Footer */}
         <footer>
-          <span>{t.isYourTag} <a href="/manage">{t.loginManage}</a></span>
-          <span>Get your own safety tag at <a href="/">guardiantag.in</a></span>
+          <span>{t.isYourTag} <Link href="/manage">{t.loginManage}</Link></span>
+          <span>Get your own safety tag at <Link href="/">guardiantag.in</Link></span>
         </footer>
       </div>
 

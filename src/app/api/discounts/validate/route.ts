@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         discountAmountRs: Math.round(discountAmountPaise / 100),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Failed to validate discount:', error);
     return NextResponse.json({ success: false, error: 'Failed to apply coupon' }, { status: 500 });
   }

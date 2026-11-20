@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { Html5QrcodeScanner } from 'html5-qrcode';
 import Image from 'next/image';
 import { Camera, RefreshCw, X, Shield, Zap, Sparkles } from 'lucide-react';
 
@@ -10,10 +12,10 @@ export default function MobileScanPage() {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [manualInput, setManualInput] = useState('');
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   useEffect(() => {
-    let html5QrcodeScanner: any = null;
+    let html5QrcodeScanner: Html5QrcodeScanner | null = null;
 
     async function startScanner() {
       try {
@@ -48,14 +50,14 @@ export default function MobileScanPage() {
             }
             router.push(`/emergency?id=${encodeURIComponent(cleanId)}`);
           },
-          (error: any) => {
+          () => {
             // Scanning in progress
           }
         );
 
         scannerRef.current = html5QrcodeScanner;
         setCameraActive(true);
-      } catch (err: any) {
+      } catch (err) {
         setCameraError('Camera access required. Please allow camera permissions or enter Tag ID manually below.');
       }
     }
@@ -84,13 +86,13 @@ export default function MobileScanPage() {
     <div className="min-h-screen bg-black text-white flex flex-col justify-between p-4 sm:p-6 font-sans">
       {/* Top Navigation */}
       <div className="flex items-center justify-between border-b border-white/10 pb-4">
-        <a href="/" className="flex items-center gap-2 text-white">
+        <Link href="/" className="flex items-center gap-2 text-white">
           <Image src="/gt-shield-logo.png" alt="GT Logo" width={28} height={28} className="invert filter" />
           <span className="font-extrabold text-base font-mono">GuardianTag <span className="text-yellow-400 font-normal">Scanner</span></span>
-        </a>
-        <a href="/" className="p-2 rounded-full bg-neutral-900 border border-white/15 text-neutral-400 hover:text-white">
+        </Link>
+        <Link href="/" className="p-2 rounded-full bg-neutral-900 border border-white/15 text-neutral-400 hover:text-white">
           <X className="w-5 h-5" />
-        </a>
+        </Link>
       </div>
 
       {/* Camera Stage */}

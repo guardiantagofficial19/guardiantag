@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { NextResponse } from 'next/server';
 import { registerTagServer } from '@/lib/tagService';
 
@@ -40,9 +41,9 @@ export async function POST(request: Request) {
       qrId,
       activatedAt: result.activatedAt,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal registration error.' },
+      { success: false, error: errorMessage(error) || 'Internal registration error.' },
       { status: 500 }
     );
   }

@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/errors';
 import { NextResponse } from 'next/server';
 import { getNeonSql } from '@/lib/neonClient';
 
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const rows = await (sql as any).query(
+    const rows = await sql.query(
       `SELECT
          (SELECT COUNT(*)::int FROM bikers) AS bikers,
          (SELECT COUNT(*)::int FROM kids) AS kids,
@@ -45,9 +46,9 @@ export async function GET(request: Request) {
     result.database = 'connected';
     result.counts = rows[0];
     return NextResponse.json(result);
-  } catch (err: any) {
+  } catch (err) {
     result.database = 'error';
-    result.error = err?.message || 'query failed';
+    result.error = errorMessage(err) || 'query failed';
     return NextResponse.json(result, { status: 503 });
   }
 }

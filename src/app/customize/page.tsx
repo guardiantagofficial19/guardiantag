@@ -14,7 +14,7 @@ function CustomizerContent() {
   const initialModel = ['GTK', 'GTT', 'GTU'].includes(initialModelParam) ? 'GTB' : initialModelParam;
 
   const [model, setModel] = useState<'GTB' | 'GTK' | 'GTT' | 'GTU'>(
-    ['GTB', 'GTK', 'GTT', 'GTU'].includes(initialModel) ? (initialModel as any) : 'GTB'
+    ['GTB', 'GTK', 'GTT', 'GTU'].includes(initialModel) ? (initialModel as 'GTB' | 'GTK' | 'GTT' | 'GTU') : 'GTB'
   );
 
   const [finish, setFinish] = useState<'STEALTH' | 'SILVER' | 'REFLECTIVE'>('STEALTH');
@@ -127,7 +127,7 @@ function CustomizerContent() {
                   ].map((f) => (
                     <button
                       key={f.id}
-                      onClick={() => setFinish(f.id as any)}
+                      onClick={() => setFinish(f.id as typeof finish)}
                       className={`p-4 rounded-2xl border text-left transition cursor-pointer ${
                         finish === f.id
                           ? 'bg-white text-black border-white shadow-xl font-bold'

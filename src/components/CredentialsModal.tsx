@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Database, PhoneCall, ShieldCheck, X, CheckCircle2, Lock } from 'lucide-react';
 import { CredentialsConfig } from '@/lib/types';
 
@@ -11,31 +11,34 @@ interface CredentialsModalProps {
 
 const STORAGE_KEY = 'guardiantag_credentials_v1';
 
+const EMPTY_CONFIG: CredentialsConfig = {
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  twilioAccountSid: '',
+  twilioAuthToken: '',
+  twilioPhoneNumber: '',
+};
+
+function readStoredConfig(): CredentialsConfig {
+  if (typeof window === 'undefined') return EMPTY_CONFIG;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : EMPTY_CONFIG;
+  } catch {
+    return EMPTY_CONFIG;
+  }
+}
+
+// The form mounts fresh each time the modal opens, so saved values are re-read on every open.
 export default function CredentialsModal({ isOpen, onClose }: CredentialsModalProps) {
-  const [config, setConfig] = useState<CredentialsConfig>({
-    supabaseUrl: '',
-    supabaseAnonKey: '',
-    twilioAccountSid: '',
-    twilioAuthToken: '',
-    twilioPhoneNumber: '',
-  });
+  if (!isOpen) return null;
+  return <CredentialsForm onClose={onClose} />;
+}
+
+function CredentialsForm({ onClose }: Pick<CredentialsModalProps, 'onClose'>) {
+  const [config, setConfig] = useState<CredentialsConfig>(readStoredConfig);
 
   const [savedSuccess, setSavedSuccess] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          setConfig(JSON.parse(stored));
-        } catch {
-          // ignore
-        }
-      }
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
