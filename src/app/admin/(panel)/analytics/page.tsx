@@ -1,18 +1,6 @@
 import { sql } from "@/lib/db";
 import { inr, dt } from "@/lib/format";
-import {
-  TrendingUp,
-  DollarSign,
-  Package,
-  Users,
-  ShoppingBag,
-  CreditCard,
-  MapPin,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
-} from "lucide-react";
+import { TrendingUp, DollarSign, Package, Users, MapPin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

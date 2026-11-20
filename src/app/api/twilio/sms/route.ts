@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       success: true,
       message: result.message,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to dispatch emergency SMS alert.' },
       { status: 500 }

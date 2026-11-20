@@ -1,15 +1,7 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
 import { inr, dt, ORDER_STATUSES } from "@/lib/format";
-import {
-  Package,
-  Plus,
-  Search,
-  MessageCircle,
-  Truck,
-  ExternalLink,
-  Filter,
-} from "lucide-react";
+import { Package, Plus, MessageCircle } from "lucide-react";
 
 type SP = { status?: string; payment?: string; q?: string };
 

@@ -41,7 +41,7 @@ function ManageFlow() {
   const [vehicleNo, setVehicleNo] = useState('');
   const [bloodGroup, setBloodGroup] = useState('');
   const [medicalNotes, setMedicalNotes] = useState('');
-  const [activatedAt, setActivatedAt] = useState('');
+  const [, setActivatedAt] = useState('');
   const [tagStatus, setTagStatus] = useState<'activated' | 'deactivated'>('activated');
 
   // Optional PIN Change State
@@ -52,7 +52,7 @@ function ManageFlow() {
   // UI Feedback States
   const [error, setError] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
-  const [lockoutMinutes, setLockoutMinutes] = useState<number | null>(null);
+  const [, setLockoutMinutes] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 

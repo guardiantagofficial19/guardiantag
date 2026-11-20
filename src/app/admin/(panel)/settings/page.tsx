@@ -1,16 +1,6 @@
 import { sql } from "@/lib/db";
 import { updateStoreSettingsAction } from "../../actions";
-import {
-  Settings,
-  Store,
-  DollarSign,
-  MessageCircle,
-  ShieldCheck,
-  Database,
-  Truck,
-  FileText,
-  CheckCircle2,
-} from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

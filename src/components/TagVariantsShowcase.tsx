@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bike, Baby, Briefcase, Car, Shield, Check, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Bike, Baby, Briefcase, Car, Check, ArrowRight, ShieldCheck } from 'lucide-react';
 import { TagType } from '@/lib/types';
 
 export default function TagVariantsShowcase() {

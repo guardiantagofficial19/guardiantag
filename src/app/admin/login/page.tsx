@@ -1,5 +1,5 @@
 import { loginAction } from "../actions";
-import { Lock, ShieldCheck, ArrowRight, AlertCircle, Store } from "lucide-react";
+import { Lock, ShieldCheck, ArrowRight, AlertCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

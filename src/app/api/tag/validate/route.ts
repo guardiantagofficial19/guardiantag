@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       qrId: result.tag?.qrId,
       tagType: result.tag?.tagType,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { valid: false, error: 'Internal server validation error.' },
       { status: 500 }

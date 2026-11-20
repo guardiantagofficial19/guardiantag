@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShoppingBag, Star, Check, ShieldCheck, Zap, PackageCheck } from 'lucide-react';
+import { ShoppingBag, Star, Check, ShieldCheck, PackageCheck } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { PRODUCTS } from '@/lib/mockData';
 

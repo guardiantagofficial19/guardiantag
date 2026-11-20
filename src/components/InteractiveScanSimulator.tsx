@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { PhoneCall, MessageSquare, Shield, CheckCircle2, X } from 'lucide-react';
-import { getOwnerByQrId } from '@/lib/tagService';
 import { triggerMaskedCall, triggerEmergencySms } from '@/lib/twilioService';
 import { INDIA_HELPLINES } from '@/lib/mockData';
 
@@ -10,8 +9,6 @@ export default function InteractiveScanSimulator() {
   const [selectedTag, setSelectedTag] = useState('GTB0001');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const owner = getOwnerByQrId(selectedTag);
 
   const handleCallOwner = async () => {
     setIsLoading(true);

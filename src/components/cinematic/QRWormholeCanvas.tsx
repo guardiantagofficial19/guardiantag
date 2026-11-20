@@ -17,7 +17,8 @@ export default function QRWormholeCanvas() {
   const scaleProgress = useTransform(smoothProgress, [0.1, 0.5, 0.9], [0.8, 1.2, 1]);
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    const mount = mountRef.current;
+    if (!mount) return;
 
     // Three.js Scene Setup for 3D Geometric Tunnel
     const scene = new THREE.Scene();
@@ -38,7 +39,7 @@ export default function QRWormholeCanvas() {
       camera.updateProjectionMatrix();
     };
 
-    mountRef.current.appendChild(renderer.domElement);
+    mount.appendChild(renderer.domElement);
     updateSize();
 
     // Create 3D Optical QR Tunnel Rings & Grid Geometry
@@ -93,7 +94,7 @@ export default function QRWormholeCanvas() {
 
       // Tunnel rotation & forward flight effect
       tunnelGroup.rotation.z += 0.005;
-      rings.forEach((ring, idx) => {
+      rings.forEach((ring) => {
         ring.position.z += 0.04;
         if (ring.position.z > 5) {
           ring.position.z = -ringCount * 1.5;
@@ -110,8 +111,8 @@ export default function QRWormholeCanvas() {
     return () => {
       window.removeEventListener('resize', updateSize);
       cancelAnimationFrame(animationFrameId);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (renderer.domElement.parentNode === mount) {
+        mount.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };

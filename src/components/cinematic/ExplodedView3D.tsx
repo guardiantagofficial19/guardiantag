@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Layers, ShieldCheck, Cpu, ArrowUpRight } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 export default function ExplodedView3D() {
   const [isExploded, setIsExploded] = useState(true);

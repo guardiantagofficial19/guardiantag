@@ -4,20 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  Shield, 
-  Key, 
-  Sparkles, 
-  Maximize2, 
-  CheckCircle2, 
-  Zap, 
-  Layers, 
-  Droplets, 
-  Sun, 
-  ChevronLeft, 
-  ChevronRight,
-  RotateCw
-} from 'lucide-react';
+import { Shield, Key, Sparkles, Maximize2, CheckCircle2, Zap, Layers, Droplets, Sun, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface BikerTagItem {

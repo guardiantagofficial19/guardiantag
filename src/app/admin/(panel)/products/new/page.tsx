@@ -2,7 +2,7 @@ import Link from "next/link";
 import { TAG_TYPES } from "@/lib/format";
 import { sql } from "@/lib/db";
 import { createFullProductAction } from "../../../actions";
-import { ArrowLeft, Plus, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

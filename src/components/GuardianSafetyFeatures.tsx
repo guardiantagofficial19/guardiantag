@@ -2,20 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Zap, 
-  PhoneCall, 
-  Activity, 
-  ShieldCheck, 
-  Droplets, 
-  MapPin, 
-  Sparkles, 
-  LifeBuoy, 
-  HeartPulse,
-  Lock,
-  ZapOff,
-  Crosshair
-} from 'lucide-react';
+import { PhoneCall, ShieldCheck, MapPin, Sparkles, LifeBuoy, HeartPulse, ZapOff } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface SafetyFeature {

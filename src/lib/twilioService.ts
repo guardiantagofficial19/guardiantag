@@ -1,5 +1,5 @@
 import { errorMessage } from '@/lib/errors';
-import { getTagByQrId, getTagByQrIdAsync } from './tagService';
+import { getTagByQrIdAsync } from './tagService';
 
 // Public Action Rate Limiter (Max 3 calls/SMS per IP per 10 mins)
 const actionRateLimitStore = new Map<string, { count: number; expiresAt: number }>();

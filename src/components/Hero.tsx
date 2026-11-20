@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { ArrowRight, QrCode, Shield, Radio, Sparkles, Cpu } from 'lucide-react';
+import { ArrowRight, QrCode, Shield, Radio, Sparkles } from 'lucide-react';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 
 export default function Hero() {
@@ -42,9 +43,13 @@ export default function Hero() {
         <motion.div style={{ y: textY }} className="py-2 flex flex-col items-center">
           {/* Official GT Shield Logo */}
           <div className="w-20 h-20 sm:w-28 sm:h-28 lg:w-36 lg:h-36 mb-4 sm:mb-6 flex items-center justify-center">
-            <img
+            <Image
               src="/gt-logo.png"
               alt="GuardianTag GT Shield Logo"
+              width={463}
+              height={497}
+              sizes="144px"
+              preload
               className="w-full h-full object-contain filter brightness-0 invert drop-shadow-[0_0_25px_rgba(255,255,255,0.4)]"
             />
           </div>

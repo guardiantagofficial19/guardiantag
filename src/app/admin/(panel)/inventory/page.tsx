@@ -1,7 +1,7 @@
 import { sql } from "@/lib/db";
-import { inr, dt, TAG_TYPES } from "@/lib/format";
-import { adjustStockAction, createProductAction, updateProductAction } from "../../actions";
-import { Layers, Plus, AlertTriangle, ArrowUpDown, History } from "lucide-react";
+import { dt } from "@/lib/format";
+import { adjustStockAction, updateProductAction } from "../../actions";
+import { ArrowUpDown, History } from "lucide-react";
 
 export default async function ShopifyInventoryPage({
   searchParams,

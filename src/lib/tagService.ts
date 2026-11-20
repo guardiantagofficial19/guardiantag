@@ -458,7 +458,7 @@ export async function registerTagServer(payload: RegisterPayload): Promise<{
   try {
     const sql = getNeonSql();
     if (sql) {
-      const { tableName, phoneCol, extraCol } = getTableNameForTag(cleanId);
+      const { tableName } = getTableNameForTag(cleanId);
       const vehicleVal = payload.vehicleNo?.trim() || null;
       const bloodVal = payload.bloodGroup?.trim() || null;
 
@@ -841,7 +841,7 @@ export function updateOwnerDetails(rawQrId: string, details: Partial<TagOwner>, 
   return { success: true };
 }
 
-export function checkLockout(rawQrId: string): { isLocked: boolean; remainingMinutes?: number } {
+export function checkLockout(): { isLocked: boolean; remainingMinutes?: number } {
   return { isLocked: false };
 }
 

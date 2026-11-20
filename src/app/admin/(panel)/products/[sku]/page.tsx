@@ -1,22 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
-import { inr, TAG_TYPES } from "@/lib/format";
-import { updateFullProductAction, deleteProductAction } from "../../../actions";
+import { TAG_TYPES } from "@/lib/format";
+import { updateFullProductAction } from "../../../actions";
 import ConfirmButton from "@/components/ConfirmButton";
-import {
-  ArrowLeft,
-  Tag,
-  DollarSign,
-  Package,
-  Layers,
-  Image as ImageIcon,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  Eye,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -188,6 +176,7 @@ export default async function ShopifyEditProductPage({
 
               <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 14 }}>
                 {product.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- arbitrary image_url from the DB; next/image would need remotePatterns for every host
                   <img
                     src={product.image_url}
                     alt={product.name}

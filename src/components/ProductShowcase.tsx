@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { Layers, ShieldCheck, Cpu } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 
 export default function ProductShowcase() {

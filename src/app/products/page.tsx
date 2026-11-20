@@ -6,34 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
-import {
-  ShoppingBag,
-  X,
-  Lock,
-  Check,
-  ArrowRight,
-  Sliders,
-  Sparkles,
-  Shield,
-  Info,
-  Truck,
-  Clock,
-  Star,
-  ChevronDown,
-  ChevronUp,
-  Zap,
-  RotateCcw,
-  Share2,
-  HelpCircle,
-  CheckCircle2,
-  Tag,
-  Package,
-  PhoneCall,
-  Award,
-  AlertCircle,
-  Eye,
-  Percent,
-} from 'lucide-react';
+import { ShoppingBag, X, Lock, Check, ArrowRight, Shield, Truck, Star, ChevronDown, ChevronUp, Zap, RotateCcw, HelpCircle, CheckCircle2, Tag, Package, PhoneCall, Award, AlertCircle, Eye, Percent } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export interface ProductCatalogItem {
@@ -475,6 +448,7 @@ function ProductsContent() {
               {galleryAngle === '3D' && (
                 <div className="w-full flex flex-col items-center justify-center py-6">
                   {currentProduct.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- arbitrary image_url from the DB; next/image would need remotePatterns for every host
                     <img
                       src={currentProduct.imageUrl}
                       alt={currentProduct.name}

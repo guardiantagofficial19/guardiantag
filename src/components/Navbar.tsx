@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { QrCode, Menu, X, User, Info, Package, ArrowRight, Camera, Scan, Shield } from 'lucide-react';
+import { QrCode, Menu, X, User, Info, Package, ArrowRight, Camera, Scan } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEngine';
 
 export default function Navbar() {
@@ -38,9 +39,12 @@ export default function Navbar() {
         <div className="flex items-center gap-3 shrink-0">
           <Link href="/" onClick={() => soundEngine.playClick()} className="flex items-center gap-2 group/logo">
             <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/30 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)] group-hover/logo:scale-110 group-hover/logo:bg-white transition-all duration-300 p-1.5">
-              <img
+              <Image
                 src="/gt-logo.png"
                 alt="GT Shield Logo"
+                width={463}
+                height={497}
+                sizes="36px"
                 className="w-full h-full object-contain filter brightness-0 invert group-hover/logo:invert-0 transition-all"
               />
             </div>

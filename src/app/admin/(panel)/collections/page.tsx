@@ -1,8 +1,7 @@
 import { sql } from "@/lib/db";
 import { createCollectionAction, deleteCollectionAction } from "../../actions";
 import ConfirmButton from "@/components/ConfirmButton";
-import Link from "next/link";
-import { Layers, Plus, ExternalLink, Trash2, FolderPlus } from "lucide-react";
+import { Layers, FolderPlus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

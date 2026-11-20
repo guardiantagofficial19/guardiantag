@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
 import { inr, dt } from "@/lib/format";
-import { Users, Search, MessageCircle, MapPin, Mail, Phone, ShoppingBag } from "lucide-react";
+import { Users, MessageCircle, MapPin, Mail, Phone } from "lucide-react";
 
 type SP = { q?: string };
 

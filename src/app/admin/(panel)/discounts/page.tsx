@@ -1,21 +1,12 @@
 import { sql } from "@/lib/db";
-import { inr, dt } from "@/lib/format";
+import { inr } from "@/lib/format";
 import {
   createDiscountAction,
   toggleDiscountAction,
   deleteDiscountAction,
 } from "../../actions";
 import ConfirmButton from "@/components/ConfirmButton";
-import {
-  Tag,
-  Plus,
-  Percent,
-  Truck,
-  DollarSign,
-  CheckCircle2,
-  AlertCircle,
-  Trash2,
-} from "lucide-react";
+import { Tag, Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

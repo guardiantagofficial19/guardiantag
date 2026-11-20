@@ -19,7 +19,7 @@ export default function PhysicalTag3D({
   interactive = true,
   className = '',
 }: PhysicalTag3DProps) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [, setIsHovered] = useState(false);
 
   // Mouse tilt physics for desktop
   const x = useMotionValue(0);

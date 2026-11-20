@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
-import { Sliders, Shield, ArrowRight, Check, Sparkles, QrCode, Lock } from 'lucide-react';
+import { Sliders, ArrowRight, Check, Sparkles, Lock } from 'lucide-react';
 
 function CustomizerContent() {
   const searchParams = useSearchParams();
@@ -21,7 +21,7 @@ function CustomizerContent() {
   const [customHeader, setCustomHeader] = useState('IN CASE OF EMERGENCY');
   const [ownerLabel, setOwnerLabel] = useState('GT-OWNER-4892');
   const [emergencyPhoneNote, setEmergencyPhoneNote] = useState('+91 98765 43210');
-  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderSuccess] = useState(false);
 
   const modelPrices: Record<string, { price: number; name: string; desc: string; isComingSoon: boolean }> = {
     GTB: { price: 499, name: 'GTB Biker Tag Kit', desc: '1 PVC Tag + 1 Key Chain + Small & Large Stickers', isComingSoon: false },

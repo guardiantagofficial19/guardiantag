@@ -2,7 +2,7 @@ import { sql } from "@/lib/db";
 import { inr, dt } from "@/lib/format";
 import { recoverAbandonedCheckoutAction } from "../../../actions";
 import Link from "next/link";
-import { ShoppingCart, MessageCircle, ArrowLeft, CheckCircle2, Clock } from "lucide-react";
+import { ShoppingCart, MessageCircle, ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

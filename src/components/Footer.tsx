@@ -1,23 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, PhoneCall, Mail, MapPin, Eye, Type } from 'lucide-react';
-import { soundEngine } from '@/lib/soundEngine';
+import { ShieldCheck, PhoneCall, Mail, MapPin } from 'lucide-react';
 
 export default function Footer() {
-  const [highContrast, setHighContrast] = useState(false);
-
-  const toggleContrast = () => {
-    soundEngine.playClick();
-    setHighContrast(!highContrast);
-    if (!highContrast) {
-      document.documentElement.classList.add('wcag-high-contrast');
-    } else {
-      document.documentElement.classList.remove('wcag-high-contrast');
-    }
-  };
-
   return (
     <footer className="bg-black text-white border-t border-white/15 pt-16 pb-12 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">

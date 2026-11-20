@@ -99,7 +99,7 @@ export async function POST(request: Request) {
         status: updatedTag?.status,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to process update request.' },
       { status: 500 }

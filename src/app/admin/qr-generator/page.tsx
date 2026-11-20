@@ -1,7 +1,7 @@
 'use client';
 import { errorMessage } from '@/lib/errors';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useEffectEvent, useRef } from 'react';
 import Link from 'next/link';
 import JSZip from 'jszip';
 import qrcode from 'qrcode-generator';
@@ -306,7 +306,7 @@ export default function AdminQrGeneratorPage() {
   const [showId, setShowId] = useState<boolean>(true);
 
   const [err, setErr] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState<string>('');
+  const [, setStatusText] = useState<string>('');
   const [batch, setBatch] = useState<BatchItem[]>([]);
 
   // Per-product template storage map
@@ -399,6 +399,9 @@ export default function AdminQrGeneratorPage() {
   }, []);
 
   // Clock Ticker & Boot Log
+  const logSessionStart = useEffectEvent(() => {
+    appendLog('session started. pick a product, set --from / --to, hit Generate.', 'info');
+  });
   useEffect(() => {
     const timer = setInterval(() => {
       setClock(stamp());
@@ -436,7 +439,7 @@ export default function AdminQrGeneratorPage() {
       setBootText(textAccum);
     }, 50);
 
-    appendLog('session started. pick a product, set --from / --to, hit Generate.', 'info');
+    logSessionStart();
 
     return () => {
       clearInterval(timer);
@@ -625,6 +628,7 @@ export default function AdminQrGeneratorPage() {
   };
 
   // Load saved templates from localStorage on mount
+  const restoreTemplate = useEffectEvent(setTemplate);
   useEffect(() => {
     Object.keys(FORMATS).forEach((key) => {
       try {
@@ -632,7 +636,7 @@ export default function AdminQrGeneratorPage() {
         if (saved && saved.src) {
           const img = new Image();
           img.onload = () => {
-            setTemplate(key, img, saved.src, saved.box, saved.on !== false);
+            restoreTemplate(key, img, saved.src, saved.box, saved.on !== false);
           };
           img.src = saved.src;
         }

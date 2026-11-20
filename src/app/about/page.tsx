@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ShieldCheck, PhoneCall, Lock, HeartHandshake, Zap, Award, Users, ArrowRight, EyeOff, Radio, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, HeartHandshake, Zap, ArrowRight, EyeOff } from 'lucide-react';
 
 export default function AboutPage() {
   return (

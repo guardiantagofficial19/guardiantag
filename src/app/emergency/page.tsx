@@ -230,7 +230,7 @@ function EmergencyContent() {
         setStateText('Active');
         setErrorNotice(null);
       }
-    } catch (err) {
+    } catch {
       setTag({
         id: cleanId,
         type: tagType,
@@ -351,13 +351,13 @@ function EmergencyContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await res.json();
+      await res.json();
 
       setSheetDone({
         title: "Alert sent",
         text: "The owner and their emergency contact got your message. If someone is hurt, also call 108."
       });
-    } catch (err) {
+    } catch {
       setSheetDone({
         title: "Alert sent",
         text: "The owner's side got your message. If someone is hurt, also call 108."

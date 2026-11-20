@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, PhoneCall, QrCode, ArrowRight, CheckCircle2, Zap, Heart, Compass, Lock } from 'lucide-react';
+import { ShieldCheck, QrCode, ArrowRight, CheckCircle2, Zap, Lock } from 'lucide-react';
 
 interface HeroDisplayProps {
   onSimulateScan?: () => void;

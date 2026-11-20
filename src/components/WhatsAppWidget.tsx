@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { MessageCircle } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEngine';
 
 export default function WhatsAppWidget() {

@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       success: true,
       message: result.message,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to initiate masked call.' },
       { status: 500 }

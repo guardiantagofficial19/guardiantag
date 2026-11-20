@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Shield, Lock, EyeOff, Trash2, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, EyeOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata = {

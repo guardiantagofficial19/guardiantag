@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Html5QrcodeScanner } from 'html5-qrcode';
 import Image from 'next/image';
-import { Camera, RefreshCw, X, Shield, Zap, Sparkles } from 'lucide-react';
+import { Camera, X, Sparkles } from 'lucide-react';
 
 export default function MobileScanPage() {
   const router = useRouter();
-  const [cameraActive, setCameraActive] = useState(false);
+  const [, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [manualInput, setManualInput] = useState('');
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
@@ -57,7 +57,7 @@ export default function MobileScanPage() {
 
         scannerRef.current = html5QrcodeScanner;
         setCameraActive(true);
-      } catch (err) {
+      } catch {
         setCameraError('Camera access required. Please allow camera permissions or enter Tag ID manually below.');
       }
     }

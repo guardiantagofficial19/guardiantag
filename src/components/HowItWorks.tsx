@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { QrCode, PhoneCall, Zap, Smartphone, CheckCircle2, ArrowRight, Shield } from 'lucide-react';
+import { QrCode, PhoneCall, Zap, Smartphone, CheckCircle2 } from 'lucide-react';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 import ScanningBeam from '@/components/cinematic/ScanningBeam';
 

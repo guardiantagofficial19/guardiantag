@@ -1,20 +1,7 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
 import { inr, dt } from "@/lib/format";
-import {
-  Package,
-  DollarSign,
-  TrendingUp,
-  AlertTriangle,
-  ArrowRight,
-  ExternalLink,
-  Plus,
-  CheckCircle2,
-  Clock,
-  Shield,
-  Layers,
-  MessageCircle,
-} from "lucide-react";
+import { Package, DollarSign, TrendingUp, AlertTriangle, ArrowRight, Plus, CheckCircle2, Clock, Shield } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

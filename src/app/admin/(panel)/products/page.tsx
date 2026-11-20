@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
 import { inr } from "@/lib/format";
-import { Tag, Plus, ExternalLink, AlertTriangle, CheckCircle2, Layers, Search } from "lucide-react";
+import { Tag, Plus, ExternalLink, AlertTriangle, CheckCircle2, Layers } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -158,6 +158,7 @@ export default async function ShopifyProductsPage({ searchParams }: { searchPara
                     <td>
                       <div className="product-cell">
                         {p.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- arbitrary image_url from the DB; next/image would need remotePatterns for every host
                           <img
                             src={p.image_url}
                             alt={p.name}

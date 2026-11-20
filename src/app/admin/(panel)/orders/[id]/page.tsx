@@ -4,19 +4,7 @@ import { sql } from "@/lib/db";
 import { inr, dt, ORDER_STATUSES, PAYMENT_STATUSES } from "@/lib/format";
 import { updateOrderAction } from "../../../actions";
 import ConfirmButton from "@/components/ConfirmButton";
-import {
-  ArrowLeft,
-  Package,
-  CreditCard,
-  Truck,
-  User,
-  MapPin,
-  MessageCircle,
-  FileText,
-  Clock,
-  CheckCircle2,
-  Calendar,
-} from "lucide-react";
+import { ArrowLeft, Package, Truck, User, MapPin, MessageCircle, FileText, Calendar } from "lucide-react";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 

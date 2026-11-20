@@ -35,7 +35,7 @@ export async function GET(
       bloodGroup: result.tag.bloodGroup,
       medicalNotes: result.tag.medicalNotes,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { found: false, error: 'Public scan lookup failed.' },
       { status: 500 }

@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { Shield, Zap, Lock, BatteryCharging, Radio, EyeOff, Layers, Cpu } from 'lucide-react';
+import { Zap, Lock, BatteryCharging, Radio, EyeOff, Layers } from 'lucide-react';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 
 export default function FeatureGrid() {

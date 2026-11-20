@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import HardwareCard from '@/components/ui/HardwareCard';
 import Badge from '@/components/ui/Badge';
-import { Bus, ShieldCheck, CheckCircle2, QrCode, Download, RefreshCw, Layers, Store, ArrowLeft } from 'lucide-react';
+import { Bus, ShieldCheck, QrCode, Download, Layers, ArrowLeft } from 'lucide-react';
 
 export default function FleetAdminPage() {
   const [selectedFleet, setSelectedFleet] = useState<'DELHI_SCHOOL' | 'BANGALORE_BIKER_CLUB' | 'CORPORATE_ASSETS'>('DELHI_SCHOOL');

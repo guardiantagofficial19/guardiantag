@@ -136,7 +136,7 @@ export default function PublicTagEmergencyPage() {
     vehicleNo?: string;
   } | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [errorNotice, setErrorNotice] = useState<{ title: string; text: string; link?: { href: string; text: string } } | null>(null);
   const [stateDot, setStateDot] = useState<'dot' | 'dot ok' | 'dot warn' | 'dot bad'>('dot');
   const [stateText, setStateText] = useState('Checking…');
@@ -222,7 +222,7 @@ export default function PublicTagEmergencyPage() {
           setStateText('Active');
           setErrorNotice(null);
         }
-      } catch (err) {
+      } catch {
         setTag({
           id: targetId,
           type: tagType,
@@ -328,7 +328,7 @@ export default function PublicTagEmergencyPage() {
       };
       if (locData) Object.assign(body, locData);
 
-      const res = await fetch('/api/twilio/sms', {
+      await fetch('/api/twilio/sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -338,7 +338,7 @@ export default function PublicTagEmergencyPage() {
         title: "Alert sent",
         text: "The owner and their emergency contact got your message. If someone is hurt, also call 108."
       });
-    } catch (err) {
+    } catch {
       setSheetDone({
         title: "Alert sent",
         text: "The owner's side got your message. If someone is hurt, also call 108."

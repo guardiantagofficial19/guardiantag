@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { Bike, Baby, Briefcase, Car, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Bike, Baby, Briefcase, Car, ArrowRight } from 'lucide-react';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 
 export default function UseCases() {

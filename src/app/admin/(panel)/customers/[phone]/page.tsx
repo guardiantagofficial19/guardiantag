@@ -2,18 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import { inr, dt } from "@/lib/format";
-import {
-  ArrowLeft,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Package,
-  Calendar,
-  CreditCard,
-  ShoppingBag,
-} from "lucide-react";
+import { ArrowLeft, Phone, Mail, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

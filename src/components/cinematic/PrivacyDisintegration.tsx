@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EyeOff, Lock, ShieldCheck, Sparkles, CheckCircle2, Trash2 } from 'lucide-react';
+import { Lock, Sparkles, CheckCircle2, Trash2 } from 'lucide-react';
 
 export default function PrivacyDisintegration() {
   const [disintegrated, setDisintegrated] = useState(false);
