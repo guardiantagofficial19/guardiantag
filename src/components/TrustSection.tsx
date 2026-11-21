@@ -2,73 +2,44 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BatteryCharging, Smartphone, Lock, ShieldCheck } from 'lucide-react';
+import { IndianRupee, Truck, RefreshCcw, Smartphone } from 'lucide-react';
+import { CONTAINER_CLASS } from '@/components/ui/SectionHeader';
+
+// Concrete buying facts (each one is backed by the FAQ / product page).
+const facts = [
+  { icon: IndianRupee, title: '₹499, one time', text: 'The full Biker Kit. No subscription.' },
+  { icon: Truck, title: 'Free delivery', text: 'Across India in 3–5 days.' },
+  { icon: RefreshCcw, title: '7-day replacement', text: 'If a tag is damaged or won’t scan.' },
+  { icon: Smartphone, title: 'Works with any phone', text: 'iPhone or Android, no app.' },
+];
 
 export default function TrustSection() {
-  const trustPoints = [
-    {
-      title: 'Battery-Free',
-      description: 'Zero charging or battery replacement required.',
-      icon: BatteryCharging,
-    },
-    {
-      title: 'No App Required',
-      description: 'Works instantly on any mobile device with a camera.',
-      icon: Smartphone,
-    },
-    {
-      title: 'Privacy Focused',
-      description: 'Private phone numbers remain hidden from public web scanners.',
-      icon: Lock,
-    },
-    {
-      title: 'Built for Everyday Safety',
-      description: 'Durable materials engineered for helmets, travel, and belongings.',
-      icon: ShieldCheck,
-    },
-  ];
-
   return (
-    <section className="py-20 bg-black text-white border-b border-white/15 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        
-        {/* Section Header */}
-        <div className="max-w-2xl mx-auto mb-12 space-y-2">
-          <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-            PRODUCT PROMISE
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Designed for Real-World Reliability.
-          </h2>
-        </div>
-
-        {/* 4 Product Promise Pillars */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {trustPoints.map((item, idx) => {
-            const Icon = item.icon;
+    <section aria-label="Why GuardianTag" className="relative bg-black text-white border-b border-white/10 py-12 sm:py-14">
+      <div className={CONTAINER_CLASS}>
+        <ul className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8">
+          {facts.map((f, i) => {
+            const Icon = f.icon;
             return (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 25 }}
+              <motion.li
+                key={f.title}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-30px' }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="hardware-card p-6 rounded-2xl text-center space-y-3 hover:border-white/40 transition duration-300"
+                transition={{ duration: 0.4, delay: i * 0.06 }}
+                className="flex items-start gap-3"
               >
-                <div className="w-10 h-10 mx-auto rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
+                <span className="w-10 h-10 shrink-0 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center">
                   <Icon className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-extrabold text-white">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-neutral-400 font-normal leading-relaxed">
-                  {item.description}
-                </p>
-              </motion.div>
+                </span>
+                <span>
+                  <span className="block text-sm sm:text-base font-semibold text-white">{f.title}</span>
+                  <span className="block text-sm text-neutral-400">{f.text}</span>
+                </span>
+              </motion.li>
             );
           })}
-        </div>
-
+        </ul>
       </div>
     </section>
   );

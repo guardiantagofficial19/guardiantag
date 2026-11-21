@@ -4,88 +4,69 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Lock, EyeOff, ShieldCheck, FileCheck } from 'lucide-react';
 import PrivacyDisintegration from '@/components/cinematic/PrivacyDisintegration';
+import SectionHeader, { CONTAINER_CLASS, SECTION_CLASS } from '@/components/ui/SectionHeader';
+
+const points = [
+  {
+    icon: EyeOff,
+    title: 'Your number is never shown',
+    description: 'It isn’t printed on the tag or displayed on the emergency page. Calls are connected for you.',
+  },
+  {
+    icon: Lock,
+    title: 'You choose what’s visible',
+    description: 'Only the details you pick, such as blood group or vehicle number, appear to the person scanning.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'No tracking, no app',
+    description: 'Scanning opens a normal web page. Nothing is installed and no location is tracked in the background.',
+  },
+  {
+    icon: FileCheck,
+    title: 'You stay in control',
+    description: 'Change contacts, pause the tag if it’s lost, or reset it if you sell the bike, any time.',
+  },
+];
 
 export default function PrivacySection() {
-  const points = [
-    {
-      icon: EyeOff,
-      title: 'Number Masking',
-      description: 'Your real 10-digit mobile number is never printed on the tag or exposed on the web scanner page.',
-    },
-    {
-      icon: Lock,
-      title: 'Minimal Data Exposure',
-      description: 'Only emergency contacts and vehicle info you explicitly choose to share are accessible to scanners.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'No App Tracking',
-      description: 'Scanners interact purely through standard web browser sessions. No background location tracking or app downloads.',
-    },
-    {
-      icon: FileCheck,
-      title: 'Owner Controlled',
-      description: 'You can update, disable, or modify emergency contacts at any time from your GuardianTag management page.',
-    },
-  ];
-
   return (
-    <section id="privacy" className="py-24 bg-black text-white border-b border-white/15 relative overflow-hidden">
-      
-      {/* Soft Calm Ambient Background */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[450px] bg-white/5 rounded-full blur-[180px] pointer-events-none -z-0" />
+    <section id="privacy" className={SECTION_CLASS}>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[450px] bg-white/5 rounded-full blur-[180px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Section Header with Slow Typography Mask Reveals */}
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.8 }}
-          className="text-center max-w-3xl mx-auto mb-16 space-y-3"
-        >
-          <span className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase tracking-wider">
-            PRIVACY &amp; ANONYMITY PROTOCOL
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-            Safety without giving away your privacy.
-          </h2>
-          <p className="text-neutral-400 text-base sm:text-lg font-normal">
-            GuardianTag bridges communication between strangers during emergencies while keeping your personal data secure.
-          </p>
-        </motion.div>
+      <div className={`${CONTAINER_CLASS} grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center`}>
+        <div className="space-y-10">
+          <SectionHeader
+            align="left"
+            eyebrow="Privacy"
+            title="Reachable when it matters."
+            muted="Private otherwise."
+            intro="A stranger can help you without ever seeing your phone number or where you live."
+          />
 
-        {/* 4 Privacy Feature Columns with Staggered Fade */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {points.map((p, i) => {
-            const Icon = p.icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.6, delay: i * 0.12 }}
-                className="hardware-card p-6 rounded-3xl space-y-4 hover:border-white/40 transition duration-300"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-extrabold text-white tracking-wide">
-                  {p.title}
-                </h3>
-                <p className="text-neutral-400 text-xs font-normal leading-relaxed">
-                  {p.description}
-                </p>
-              </motion.div>
-            );
-          })}
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
+            {points.map((p, i) => {
+              const Icon = p.icon;
+              return (
+                <motion.li
+                  key={p.title}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.45, delay: i * 0.08 }}
+                  className="space-y-2"
+                >
+                  <Icon className="w-5 h-5 text-yellow-400" />
+                  <h3 className="text-base font-semibold text-white">{p.title}</h3>
+                  <p className="text-sm text-neutral-400 leading-relaxed">{p.description}</p>
+                </motion.li>
+              );
+            })}
+          </ul>
         </div>
 
         {/* Interactive demo: what stays hidden vs. what a bystander can do */}
         <PrivacyDisintegration embedded />
-
       </div>
     </section>
   );

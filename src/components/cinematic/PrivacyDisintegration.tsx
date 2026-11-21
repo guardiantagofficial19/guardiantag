@@ -1,109 +1,84 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Sparkles, CheckCircle2, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Lock, EyeOff, Eye, CheckCircle2 } from 'lucide-react';
 
-/** `embedded`: render only the interactive demo card (no heading/section padding), for use inside PrivacySection. */
-export default function PrivacyDisintegration({ embedded = false }: { embedded?: boolean }) {
-  const [disintegrated, setDisintegrated] = useState(false);
+const PRIVATE_DATA = [
+  { id: 1, label: 'Your phone number', example: '+91 98765 43210', status: 'Hidden' },
+  { id: 2, label: 'Home address', example: 'Flat 402, …', status: 'Hidden' },
+  { id: 3, label: 'Aadhaar / government ID', example: 'XXXX XXXX 1234', status: 'Never collected' },
+];
 
-  const privateDataNodes = [
-    { id: 1, label: '+91 98765 43210 (YOUR PERSONAL PHONE)', type: 'HIDDEN' },
-    { id: 2, label: 'FLAT 402, RESIDENTIAL ADDRESS', type: 'HIDDEN' },
-    { id: 3, label: 'GOVERNMENT ID / AADHAAR NUMBER', type: 'NEVER STORED' },
-  ];
+/**
+ * Interactive privacy demo card: shows which personal details stay hidden and what a bystander
+ * can still do. Used inside PrivacySection.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function PrivacyDisintegration(_props: { embedded?: boolean }) {
+  const [hidden, setHidden] = useState(false);
 
   return (
-    <div className={embedded ? 'w-full text-white relative' : 'w-full py-20 bg-black text-white relative overflow-hidden'}>
-      <div className={embedded ? 'space-y-10 text-center' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 text-center'}>
-
-        {/* Section Header (omitted when embedded in PrivacySection, which has its own) */}
-        {!embedded && (
-        <div className="max-w-3xl mx-auto space-y-3">
-          <span className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase tracking-wider">
-            PRIVACY & DATA PROTECTION
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-            Connect when needed. Keep personal info hidden.
-          </h2>
-          <p className="text-neutral-400 text-base font-normal">
-            See how GuardianTag ensures your private details stay hidden while giving bystanders an instant way to call your emergency contact.
-          </p>
+    <div className="hardware-card rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 w-full">
+      <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-white">
+          <Lock className="w-4 h-4 text-yellow-400" />
+          What a stranger can see
         </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setHidden(!hidden)}
+          aria-pressed={hidden}
+          className="px-4 py-2 rounded-full bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition cursor-pointer flex items-center gap-1.5"
+        >
+          {hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          {hidden ? 'Show again' : 'Apply GuardianTag'}
+        </button>
+      </div>
 
-        {/* INTERACTIVE DATA DISINTEGRATION STAGE */}
-        <div className="hardware-card p-8 rounded-3xl border-2 border-white/20 shadow-2xl max-w-3xl mx-auto space-y-8 relative overflow-hidden text-left">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/15 pb-4">
-            <div className="flex items-center gap-2">
-              <Lock className="w-5 h-5 text-white" />
-              <span className="text-xs font-mono font-extrabold text-white">
-                DATA PRIVACY ENGINE
+      <div className="space-y-2.5">
+        <p className="text-xs text-neutral-500">Your personal details</p>
+        {PRIVATE_DATA.map((node) => (
+          <motion.div
+            key={node.id}
+            animate={{ opacity: hidden ? 0.45 : 1 }}
+            transition={{ duration: 0.4, delay: node.id * 0.08 }}
+            className={`p-3.5 rounded-xl text-sm flex justify-between items-center gap-3 border transition-colors ${
+              hidden ? 'bg-white/[0.02] border-white/5' : 'bg-white/5 border-white/15'
+            }`}
+          >
+            <span className="min-w-0">
+              <span className="block text-neutral-200 font-medium">{node.label}</span>
+              <span className={`block font-mono text-xs ${hidden ? 'text-neutral-600 blur-[3px] select-none' : 'text-neutral-400'}`}>
+                {node.example}
               </span>
-            </div>
-
-            <button
-              onClick={() => setDisintegrated(!disintegrated)}
-              className="px-5 py-2.5 rounded-xl bg-white text-black font-extrabold text-xs font-mono uppercase tracking-wider shadow-xl hover:bg-neutral-200 transition cursor-pointer flex items-center gap-2"
+            </span>
+            <span
+              className={`shrink-0 text-xs px-2.5 py-1 rounded-full ${
+                hidden ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/20' : 'bg-white/10 text-neutral-300'
+              }`}
             >
-              {disintegrated ? <Sparkles className="w-4 h-4 text-black" /> : <Trash2 className="w-4 h-4 text-black" />}
-              <span>{disintegrated ? 'Reset Privacy Demo' : 'Hide Sensitive Personal Info'}</span>
-            </button>
-          </div>
-
-          {/* Data Nodes Container */}
-          <div className="space-y-3">
-            <span className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
-              SENSITIVE DATA DEMO:
+              {hidden ? node.status : 'Visible'}
             </span>
+          </motion.div>
+        ))}
+      </div>
 
-            <AnimatePresence>
-              {privateDataNodes.map((node) => (
-                <motion.div
-                  key={node.id}
-                  animate={{
-                    opacity: disintegrated ? 0.2 : 1,
-                    x: disintegrated ? [0, -10, 20, -50] : 0,
-                    scale: disintegrated ? 0.9 : 1,
-                    filter: disintegrated ? 'blur(4px)' : 'none',
-                  }}
-                  transition={{ duration: 0.6, delay: node.id * 0.1 }}
-                  className={`p-3.5 rounded-xl font-mono text-xs flex justify-between items-center transition-all ${
-                    disintegrated ? 'bg-red-950/20 text-neutral-600 line-through border border-red-900/30' : 'bg-white/5 text-white border border-white/15'
-                  }`}
-                >
-                  <span className="font-bold">{node.label}</span>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-neutral-300">
-                    {disintegrated ? 'PROTECTED' : node.type}
-                  </span>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+      <div className="pt-4 border-t border-white/10 space-y-2.5">
+        <p className="text-xs text-neutral-500 flex items-center gap-1.5">
+          <CheckCircle2 className="w-3.5 h-3.5 text-yellow-400" />
+          What they can still do
+        </p>
+        <div className="p-4 rounded-2xl bg-white text-black text-sm space-y-2">
+          <div className="flex justify-between gap-4">
+            <span className="font-semibold">Call your emergency contact</span>
+            <span className="text-neutral-600">Number hidden</span>
           </div>
-
-          {/* Filtered Safe Public Output */}
-          <div className="pt-4 border-t border-white/15 space-y-3">
-            <span className="text-[11px] font-mono font-bold text-white uppercase tracking-widest flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-white" />
-              <span>GUARDIANTAG SECURE EMERGENCY VIEW:</span>
-            </span>
-
-            <div className="p-4 rounded-2xl bg-white text-black font-mono text-xs font-bold space-y-2 shadow-xl">
-              <div className="flex justify-between">
-                <span>EMERGENCY CONTACT CALL</span>
-                <span>ENABLED (NUMBER HIDDEN)</span>
-              </div>
-              <div className="flex justify-between text-neutral-700 font-normal">
-                <span>NATIONAL HELPLINES (112, 1033)</span>
-                <span>AVAILABLE DIRECTLY</span>
-              </div>
-            </div>
+          <div className="flex justify-between gap-4">
+            <span className="font-semibold">Call 112 / 1033</span>
+            <span className="text-neutral-600">Direct</span>
           </div>
-
         </div>
-
       </div>
     </div>
   );

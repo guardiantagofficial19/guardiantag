@@ -3,135 +3,115 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Layers } from 'lucide-react';
+import SectionHeader, { CONTAINER_CLASS, SECTION_CLASS } from '@/components/ui/SectionHeader';
+
+// `look` gives each layer a distinct material so the stack reads clearly in the 3D view.
+const layers = [
+  {
+    id: 'L1',
+    title: 'Protective overlaminate',
+    detail: 'A UV-resistant top film that shields the print from sun, rain and scratches.',
+    offsetZ: 90,
+    look: 'bg-white/[0.06] border-white/50 backdrop-blur-[2px] text-white',
+  },
+  {
+    id: 'L2',
+    title: 'High-contrast QR print',
+    detail: 'Printed for fast scanning by any phone camera, in daylight or under headlights.',
+    offsetZ: 30,
+    look: 'bg-white border-white text-black',
+  },
+  {
+    id: 'L3',
+    title: 'Vinyl and PVC core',
+    detail: 'Flexible and tear-resistant, so it follows helmet curves and bike panels.',
+    offsetZ: -30,
+    look: 'bg-yellow-400 border-yellow-300 text-black',
+  },
+  {
+    id: 'L4',
+    title: 'Sticky backing',
+    detail: 'Peel off the liner and stick it on your helmet, bike, keys, bag, anywhere.',
+    offsetZ: -90,
+    look: 'bg-neutral-800 border-neutral-600 text-neutral-200',
+  },
+];
 
 export default function ExplodedView3D() {
   const [isExploded, setIsExploded] = useState(true);
 
-  const layers = [
-    {
-      id: 'L1',
-      title: '01. Protective Overlaminate',
-      detail: 'UV-resistant protective top film that shields against sun exposure, road rain, and scratches.',
-      offsetZ: 90,
-      badge: 'WEATHERPROOF SHIELD',
-    },
-    {
-      id: 'L2',
-      title: '02. High-Contrast QR Matrix',
-      detail: 'Precision-printed high-contrast QR pattern calibrated for fast smartphone camera scanning in all lighting.',
-      offsetZ: 30,
-      badge: 'HIGH-CONTRAST QR',
-    },
-    {
-      id: 'L3',
-      title: '03. Durable Vinyl & PVC Base',
-      detail: 'Flexible, tear-resistant core designed to conform smoothly to helmet curves and motorcycle surfaces.',
-      offsetZ: -30,
-      badge: 'DURABLE VINYL & PVC',
-    },
-    {
-      id: 'L4',
-      title: '04. Heavy-Duty 3M Adhesive',
-      detail: 'All-weather high-tack 3M adhesive backing engineered to bond firmly through Indian weather conditions.',
-      offsetZ: -90,
-      badge: '3M ALL-WEATHER BOND',
-    },
-  ];
-
   return (
-    <div className="w-full py-16 bg-black text-white relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/15 pb-6">
-          <div className="space-y-2">
-            <span className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase tracking-wider">
-              MULTI-LAYER TAG ARCHITECTURE
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Multi-Layer Tag Construction.
-            </h2>
-          </div>
-
+    <section id="build" className={SECTION_CLASS}>
+      <div className={`${CONTAINER_CLASS} space-y-12`}>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
+          <SectionHeader
+            align="left"
+            eyebrow="Build quality"
+            title="Four layers."
+            muted="Made for Indian roads."
+            intro="Each tag is laminated in layers, so the code stays readable after years of sun, rain and washing."
+          />
           <button
+            type="button"
             onClick={() => setIsExploded(!isExploded)}
-            className="px-6 py-3 rounded-2xl bg-white text-black font-extrabold text-xs font-mono uppercase tracking-wider shadow-xl hover:bg-neutral-200 transition cursor-pointer flex items-center gap-2 self-start sm:self-auto"
+            className="px-5 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold text-sm hover:bg-white/15 transition cursor-pointer flex items-center gap-2 self-start md:self-auto shrink-0"
           >
-            <Layers className="w-4 h-4 text-black" />
-            <span>{isExploded ? 'Reassemble Layers' : 'Separate Layers'}</span>
+            <Layers className="w-4 h-4" />
+            <span>{isExploded ? 'Put layers together' : 'Separate layers'}</span>
           </button>
         </div>
 
-        {/* 3D Exploded Layer Specimen Interactive Stage */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[480px]">
-          
-          {/* Left Column: 3D Exploded Layers Visualizer */}
-          <div className="lg:col-span-6 flex justify-center items-center py-10 perspective-1000">
-            <div className="relative w-64 h-64 sm:w-80 sm:h-80 flex justify-center items-center">
-              {layers.map((layer, index) => {
-                const zOffset = isExploded ? layer.offsetZ : 0;
-                const opacity = isExploded ? 0.95 : 1 - index * 0.15;
-
-                return (
-                  <motion.div
-                    key={layer.id}
-                    animate={{
-                      z: zOffset,
-                      rotateX: isExploded ? 45 : 0,
-                      rotateY: isExploded ? -25 : 0,
-                      opacity,
-                    }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute w-56 h-56 sm:w-72 sm:h-72 rounded-3xl border-2 border-white/30 bg-black/90 p-4 shadow-2xl flex flex-col justify-between hardware-card"
-                    style={{ transformStyle: 'preserve-3d' }}
-                  >
-                    <div className="flex justify-between items-center text-[11px] font-mono font-bold text-neutral-400">
-                      <span className="text-white">{layer.badge}</span>
-                      <span>LAYER {index + 1}/4</span>
-                    </div>
-
-                    <div className="my-auto text-center space-y-1">
-                      <span className="text-xs font-mono font-extrabold text-white">
-                        {layer.title}
-                      </span>
-                    </div>
-
-                    <div className="text-[11px] font-mono text-neutral-500 text-right">
-                      {isExploded ? 'LAYER EXPANDED' : 'ASSEMBLED'}
-                    </div>
-                  </motion.div>
-                );
-              })}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* 3D layer visual */}
+          <div className="lg:col-span-6 flex justify-center items-center py-10" aria-hidden="true">
+            <div
+              className="relative w-64 h-64 sm:w-80 sm:h-80 flex justify-center items-center"
+              style={{ perspective: 1200, transformStyle: 'preserve-3d' }}
+            >
+              {layers.map((layer, index) => (
+                <motion.div
+                  key={layer.id}
+                  animate={{
+                    // Exploded: layers fan out vertically in an isometric view. Assembled: one stacked tag.
+                    y: isExploded ? (index - 1.5) * 70 : index * 3,
+                    rotateX: isExploded ? 58 : 0,
+                    rotateZ: isExploded ? -32 : 0,
+                    scale: isExploded ? 0.8 : 1,
+                  }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  className={`absolute w-56 h-36 sm:w-64 sm:h-40 rounded-2xl border p-4 shadow-2xl shadow-black/60 flex items-end justify-between ${layer.look}`}
+                  style={{ zIndex: layers.length - index }}
+                >
+                  <span className="text-xs font-semibold">{layer.title}</span>
+                  <span className="text-xs font-mono font-bold tabular-nums opacity-70">{index + 1}</span>
+                </motion.div>
+              ))}
             </div>
           </div>
 
-          {/* Right Column: Interactive Layer Details Accordion */}
-          <div className="lg:col-span-6 space-y-4">
+          {/* Layer details */}
+          <ol className="lg:col-span-6 space-y-3">
             {layers.map((l, i) => (
-              <motion.div
+              <motion.li
                 key={l.id}
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="hardware-card p-5 rounded-2xl border border-white/15 space-y-1 hover:border-white/40 transition"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.45, delay: i * 0.08 }}
+                className="hardware-card p-5 rounded-2xl flex gap-4"
               >
-                <div className="flex items-center justify-between text-xs font-mono font-bold">
-                  <span className="text-white">{l.title}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-white/10 text-neutral-300 text-[11px]">
-                    {l.badge}
-                  </span>
+                <span className="w-8 h-8 shrink-0 rounded-lg bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-sm font-bold flex items-center justify-center tabular-nums">
+                  {i + 1}
+                </span>
+                <div>
+                  <h3 className="text-base font-semibold text-white">{l.title}</h3>
+                  <p className="text-sm text-neutral-400 leading-relaxed pt-1">{l.detail}</p>
                 </div>
-                <p className="text-neutral-400 text-xs font-normal leading-relaxed pt-1">
-                  {l.detail}
-                </p>
-              </motion.div>
+              </motion.li>
             ))}
-          </div>
-
+          </ol>
         </div>
-
       </div>
-    </div>
+    </section>
   );
 }

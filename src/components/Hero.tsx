@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { ArrowRight, QrCode, Shield, Radio, Sparkles } from 'lucide-react';
+import { ArrowRight, QrCode } from 'lucide-react';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
 
 export default function Hero() {
@@ -72,7 +72,7 @@ export default function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
           <Link
             href="/products"
-            className="w-full sm:w-auto px-10 py-4.5 rounded-full bg-white hover:bg-neutral-200 text-black font-extrabold text-sm sm:text-base shadow-2xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-10 py-4.5 rounded-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-sm sm:text-base shadow-lg shadow-yellow-500/20 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
             <span>Buy Biker Tag — ₹499</span>
             <ArrowRight className="w-5 h-5 text-black" />
@@ -103,22 +103,6 @@ export default function Hero() {
         >
           <PhysicalTag3D serial="GTB0001" tagType="GTB" size="lg" />
         </motion.div>
-
-        {/* Feature Highlights Row */}
-        <div className="pt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto border-t border-white/15 text-neutral-400 text-xs font-mono font-bold uppercase">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2">
-            <Radio className="w-4 h-4 text-white" />
-            <span>Instant Emergency Connection</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 text-white" />
-            <span>Weatherproof Vinyl & PVC</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2">
-            <Shield className="w-4 h-4 text-white" />
-            <span>Your Number Stays Hidden</span>
-          </div>
-        </div>
 
       </div>
     </section>

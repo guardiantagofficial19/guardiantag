@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Shield, Key, Sparkles, Maximize2, CheckCircle2, Zap, Layers, Droplets, Sun, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, Key, Zap, Layers, Droplets, ChevronLeft, ChevronRight, CreditCard, BadgeCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import SectionHeader, { CONTAINER_CLASS, SECTION_CLASS } from '@/components/ui/SectionHeader';
 
 interface BikerTagItem {
   id: string;
@@ -13,219 +14,184 @@ interface BikerTagItem {
   title: string;
   shortName: string;
   tagline: string;
-  image: string;
+  /** Product photo; items without one show `icon` instead. */
+  image?: string;
+  icon: LucideIcon;
   specs: {
-    dimensions: string;
-    material: string;
-    durability: string;
-    mount: string;
+    inKit: string;
+    useOn: string;
   };
   features: {
     icon: LucideIcon;
     title: string;
     desc: string;
   }[];
-  accentColor: string;
-  glowColor: string;
 }
 
+// Contents of the GTB Biker Kit: 4 stickers, 2 key rings, 1 PVC card, 1 pin badge.
 const TAGS_DATA: BikerTagItem[] = [
   {
-    id: 'helmet-tag',
-    badge: 'FORMAT 01 • HELMET SPECIALIST',
-    title: 'High-Impact PVC Helmet Tag',
-    shortName: 'Helmet Tag',
-    tagline: 'Engineered for durability & immediate first-responder access right on your helmet.',
-    image: '/biker-tags/pvc-helmet-tag.png',
+    id: 'stickers',
+    badge: 'For your helmet and bike',
+    title: 'QR stickers',
+    shortName: 'Stickers',
+    tagline: 'Peel-and-stick QR stickers, including small ones sized for your helmet and your bike.',
+    image: '/biker-tags/large-sticker.png',
+    icon: Layers,
     specs: {
-      dimensions: '85mm × 54mm (Credit Card Size)',
-      material: 'Flexible High-Density PVC',
-      durability: '100% Waterproof & Weather Resistant',
-      mount: '3M Automotive-Grade Adhesive Base'
+      inKit: '4 stickers',
+      useOn: 'Helmet, bike, visor, bag',
     },
     features: [
       {
+        icon: Layers,
+        title: 'Peel and stick',
+        desc: 'Stick them on any clean, dry surface. No tools needed.',
+      },
+      {
         icon: Droplets,
-        title: 'Weatherproof Seal',
-        desc: 'Built to withstand torrential rain, high-pressure washing, UV rays, and road grime.'
+        title: 'Waterproof',
+        desc: 'Laminated to handle rain, sun and washing.',
       },
       {
         icon: Zap,
-        title: '3-Step Emergency Guide',
-        desc: 'Clear guide printed directly on face: 1. Scan QR, 2. Tap Connect, 3. Call Emergency Contact.'
+        title: 'Fast to scan',
+        desc: 'High-contrast QR that any phone camera reads in a second.',
       },
-      {
-        icon: Sun,
-        title: 'High-Visibility Safety Border',
-        desc: 'High-contrast hazard yellow framing ensures instant visibility for responders.'
-      }
     ],
-    accentColor: 'from-amber-400 to-yellow-500',
-    glowColor: 'rgba(250, 204, 21, 0.25)'
   },
   {
-    id: 'keychain-tag',
-    badge: 'FORMAT 02 • KEYRING SENTINEL',
-    title: 'Emergency Key Chain Tag',
-    shortName: 'Key Chain Tag',
-    tagline: 'High-visibility keyring sentinel providing rapid contact access even if helmet is separated.',
+    id: 'key-rings',
+    badge: 'For your keys',
+    title: 'QR key rings',
+    shortName: 'Key rings',
+    tagline: 'Two key rings, so your bike keys and house keys both carry your emergency QR.',
     image: '/biker-tags/keychain-tag.png',
+    icon: Key,
     specs: {
-      dimensions: '50mm Diameter Circular Shield',
-      material: 'Durable Impact PVC + Reinforced Weave',
-      durability: 'Scratch-Proof & Impact Resistant',
-      mount: 'Heavy-Duty Stainless Steel Keyring'
+      inKit: '2 key rings',
+      useOn: 'Bike keys, house keys',
     },
     features: [
       {
         icon: Key,
-        title: 'Ignition-Key Access',
-        desc: 'First responders routinely inspect motorcycle keys at the scene of an accident.'
+        title: 'Where responders look',
+        desc: 'Keys are one of the first things checked at an accident scene.',
       },
       {
         icon: Shield,
-        title: 'Dual-Sided High Contrast QR',
-        desc: 'Precision matrix readable from either side regardless of key position.'
+        title: 'A backup to the helmet',
+        desc: 'Still with you if the helmet comes off.',
       },
-      {
-        icon: Sparkles,
-        title: 'Matte Finish Aesthetic',
-        desc: 'Tactical dark texture designed to match high-end motorcycle hardware.'
-      }
     ],
-    accentColor: 'from-emerald-400 to-green-500',
-    glowColor: 'rgba(52, 211, 153, 0.25)'
   },
   {
-    id: 'small-sticker',
-    badge: 'FORMAT 03 • VISOR & COLLAR DECAL',
-    title: 'Visor & Compact Helmet Sticker',
-    shortName: 'Visor Sticker',
-    tagline: 'Ultra-slim precision decal engineered for visors, suit collars, and subtle placements.',
-    image: '/biker-tags/small-sticker.png',
+    id: 'pvc-card',
+    badge: 'For your wallet',
+    title: 'PVC emergency card',
+    shortName: 'PVC card',
+    tagline: 'A durable card with your QR that lives in your wallet or phone cover.',
+    image: '/biker-tags/pvc-helmet-tag.png',
+    icon: CreditCard,
     specs: {
-      dimensions: '35mm × 35mm Square (Rounded Edge)',
-      material: 'Laminated Flexible Vinyl Film',
-      durability: 'UV-Protected & Scratch Resistant',
-      mount: 'Contour-Conforming Acrylic Adhesive'
+      inKit: '1 card',
+      useOn: 'Wallet, phone cover, riding jacket',
     },
     features: [
       {
-        icon: Maximize2,
-        title: 'Micro Form Factor',
-        desc: 'Compact footprint fits seamlessly on visor lower corner or rear helmet base without obstruction.'
-      },
-      {
-        icon: Layers,
-        title: 'Curved Surface Flexibility',
-        desc: 'Specialized vinyl backing wraps cleanly around helmet curves without bubbling or lifting.'
-      },
-      {
-        icon: Zap,
-        title: 'High-Contrast Optical Matrix',
-        desc: 'Calibrated QR pattern allows fast, effortless phone camera reads in seconds.'
-      }
-    ],
-    accentColor: 'from-cyan-400 to-blue-500',
-    glowColor: 'rgba(56, 189, 248, 0.25)'
-  },
-  {
-    id: 'large-sticker',
-    badge: 'FORMAT 04 • BODYWORK & LUGGAGE',
-    title: 'Bike Frame & Large Decal',
-    shortName: 'Frame Decal',
-    tagline: 'Wide-format decal optimized for motorcycle bodywork, fuel tanks, top boxes & side panniers.',
-    image: '/biker-tags/large-sticker.png',
-    specs: {
-      dimensions: '110mm × 70mm Large Card Format',
-      material: 'Industrial Heavy-Duty Vinyl Sheet',
-      durability: 'Fuel & Weather Resistant Coating',
-      mount: 'Permanent All-Weather Bond'
-    },
-    features: [
-      {
-        icon: Shield,
-        title: 'Wide-Distance Rapid Scan',
-        desc: 'Magnified QR code footprint readable by emergency responders from distance.'
+        icon: CreditCard,
+        title: 'Wallet-friendly',
+        desc: 'Slips in next to your licence and ID.',
       },
       {
         icon: Droplets,
-        title: 'Chemical & Rain Guard',
-        desc: 'Specialized clear coat protects against fuel spills, chain lube, and road debris.'
+        title: 'Durable PVC',
+        desc: "Won't tear or go soggy like paper.",
       },
-      {
-        icon: CheckCircle2,
-        title: 'Chamfered Anti-Peel Edges',
-        desc: 'Precision laser die-cut corners prevent air friction peeling at highway speeds.'
-      }
     ],
-    accentColor: 'from-orange-400 to-red-500',
-    glowColor: 'rgba(251, 146, 60, 0.25)'
-  }
+  },
+  {
+    id: 'pin-badge',
+    badge: 'For your jacket',
+    title: 'Pin badge',
+    shortName: 'Pin badge',
+    tagline: 'A pin badge for your riding jacket or bag.',
+    icon: BadgeCheck,
+    specs: {
+      inKit: '1 badge',
+      useOn: 'Riding jacket, bag',
+    },
+    features: [
+      {
+        icon: BadgeCheck,
+        title: 'Pins on anywhere',
+        desc: 'Fix it to your jacket, bag strap or backpack.',
+      },
+    ],
+  },
 ];
 
 export default function BikerTagShowcase() {
   const [activeIdx, setActiveIdx] = useState(0);
+  // Auto-rotates until the visitor interacts; pauses while hovered so a card isn't swapped mid-read.
+  const [autoPlay, setAutoPlay] = useState(true);
+  const [hovered, setHovered] = useState(false);
 
-  // Automatic orbit loop by default (rotates every 3.5s)
   useEffect(() => {
+    if (!autoPlay || hovered) return;
     const interval = setInterval(() => {
       setActiveIdx((prev) => (prev + 1) % TAGS_DATA.length);
-    }, 3500);
+    }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [autoPlay, hovered]);
 
   const activeTag = TAGS_DATA[activeIdx];
 
-  const handleNext = () => {
-    setActiveIdx((prev) => (prev + 1) % TAGS_DATA.length);
+  const select = (idx: number) => {
+    setAutoPlay(false);
+    setActiveIdx((idx + TAGS_DATA.length) % TAGS_DATA.length);
   };
-
-  const handlePrev = () => {
-    setActiveIdx((prev) => (prev - 1 + TAGS_DATA.length) % TAGS_DATA.length);
-  };
+  const handleNext = () => select(activeIdx + 1);
+  const handlePrev = () => select(activeIdx - 1);
 
   return (
-    <section id="products" className="relative w-full bg-black text-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden scroll-mt-24">
-      {/* Dynamic Background Ambient Light Mesh */}
-      <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none transition-all duration-1000"
-        style={{ background: activeTag.glowColor }}
-      />
+    <section
+      id="products"
+      className={SECTION_CLASS}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Background ambient light */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none bg-yellow-400/10" />
 
-      <div className="max-w-7xl mx-auto space-y-12 relative z-10">
-        
+      <div className={`${CONTAINER_CLASS} space-y-12`}>
+
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 font-mono text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-              Interactive Orbital Hardware Showcase
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              4 Physical Formats. <span className="text-yellow-400 font-normal">One Life-Saving System.</span>
-            </h2>
-            <p className="text-sm sm:text-base text-neutral-400">
-              Explore our complete lineup of weather-sealed, zero-battery emergency ID tags designed for helmets, keychains, visors, and motorcycle bodywork.
-            </p>
-          </div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
+          <SectionHeader
+            align="left"
+            eyebrow="The Biker Kit"
+            title="Everything in the Biker Kit."
+            muted="One emergency profile."
+            intro="Four stickers, two key rings, a PVC card and a pin badge for ₹499, so your emergency QR goes wherever you do."
+          />
 
           {/* Navigation Controls Bar */}
-          <div className="flex items-center gap-3 self-start md:self-auto">
+          <div className="flex items-center gap-3 self-start md:self-auto shrink-0">
             <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl p-1.5 shadow-lg">
               <button
                 onClick={handlePrev}
-                className="p-2 rounded-lg hover:bg-white/10 text-white transition cursor-pointer"
+                className="p-3 rounded-lg hover:bg-white/10 text-white transition cursor-pointer"
                 aria-label="Previous Tag"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="font-mono text-xs font-bold text-yellow-400 px-3 tracking-wider">
-                0{activeIdx + 1} / 0{TAGS_DATA.length}
+              <span className="font-mono text-xs font-bold text-neutral-300 px-3 tabular-nums">
+                {activeIdx + 1} / {TAGS_DATA.length}
               </span>
               <button
                 onClick={handleNext}
-                className="p-2 rounded-lg hover:bg-white/10 text-white transition cursor-pointer"
+                className="p-3 rounded-lg hover:bg-white/10 text-white transition cursor-pointer"
                 aria-label="Next Tag"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -291,7 +257,7 @@ export default function BikerTagShowcase() {
                     zIndex: isSelected ? 30 : 10
                   }}
                   transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-                  onClick={() => setActiveIdx(idx)}
+                  onClick={() => select(idx)}
                   className={`absolute cursor-pointer transition-shadow rounded-xl p-2 bg-neutral-900/90 border backdrop-blur-md ${
                     isSelected 
                       ? `border-yellow-400 shadow-2xl shadow-yellow-500/30 ring-2 ring-yellow-400/40` 
@@ -299,13 +265,17 @@ export default function BikerTagShowcase() {
                   }`}
                 >
                   <div className="relative w-24 h-20 sm:w-32 sm:h-24 flex items-center justify-center p-1 overflow-hidden">
-                    <Image
-                      src={tag.image}
-                      alt={tag.title}
-                      width={120}
-                      height={90}
-                      className="object-contain max-h-full w-auto drop-shadow-md"
-                    />
+                    {tag.image ? (
+                      <Image
+                        src={tag.image}
+                        alt={tag.title}
+                        width={120}
+                        height={90}
+                        className="object-contain max-h-full w-auto drop-shadow-md"
+                      />
+                    ) : (
+                      <tag.icon className="w-10 h-10 text-yellow-400" aria-hidden="true" />
+                    )}
                   </div>
                   <div className="text-center pt-1 border-t border-white/10">
                     <span className={`text-[11px] font-mono font-bold block truncate max-w-[100px] sm:max-w-[120px] ${
@@ -328,24 +298,19 @@ export default function BikerTagShowcase() {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -20, scale: 0.96 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                className="rounded-3xl bg-neutral-900/80 border border-white/15 p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-2xl shadow-black/80"
+                className="hardware-card rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl shadow-black/80"
               >
                 {/* Header Badge & Title */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="px-3 py-1 rounded-md bg-white/10 border border-white/15 font-mono text-xs font-bold text-yellow-400 tracking-wider uppercase">
-                      {activeTag.badge}
-                    </span>
-                    <span className="text-xs font-mono text-neutral-500 uppercase">
-                      FORMAT 0{activeIdx + 1} OF 04
-                    </span>
-                  </div>
+                  <span className="inline-block text-xs font-semibold text-yellow-400">
+                    {activeTag.badge}
+                  </span>
 
                   <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     {activeTag.title}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-sans">
+                  <p className="text-sm text-neutral-400 leading-relaxed font-sans">
                     {activeTag.tagline}
                   </p>
                 </div>
@@ -363,10 +328,10 @@ export default function BikerTagShowcase() {
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="space-y-0.5">
-                          <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wide">
+                          <h4 className="text-sm font-semibold text-white">
                             {feat.title}
                           </h4>
-                          <p className="text-xs text-neutral-400 leading-snug">
+                          <p className="text-[13px] text-neutral-400 leading-snug">
                             {feat.desc}
                           </p>
                         </div>
@@ -376,41 +341,33 @@ export default function BikerTagShowcase() {
                 </div>
 
                 {/* Specifications Grid */}
-                <div className="grid grid-cols-2 gap-3 pt-2 font-mono text-xs">
-                  <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[11px] uppercase">Dimensions</span>
-                    <span className="text-neutral-200 font-semibold leading-tight block">{activeTag.specs.dimensions}</span>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-white/10 text-sm">
+                  <div className="space-y-0.5">
+                    <dt className="text-xs text-neutral-500">In the kit</dt>
+                    <dd className="text-neutral-200 font-medium leading-snug">{activeTag.specs.inKit}</dd>
                   </div>
-                  <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[11px] uppercase">Mounting System</span>
-                    <span className="text-neutral-200 font-semibold leading-tight block">{activeTag.specs.mount}</span>
+                  <div className="space-y-0.5">
+                    <dt className="text-xs text-neutral-500">Use it on</dt>
+                    <dd className="text-neutral-200 font-medium leading-snug">{activeTag.specs.useOn}</dd>
                   </div>
-                  <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[11px] uppercase">Material Core</span>
-                    <span className="text-neutral-200 font-semibold leading-tight block">{activeTag.specs.material}</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                    <span className="text-neutral-500 block text-[11px] uppercase">Weather Rating</span>
-                    <span className="text-yellow-400 font-semibold leading-tight block">{activeTag.specs.durability}</span>
-                  </div>
-                </div>
+                </dl>
 
                 {/* Action CTA & Quick Switch Strip */}
                 <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
                   <Link
                     href="/products"
-                    className="w-full sm:w-auto flex-1 px-6 py-3 rounded-xl bg-yellow-400 text-black font-extrabold text-xs font-mono uppercase tracking-wider shadow-lg shadow-yellow-500/20 hover:bg-yellow-300 transition text-center"
+                    className="w-full sm:w-auto flex-1 px-6 py-3.5 rounded-full bg-yellow-400 text-black font-bold text-sm shadow-lg shadow-yellow-500/20 hover:bg-yellow-300 transition text-center"
                   >
-                    Get 4-Piece Biker Kit — ₹499
+                    Get the Biker Kit — ₹499
                   </Link>
 
                   {/* Format Selector Dots */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-6 px-2">
                     {TAGS_DATA.map((_, dotIdx) => (
                       <button
                         key={dotIdx}
-                        onClick={() => setActiveIdx(dotIdx)}
-                        className={`w-3 h-3 rounded-full transition-all cursor-pointer ${
+                        onClick={() => select(dotIdx)}
+                        className={`relative w-3 h-3 rounded-full transition-all cursor-pointer before:absolute before:-inset-x-2.5 before:-inset-y-4 before:content-[''] ${
                           activeIdx === dotIdx 
                             ? 'bg-yellow-400 scale-125 ring-2 ring-yellow-400/40' 
                             : 'bg-white/20 hover:bg-white/40'

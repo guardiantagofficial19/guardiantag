@@ -57,30 +57,24 @@ export default function Home() {
       {/* Header Navigation */}
       <Navbar />
 
-      {/* BLOCK 1: Hero */}
+      {/* 1. What it is */}
       <Hero />
 
-      {/* BLOCK 1.2: GuardianTag Rider Safety & Feature Architecture */}
-      <GuardianSafetyFeatures />
-
-      {/* BLOCK 1.5: Interactive 3D Orbital Biker Tag Showcase */}
-      <BikerTagShowcase />
-
-      {/* BLOCK 2: How It Works & Live Emergency Connection Demo */}
+      {/* 2. How it works, then see it */}
       <HowItWorks />
       <EmergencyDemo />
 
-      {/* BLOCK 3: 3D Hardware Layer Architecture (Exploded View) */}
+      {/* 3. What you get */}
+      <GuardianSafetyFeatures />
+      <BikerTagShowcase />
       <ExplodedView3D />
 
-      {/* BLOCK 4: Zero PII Exposure & Data Disintegration */}
+      {/* 4. Why trust it */}
       <PrivacySection />
-
-      {/* BLOCK 5: Trust Pillars & FAQ Accordion */}
       <TrustSection />
       <FAQ />
 
-      {/* BLOCK 6: Final CTA & Footer */}
+      {/* 5. Close */}
       <FinalCTA />
       <Footer />
     </div>

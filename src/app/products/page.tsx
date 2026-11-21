@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PhysicalTag3D from '@/components/cinematic/PhysicalTag3D';
-import { ShoppingBag, X, Lock, Check, ArrowRight, Shield, Truck, Star, ChevronDown, ChevronUp, Zap, RotateCcw, HelpCircle, CheckCircle2, Tag, Package, PhoneCall, Award, AlertCircle, Eye, Percent } from 'lucide-react';
+import { ShoppingBag, X, Lock, Check, ArrowRight, Shield, Truck, ChevronDown, ChevronUp, Zap, RotateCcw, HelpCircle, CheckCircle2, Tag, Package, PhoneCall, Award, AlertCircle, Eye, Percent } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export interface ProductCatalogItem {
@@ -34,25 +34,24 @@ const DEFAULT_CATALOG: ProductCatalogItem[] = [
     id: 'GTB',
     sku: 'GTB-KIT',
     sectionNo: 'S.01',
-    name: 'GTB Biker Tag — 4-Piece Emergency Safety Kit',
-    subtitle: 'Helmets, Keyrings & Superbike Frame Mounts',
+    name: 'GTB Biker Kit — Emergency QR Safety Kit',
+    subtitle: 'Stickers, key rings, PVC card & pin badge',
     price: '₹499',
     priceNum: 499,
     comparePriceNum: 999,
     category: 'Motorcycle & Helmet Safety',
     vendor: 'GuardianTag Hardware Labs',
-    material: 'High-Impact Curved PVC + 3M Military VHB Adhesive',
-    rating: '100% Waterproof, Fuel-Resistant & UV Weather-Shielded',
+    material: 'Waterproof laminated PVC & vinyl stickers',
+    rating: 'Waterproof, UV-resistant stickers',
     isComingSoon: false,
     stock: 24,
     description:
       'Engineered specifically for motorcyclists, track racers, and daily commuters. In any roadside incident or accident, bystanders or first responders simply scan the high-contrast QR with any smartphone camera (zero app required) to trigger an instant masked SOS call to your emergency contacts without exposing your personal phone number.',
     features: [
-      '1x High-Impact Curved PVC Helmet Tag (Ergonomic curve for full-face & modular helmets)',
-      '1x Emergency Keyring Hardware Tag (Stainless steel braided wire loop)',
-      '1x Reflective Small Visor/Armour Decal (Ultra-thin waterproof laminate)',
-      '1x All-Weather Bike Frame / Swingarm Decal (3M High-Tack adhesive)',
-      '1x 3M VHB Surface Cleaning Prep Wipe & Primer',
+      '4x QR stickers (including small helmet and bike stickers)',
+      '2x QR key rings (for your bike keys and house keys)',
+      '1x PVC emergency card (for your wallet)',
+      '1x Pin badge (for your riding jacket or bag)',
     ],
   },
   {
@@ -115,60 +114,17 @@ const DEFAULT_CATALOG: ProductCatalogItem[] = [
     category: 'Multi-Surface Decal Pack',
     vendor: 'GuardianTag Hardware Labs',
     material: 'Prismatic Reflective Vinyl + UV Polymer Overlamination',
-    rating: 'All-Weather Residue-Free 3M Adhesive',
+    rating: 'All-weather, peel-and-stick',
     isComingSoon: true,
     stock: 0,
     description:
       'High-visibility reflective safety decals designed for car windshields, laptops, photography gear, and everyday carry. If your parked car blocks a driveway or your laptop is left behind, finders can call you anonymously without seeing your private number.',
     features: [
       'Universal application on car windshields, scooters, bicycles & laptops',
-      'Zero-residue 3M removable adhesive (leaves no sticky marks)',
+      'Peel-and-stick on almost any clean surface',
       'Prismatic micro-reflectors illuminate under headlights at 100 meters',
       'Anonymous two-way voice proxy for urgent parking alerts',
     ],
-  },
-];
-
-const CUSTOMER_REVIEWS = [
-  {
-    author: 'Vikram Sengupta',
-    role: 'KTM Duke 390 Rider • Bangalore',
-    rating: 5,
-    title: 'Must-have hardware for every serious rider in India',
-    date: '2 days ago',
-    verified: true,
-    content:
-      'The 3M adhesive is genuinely military grade. Stuck it onto my AGV helmet and went through heavy western ghat monsoons at highway speeds—did not budge a millimetre. Paramedic scan test triggered an instant call to my brother without showing my phone number.',
-  },
-  {
-    author: 'Aditya Sharma',
-    role: 'Royal Enfield Himalayan 450 Tourer • Leh Rider',
-    rating: 5,
-    title: 'Surviving sub-zero Ladakh ride with zero peel',
-    date: '1 week ago',
-    verified: true,
-    content:
-      'Took the 4-piece kit on my Manali-Leh circuit. Freezing temperatures, river crossings, dust storms—the tag still looks brand new. The keychain tag is also heavy-duty and never gets scratched by bike keys.',
-  },
-  {
-    author: 'Pooja Nair',
-    role: 'Triumph Speed 400 Commuter • Mumbai',
-    rating: 5,
-    title: 'Complete peace of mind for daily Mumbai traffic',
-    date: '2 weeks ago',
-    verified: true,
-    content:
-      'Setup took literally 45 seconds. Scanned the box, added my emergency contact & blood group (O+), and it was active. Knowing that someone can reach my family in an emergency without having my private number is unbeatable.',
-  },
-  {
-    author: 'Rahul Deshmukh',
-    role: 'Yamaha R15 Track Rider • Pune',
-    rating: 5,
-    title: 'Looks factory fitted on a sportbike helmet',
-    date: '3 weeks ago',
-    verified: true,
-    content:
-      'The curved shape hugs helmet contours cleanly without looking like a random bulky sticker. The yellow and black finish looks premium and factory-installed. Super fast 2-day delivery to Pune!',
   },
 ];
 
@@ -440,7 +396,7 @@ function ProductsContent() {
                 </span>
                 <span className="px-3 py-1 rounded-full bg-neutral-900/90 border border-white/20 text-neutral-200 text-[11px] font-mono font-medium flex items-center gap-1.5 backdrop-blur-md">
                   <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                  3M MILITARY VHB
+                  PEEL & STICK
                 </span>
               </div>
 
@@ -477,17 +433,17 @@ function ProductsContent() {
                   <div className="w-48 h-48 rounded-full border-2 border-dashed border-yellow-400/40 bg-yellow-400/5 flex flex-col items-center justify-center p-6 relative">
                     <div className="w-28 h-28 rounded-2xl bg-neutral-900 border border-white/20 flex flex-col items-center justify-center shadow-xl p-3">
                       <div className="w-8 h-8 rounded-lg bg-yellow-400 text-black flex items-center justify-center font-black text-xs font-mono mb-2">GT</div>
-                      <span className="text-[10px] font-mono text-white font-bold">HELMET MOUNT</span>
-                      <span className="text-[9px] font-mono text-neutral-400">CURVED FIT</span>
+                      <span className="text-[10px] font-mono text-white font-bold">HELMET STICKER</span>
+                      <span className="text-[9px] font-mono text-neutral-400">PEEL &amp; STICK</span>
                     </div>
                     <div className="absolute -bottom-3 px-3 py-1 rounded-full bg-yellow-400 text-black font-mono font-black text-[10px]">
-                      AERODYNAMIC TESTED 150 KM/H
+                      STICKS ON ANY HELMET
                     </div>
                   </div>
                   <div className="max-w-md">
-                    <h4 className="text-sm font-bold text-white font-mono">Curved Ergonomic Helmet Mount</h4>
+                    <h4 className="text-sm font-bold text-white font-mono">Helmet sticker</h4>
                     <p className="text-xs text-neutral-400 mt-1">
-                      Molded with high-elasticity flex polymer that adheres perfectly to full-face and modular helmet curves with zero aerodynamic drag.
+                      A small QR sticker for the back of your helmet, where responders look first. Peel it off and stick it on a clean, dry surface.
                     </p>
                   </div>
                 </div>
@@ -498,17 +454,17 @@ function ProductsContent() {
                   <div className="w-48 h-48 rounded-full border-2 border-dashed border-emerald-400/40 bg-emerald-400/5 flex flex-col items-center justify-center p-6 relative">
                     <div className="w-28 h-28 rounded-2xl bg-neutral-900 border border-white/20 flex flex-col items-center justify-center shadow-xl p-3">
                       <div className="w-8 h-8 rounded-lg bg-emerald-400 text-black flex items-center justify-center font-black text-xs font-mono mb-2">KEY</div>
-                      <span className="text-[10px] font-mono text-white font-bold">STEEL LOOP</span>
-                      <span className="text-[9px] font-mono text-emerald-400">BRAIDED WIRE</span>
+                      <span className="text-[10px] font-mono text-white font-bold">KEY RING</span>
+                      <span className="text-[9px] font-mono text-emerald-400">QR TAG</span>
                     </div>
                     <div className="absolute -bottom-3 px-3 py-1 rounded-full bg-emerald-400 text-black font-mono font-black text-[10px]">
-                      ANTI-TEAR KEYCHAIN
+                      2 IN EVERY KIT
                     </div>
                   </div>
                   <div className="max-w-md">
-                    <h4 className="text-sm font-bold text-white font-mono">Stainless Braided Keyring Tag</h4>
+                    <h4 className="text-sm font-bold text-white font-mono">QR key rings</h4>
                     <p className="text-xs text-neutral-400 mt-1">
-                      Heavy-duty aircraft-grade steel loop connects to your bike keys or riding jacket zipper so you always have emergency info even off the bike.
+                      Two key rings, one for your bike keys and one for your house keys, so your emergency QR is with you even off the bike.
                     </p>
                   </div>
                 </div>
@@ -518,30 +474,30 @@ function ProductsContent() {
                 <div className="w-full flex flex-col items-center justify-center py-6 text-center space-y-4">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-lg">
                     <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
-                      <div className="text-yellow-400 font-mono text-xs font-black">01</div>
-                      <div className="text-[11px] font-bold text-white">Helmet Tag</div>
-                      <div className="text-[9px] text-neutral-400">Curved PVC</div>
+                      <div className="text-yellow-400 font-mono text-xs font-black">×4</div>
+                      <div className="text-[11px] font-bold text-white">Stickers</div>
+                      <div className="text-[9px] text-neutral-400">Helmet, bike &amp; more</div>
                     </div>
                     <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
-                      <div className="text-yellow-400 font-mono text-xs font-black">02</div>
-                      <div className="text-[11px] font-bold text-white">Keyring Tag</div>
-                      <div className="text-[9px] text-neutral-400">Steel Cable</div>
+                      <div className="text-yellow-400 font-mono text-xs font-black">×2</div>
+                      <div className="text-[11px] font-bold text-white">Key rings</div>
+                      <div className="text-[9px] text-neutral-400">Bike &amp; house keys</div>
                     </div>
                     <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
-                      <div className="text-yellow-400 font-mono text-xs font-black">03</div>
-                      <div className="text-[11px] font-bold text-white">Small Decals</div>
-                      <div className="text-[9px] text-neutral-400">Visor / Gear</div>
+                      <div className="text-yellow-400 font-mono text-xs font-black">×1</div>
+                      <div className="text-[11px] font-bold text-white">PVC card</div>
+                      <div className="text-[9px] text-neutral-400">Wallet</div>
                     </div>
                     <div className="p-3 rounded-2xl bg-neutral-950 border border-white/10 text-center space-y-1">
-                      <div className="text-yellow-400 font-mono text-xs font-black">04</div>
-                      <div className="text-[11px] font-bold text-white">3M Primer</div>
-                      <div className="text-[9px] text-neutral-400">Prep Wipe</div>
+                      <div className="text-yellow-400 font-mono text-xs font-black">×1</div>
+                      <div className="text-[11px] font-bold text-white">Pin badge</div>
+                      <div className="text-[9px] text-neutral-400">Jacket / bag</div>
                     </div>
                   </div>
                   <div className="max-w-md">
-                    <h4 className="text-sm font-bold text-white font-mono">Complete 4-Piece Hardware Suite</h4>
+                    <h4 className="text-sm font-bold text-white font-mono">What&apos;s in the box</h4>
                     <p className="text-xs text-neutral-400 mt-1">
-                      Every piece is synced to your single emergency profile. All stickers and tags share your unique secure ID.
+                      The stickers, key rings and card all link to the same emergency profile, which you set up once.
                     </p>
                   </div>
                 </div>
@@ -552,9 +508,9 @@ function ProductsContent() {
             <div className="grid grid-cols-4 gap-3">
               {[
                 { id: '3D', label: '3D Hardware', icon: Eye, sub: 'Interactive' },
-                { id: 'HELMET', label: 'Helmet Fit', icon: Shield, sub: 'Aerodynamic' },
-                { id: 'KEYCHAIN', label: 'Keyring Tag', icon: Tag, sub: 'Steel Cable' },
-                { id: 'BOX', label: '4-Piece Kit', icon: Package, sub: 'Unboxing' },
+                { id: 'HELMET', label: 'Helmet sticker', icon: Shield, sub: 'Peel & stick' },
+                { id: 'KEYCHAIN', label: 'Key rings', icon: Tag, sub: '2 in the kit' },
+                { id: 'BOX', label: 'Biker Kit', icon: Package, sub: "What's inside" },
               ].map((item) => {
                 const IconComp = item.icon;
                 const isActive = galleryAngle === item.id;
@@ -624,20 +580,6 @@ function ProductsContent() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
                 {currentProduct.name}
               </h1>
-
-              {/* Star Rating & Social Proof */}
-              <div className="flex items-center gap-2 pt-0.5">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400" />
-                  ))}
-                </div>
-                <span className="text-xs font-bold text-white font-mono">4.9 / 5.0</span>
-                <span className="text-neutral-500 text-xs">•</span>
-                <a href="#reviews" className="text-xs text-neutral-400 hover:text-yellow-400 underline font-mono transition">
-                  184 verified rider reviews
-                </a>
-              </div>
             </div>
 
             {/* SHOPIFY SIGNATURE PRICE BLOCK */}
@@ -886,7 +828,7 @@ function ProductsContent() {
                 >
                   <div className="flex items-center gap-2.5">
                     <Package className="w-4 h-4 text-yellow-400" />
-                    <span className="text-xs font-mono font-bold text-white">What&apos;s Included in the 4-Piece Kit</span>
+                    <span className="text-xs font-mono font-bold text-white">What&apos;s in the kit</span>
                   </div>
                   {openAccordion === 'box' ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
                 </button>
@@ -1021,8 +963,8 @@ function ProductsContent() {
                   <td className="p-4 text-neutral-400">Waterproof but easily forgotten at home</td>
                 </tr>
                 <tr>
-                  <td className="p-4 font-bold text-white">Adhesive Strength</td>
-                  <td className="p-4 font-bold text-emerald-400 bg-yellow-400/5">3M Military VHB (Wind shear 150 km/h)</td>
+                  <td className="p-4 font-bold text-white">Mounting</td>
+                  <td className="p-4 font-bold text-emerald-400 bg-yellow-400/5">Peel-and-stick, sticks anywhere</td>
                   <td className="p-4 text-neutral-400">Standard paper glue (Peels off)</td>
                   <td className="p-4 text-neutral-400">N/A (Wearable strap)</td>
                 </tr>
@@ -1046,71 +988,6 @@ function ProductsContent() {
                 </tr>
               </tbody>
             </table>
-          </div>
-        </section>
-
-        {/* ========================================================= */}
-        {/* BELOW THE FOLD: VERIFIED RIDER REVIEWS                    */}
-        {/* ========================================================= */}
-        <section id="reviews" className="mt-20 pt-14 border-t border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-            <div>
-              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/15 text-xs font-mono font-bold text-yellow-400 uppercase">
-                COMMUNITY FEEDBACK
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
-                Verified Indian Rider Reviews
-              </h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right font-mono">
-                <div className="text-xl font-black text-white">4.9 / 5.0</div>
-                <div className="text-[11px] text-neutral-400">Based on 184 reviews</div>
-              </div>
-              <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400" />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {CUSTOMER_REVIEWS.map((rev, idx) => (
-              <div
-                key={idx}
-                className="p-6 rounded-3xl border border-white/15 bg-neutral-950/80 space-y-4 hover:border-yellow-400/40 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex text-yellow-400">
-                    {[...Array(rev.rating)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-yellow-400" />
-                    ))}
-                  </div>
-                  <span className="text-[11px] font-mono text-neutral-500">{rev.date}</span>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-bold text-white font-mono">&quot;{rev.title}&quot;</h4>
-                  <p className="text-xs text-neutral-300 font-sans mt-2 leading-relaxed">
-                    {rev.content}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-bold text-white font-mono">{rev.author}</div>
-                    <div className="text-[11px] text-neutral-400">{rev.role}</div>
-                  </div>
-                  {rev.verified && (
-                    <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Verified Rider
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -1139,7 +1016,7 @@ function ProductsContent() {
               },
               {
                 q: 'Will high pressure water washing or rain peel the tag off?',
-                a: 'No. GuardianTag uses authentic 3M high-tack VHB structural adhesive. It is rated for 150 km/h wind shear, intense monsoons, and industrial 120-bar motorcycle pressure washes once cured for 12 hours.',
+                a: 'The stickers are laminated and waterproof, made for rain and regular washing. For the best hold, stick them on a clean, dry surface and avoid washing that spot for the first day.',
               },
               {
                 q: 'Can I change my emergency contact number later if I change phones?',

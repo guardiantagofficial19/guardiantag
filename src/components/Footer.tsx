@@ -21,7 +21,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-xs text-neutral-400 font-normal leading-relaxed max-w-sm">
-              GuardianTag provides physical QR personal safety technology engineered for Indian roads, children, travel, and personal belongings. Instant bystander emergency routing with 100% number masking privacy.
+              Emergency QR tags for Indian riders. Anyone who finds you can reach your family in one tap, without ever seeing your number.
             </p>
 
             <div className="pt-2 flex items-center gap-2 text-xs font-mono text-neutral-400">
@@ -115,7 +115,7 @@ export default function Footer() {
           <div className="flex space-x-6">
             <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition">Terms of Service</Link>
-            <Link href="/security" className="hover:text-white transition">Security Protocol</Link>
+            <Link href="/security" className="hover:text-white transition">Security</Link>
           </div>
         </div>
 

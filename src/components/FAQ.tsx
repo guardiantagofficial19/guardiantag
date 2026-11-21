@@ -1,103 +1,115 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, HelpCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import SectionHeader, { CONTAINER_CLASS, SECTION_CLASS } from '@/components/ui/SectionHeader';
+
+const faqs = [
+  {
+    question: 'How does GuardianTag work in an emergency?',
+    answer:
+      'Anyone who scans the QR on your helmet, keys or bike opens your emergency page in their phone browser. With one tap they can call your emergency contact or national helplines (112 and the 1033 highway helpline). They don’t need an app or an account.',
+  },
+  {
+    question: 'Is there a monthly or yearly fee?',
+    answer:
+      'No. The Biker Kit is a one-time purchase of ₹499 for 4 stickers, 2 key rings, a PVC card and a pin badge. There is no subscription, and your emergency page stays online.',
+  },
+  {
+    question: 'Can someone who scans the tag see my phone number?',
+    answer:
+      'No. Your phone number and address are never shown on the tag or the emergency page. Calls are connected through GuardianTag, so the person helping you reaches your contact without seeing anyone’s number.',
+  },
+  {
+    question: 'How much is delivery, and how long does it take?',
+    answer:
+      'Delivery is free to all serviceable pin codes in India. Orders are packed within 24–48 hours and usually arrive in 3–5 business days by tracked courier.',
+  },
+  {
+    question: 'What is the replacement policy?',
+    answer:
+      'If a tag arrives damaged, has a print defect or doesn’t scan, tell us within 7 days at support@guardiantag.in or on WhatsApp (+91 80588 00880) and we’ll replace it.',
+  },
+  {
+    question: 'What if I lose a tag or sell my bike?',
+    answer:
+      'Log in on the Manage page with your tag ID and PIN (or an SMS code). You can pause the tag, change your emergency contacts, or ask us to reset it for the next owner.',
+  },
+  {
+    question: 'Will the tags survive rain, sun and highway riding?',
+    answer:
+      'Yes. They are laminated, waterproof stickers with UV protection, made to handle monsoon rain, mud, sun and regular washing. Just peel and stick them on a clean, dry surface.',
+  },
+];
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const faqs = [
-    {
-      question: 'How does GuardianTag work in an emergency?',
-      answer: 'When a bystander or paramedic scans your physical GuardianTag QR on your helmet, keychain, or motorcycle, it opens a fast mobile emergency page. With a single tap, they can call your primary emergency contact directly or connect to national emergency services (112 & 1033). No app download or sign-up is required.',
-    },
-    {
-      question: 'Is there any yearly or monthly subscription fee?',
-      answer: 'No. GuardianTag is a one-time purchase of ₹499 for the complete 4-piece Biker Safety Kit. There are zero monthly or yearly subscription fees. Lifetime emergency page hosting and QR connectivity are included.',
-    },
-    {
-      question: 'Is my private phone number or personal identity exposed to anyone who scans?',
-      answer: 'Never. We do not display your private phone number or home address publicly on the emergency page. Bystanders reach your designated emergency contact without seeing your personal contact number.',
-    },
-    {
-      question: 'What are the delivery charges and shipping times across India?',
-      answer: 'We provide free shipping across all serviceable pin codes in India. Orders are processed within 24-48 hours and delivered via tracked express couriers within 3 to 5 business days.',
-    },
-    {
-      question: 'What is your replacement policy?',
-      answer: 'We offer a 7-day replacement guarantee. If your tag arrives damaged, has a print defect, or fails to scan, reach out to support@guardiantag.in or WhatsApp support at +91 80588 00880 for a quick, no-hassle replacement.',
-    },
-    {
-      question: 'What happens if I lose my tag or sell my bike? Can I deactivate it?',
-      answer: 'Yes! You have full owner control. Simply log into your GuardianTag Dashboard at /manage using your registered phone number to deactivate your tag instantly or update your emergency contact info anytime.',
-    },
-    {
-      question: 'How durable are the tags in Indian weather and high-speed riding?',
-      answer: 'Tags are crafted from heavy-duty impact PVC and laminated vinyl with UV protection and all-weather 3M adhesive. They are 100% waterproof, mud-resistant, and tested against highway wind and frequent washing.',
-    },
-  ];
-
   return (
-    <section id="faq" className="py-24 bg-black text-white border-b border-white/15 relative">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="text-center mb-16 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold text-white uppercase">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>FREQUENTLY ASKED QUESTIONS</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-            Everything you need to know.
-          </h2>
+    <section id="faq" className={SECTION_CLASS}>
+      <div className={`${CONTAINER_CLASS} grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16`}>
+        <div className="lg:col-span-4 lg:sticky lg:top-28 self-start space-y-6">
+          <SectionHeader
+            align="left"
+            eyebrow="FAQ"
+            title="Questions, answered."
+            intro="Can't find what you're looking for? We usually reply on WhatsApp within a few hours."
+          />
+          <Link
+            href="https://wa.me/918058800880"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/20 text-sm font-semibold text-white hover:bg-white/15 transition"
+          >
+            Ask on WhatsApp
+          </Link>
         </div>
 
-        {/* Sequential Accordion List */}
-        <div className="space-y-4">
+        <div className="lg:col-span-8 divide-y divide-white/10 border-y border-white/10">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
+            const panelId = `faq-panel-${index}`;
             return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-20px' }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
-                className="hardware-card rounded-2xl overflow-hidden border border-white/15"
-              >
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full p-6 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition"
-                >
-                  <span className="text-base sm:text-lg font-extrabold text-white font-sans">
-                    {faq.question}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-neutral-400 shrink-0 transition-transform duration-300 ${
-                      isOpen ? 'rotate-180 text-white' : ''
-                    }`}
-                  />
-                </button>
+              <div key={faq.question}>
+                <h3>
+                  <button
+                    type="button"
+                    onClick={() => setOpenIndex(isOpen ? null : index)}
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    className="w-full py-5 sm:py-6 text-left flex items-center justify-between gap-6 cursor-pointer group"
+                  >
+                    <span className="text-base sm:text-lg font-semibold text-white group-hover:text-yellow-400 transition-colors">
+                      {faq.question}
+                    </span>
+                    <Plus
+                      className={`w-5 h-5 shrink-0 transition-transform duration-300 ${
+                        isOpen ? 'rotate-45 text-yellow-400' : 'text-neutral-500'
+                      }`}
+                    />
+                  </button>
+                </h3>
 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {isOpen && (
                     <motion.div
+                      id={panelId}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="px-6 pb-6 text-neutral-400 text-sm font-normal leading-relaxed border-t border-white/10 pt-4"
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
                     >
-                      {faq.answer}
+                      <p className="pb-6 pr-10 text-neutral-400 text-[15px] leading-relaxed">{faq.answer}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             );
           })}
         </div>
-
       </div>
     </section>
   );
